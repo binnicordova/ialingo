@@ -9,6 +9,7 @@ import { completeOnboardingAtom, speakAtom, tapFeedbackAtom, updateSettingsAtom 
 import { contentAtom } from '@/state/core';
 import { localeAtom } from '@/state/selectors';
 
+import { BrandLogo } from '../art/BrandLogo';
 import { CharacterAvatar } from '../art/CharacterAvatar';
 import { EggPortrait } from '../art/PetPortrait';
 import { SpeechBubble } from '../components/game';
@@ -60,9 +61,7 @@ export function WelcomeScreen() {
     <Screen background={colors.primarySoft}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Animated.View entering={FadeInUp.springify()} style={styles.brand}>
-          <AppText variant="hero" color={colors.primary} center>
-            iaLingo
-          </AppText>
+          <BrandLogo />
           <AppText variant="body" color={colors.inkSoft} center>
             {t('welcomeSubtitle')}
           </AppText>
@@ -145,7 +144,7 @@ export function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.xl, flexGrow: 1 },
-  brand: { gap: spacing.xs, marginTop: spacing.lg },
+  brand: { alignItems: 'center', gap: spacing.xs, marginTop: spacing.lg },
   guideRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   bubble: { flex: 1 },
   options: { gap: spacing.md },
