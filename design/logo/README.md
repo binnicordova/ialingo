@@ -2,8 +2,6 @@
 
 **The idea:** a baby dino whose whole body is the capital **L** of Lingo. It is a letter and a pet at once, so the name and the game's promise ("my pet grows because I'm learning") arrive together. Meet the Lingosaur.
 
-See it in use: [`board/presentation.html`](board/presentation.html) (slides as PNG in `board/slides/`). The round 1 options are kept in [`concepts/`](concepts/).
-
 ## Which version to use
 
 | Version | File | Use it for |
@@ -14,7 +12,7 @@ See it in use: [`board/presentation.html`](board/presentation.html) (slides as P
 | **Horizontal / stacked lockup** | `master/lockup-*.svg` | When the pet must stay large and the name fully typed: posters, shirts, slides |
 | **Plain wordmark** | `master/wordmark-*.svg` | Below the logotype's minimum size, and in small one-colour uses such as legal lines |
 
-Pick the file named for your background: `color-on-light`, `color-on-violet`, `black`, `white`. Ready-made PNGs are in `export/png/`, and a complete web icon set is in `export/web/` (with `head-snippet.html` to paste).
+Pick the file named for your background: `color-on-light`, `color-on-violet`, `black`, `white`. The SVG masters are the only source files; export PNGs from them when you need one.
 
 ## In the app
 
