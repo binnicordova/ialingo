@@ -23,7 +23,7 @@ app (routes)  →  presentation  →  state (Jotai)  →  application  →  doma
 | --- | --- | --- |
 | Curriculum | `domain/curriculum/*` | Worlds, words, sentences, **stories**, **songs**, levels, lesson plans (learn × n → story → song → speak → review → boss), the **lesson generator** (12 exercise types, distractors with unique pictures and words, deterministic seeds), the **Word Gym** generator (`generatePracticeLesson`, lesson id `gym`), `gapLine` for missing-word exercises, answer evaluation, unlock rules |
 | Learning | `domain/learning/*` | **Leitner spaced repetition** (a box is gained only on a *due* review, see ADR 0006), the lesson session (a missed exercise is re-queued once; only the first attempt is scored), stars and progress (lessons and practice sessions), the **sticker album**, and **pronunciation scoring** (`pronunciation.ts`: normalization, phonetic folding, edit distance, verdicts) |
-| Play | `domain/play/*` | Play Park rules: unlock after 6 words, daily game-berry cap, Bubble Pop rounds, the Memory Match board (flip, match, mismatch, solved) |
+| Play | `domain/play/*` | Play Park rules: unlock after 6 words, daily game-berry cap, Bubble Pop rounds, the Memory Match board (flip, match, mismatch, solved), I Spy scenes (jittered 3×3 layout, no overlaps), Odd One Out rounds (3 words from one *coherent* world + 1 from a world of another theme, using `World.category`) |
 | Quests | `domain/quests/*` | Daily quest board (3 per day, "lessons" always included, deterministic by day), progress, chest, day rollover without penalty |
 | Profiles | `domain/profiles/*` | Family profile index (up to 4, ids p1–p4, never removes the last), validation of the stored index |
 | Voice | `domain/voice/*` | Voice diary rules: one postcard per week, keep the first 2 plus the 10 newest |
@@ -79,7 +79,8 @@ gameStateAtom ──store.sub──▶ debounced repository.save() (AsyncStorage
 - **Exercises** (`presentation/exercises/ExerciseViews.tsx`, `SpeakAndStoryViews.tsx`, `SongViews.tsx`): one view per exercise type. Audio plays automatically; the instruction is spoken (in the child's language) the first time each type appears in a lesson (`hooks/use-exercise-intro.ts`). `SpeakView` switches between recognition (mic button, live transcript, 3 attempts; the parental gate comes before the OS permission prompt) and self-check. `SongView` chants line by line (guide voice slightly slower and higher, a clap, an echo pause sized to the line, a safety timer if TTS never reports the end).
 - **Art:** `art/PetPortrait.tsx` and `art/CharacterAvatar.tsx` draw SVG from the same data blueprints used by the 3D models, so lists stay cheap (no WebGL context per card).
 - **3D** (`presentation/three`): `ThreeStage` hosts three.js on expo-gl; `pet-model.ts` builds a pet rig from a blueprint; `accessory-model.ts`, `egg-model.ts`; `pet-scene.ts` is the animation state machine (idle breathing, blinking, ear twitches, tail wag, plus jump / spin / eat / love / wobble / hatch). See ADR 0001.
-- **i18n** (`presentation/i18n`): typed dictionaries. Every locale must have every key (compile-time check).
+- **i18n** (`presentation/i18n`): typed dictionaries for es, pt, fr and en. Every locale must have every key (compile-time check). French uses tutoiement for children and vouvoiement in parent texts, with no-break spaces before `! ? : ;` (see ADR 0007).
+- **Accessibility on web and native:** use the `disabled` prop on `Pressable` (it drives `aria-disabled` on web and the disabled state on iOS/Android) and `aria-*` props (`aria-selected`, `aria-checked`) rather than `accessibilityState`, which react-native-web ignores.
 
 ## Testing
 
@@ -104,7 +105,7 @@ gameStateAtom ──store.sub──▶ debounced repository.save() (AsyncStorage
 - **A world:** add a `defineWorld({...})` block (compact rows) and a reward pet. The tests will tell you if any reference is missing.
 - **A pet:** add one `PetSpecies` with a blueprint (body, colors, ears, tail, extra, pattern, eyes).
 - **An exercise type:** add a variant to `Exercise` and its `evaluateAnswer` case, a builder slot in the generator, and one view. The compiler's exhaustive switches point to every place to update.
-- **A UI language:** add the locale to `SUPPORTED_LOCALES`, a dictionary in `strings.ts`, and translations in content rows.
+- **A UI language:** add the locale to `SUPPORTED_LOCALES` and `SPEECH_LANGUAGE_TAG`, a dictionary in `strings.ts`, a column in every content row (words, sentences, story and song lines) and a field in every `LocalizedText` (world, story and song titles, pets, badges, accessories, guides, levels). The compiler lists every place; the catalog test checks that nothing is empty or copied from English. ADR 0007 describes how French was added.
 
 ## Builds
 

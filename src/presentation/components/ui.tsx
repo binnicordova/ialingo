@@ -95,7 +95,6 @@ export function BigButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={() => {
         if (!silent) feedback();

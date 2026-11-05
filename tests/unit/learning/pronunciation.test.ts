@@ -71,3 +71,22 @@ describe('isPassingVerdict', () => {
     expect(isPassingVerdict('try-again')).toBe(false);
   });
 });
+
+describe('accents of French-speaking learners (v1.3)', () => {
+  it.each([
+    ['happy', 'appy', 'great'], // h-dropping
+    ['hello', 'ello', 'great'],
+    ['house', 'ouse', 'great'],
+    ['this', 'zis', 'good'], // th → z
+    ['three', 'tree', 'great'], // th → t
+    ['three', 'free', 'good'], // th → f
+    ['sheep', 'ship', 'great'], // long and short i merge
+  ] as const)('%s heard as "%s" is %s', (target, heard, verdict) => {
+    expect(scoreUtterance(target, [heard]).verdict).toBe(verdict);
+  });
+
+  it('still rejects a different word', () => {
+    expect(scoreUtterance('happy', ['banana']).verdict).toBe('try-again');
+    expect(scoreUtterance('three', ['house']).verdict).toBe('try-again');
+  });
+});

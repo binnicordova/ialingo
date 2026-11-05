@@ -121,12 +121,12 @@ describe('generateLesson', () => {
 describe('story and speaking lessons', () => {
   const base = makeWorld();
   const world = attachStory(base, {
-    title: { en: 'A day', es: 'Un día', pt: 'Um dia' },
+    title: { en: 'A day', es: 'Un día', pt: 'Um dia', fr: 'Un jour' },
     lines: [
-      ['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'dog'],
-      ['The cat sleeps.', '🐱', 'El gato duerme.', 'O gato dorme.', 'cat'],
-      ['The cow eats.', '🐮', 'La vaca come.', 'A vaca come.', 'cow'],
-      ['The pig plays.', '🐷', 'El cerdo juega.', 'O porco brinca.', 'pig'],
+      ['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'fr', 'dog'],
+      ['The cat sleeps.', '🐱', 'El gato duerme.', 'O gato dorme.', 'fr', 'cat'],
+      ['The cow eats.', '🐮', 'La vaca come.', 'A vaca come.', 'fr', 'cow'],
+      ['The pig plays.', '🐷', 'El cerdo juega.', 'O porco brinca.', 'fr', 'pig'],
     ],
   });
   const worlds = [world];
@@ -168,12 +168,12 @@ describe('story and speaking lessons', () => {
 describe('song lessons', () => {
   const base = makeWorld();
   const world = attachSong(base, {
-    title: { en: 'Farm song', es: 'Canción', pt: 'Música' },
+    title: { en: 'Farm song', es: 'Canción', pt: 'Música', fr: 'Chanson' },
     lines: [
-      ['The dog says woof, woof!', '🐶', 'El perro dice guau.', 'O cachorro faz au.', 'dog'],
-      ['Cat, cat, meow, cat!', '🐱', 'Gato, gato, miau.', 'Gato, gato, miau.', 'cat'],
-      ['The cow says moo!', '🐮', 'La vaca dice mu.', 'A vaca faz mu.', 'cow'],
-      ['Hug my teddy bear!', '🧸', 'Abrazo mi osito.', 'Abraço meu ursinho.', 'teddy bear'],
+      ['The dog says woof, woof!', '🐶', 'El perro dice guau.', 'O cachorro faz au.', 'fr', 'dog'],
+      ['Cat, cat, meow, cat!', '🐱', 'Gato, gato, miau.', 'Gato, gato, miau.', 'fr', 'cat'],
+      ['The cow says moo!', '🐮', 'La vaca dice mu.', 'A vaca faz mu.', 'fr', 'cow'],
+      ['Hug my teddy bear!', '🧸', 'Abrazo mi osito.', 'Abraço meu ursinho.', 'fr', 'teddy bear'],
     ],
   });
   const worlds = [world];
@@ -181,8 +181,8 @@ describe('song lessons', () => {
 
   it('slots the song between the story and the speaking lesson', () => {
     const withStory = attachStory(world, {
-      title: { en: 'A day', es: 'Un día', pt: 'Um dia' },
-      lines: [['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'dog']],
+      title: { en: 'A day', es: 'Un día', pt: 'Um dia', fr: 'Un jour' },
+      lines: [['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'fr', 'dog']],
     });
     const kinds = buildLessonPlans(withStory).filter((p) => p.kind !== 'learn').map((p) => p.kind);
     expect(kinds).toEqual(['story', 'song', 'speak', 'review', 'boss']);

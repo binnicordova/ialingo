@@ -1,7 +1,7 @@
 import type { PetSpecies } from '@/domain/pets/species';
 
 /**
- * The 51 original pets: 3 starters, 34 world pets (one per boss) and 14 badge
+ * The 55 original pets: 3 starters, 38 world pets (one per boss) and 14 badge
  * pets. Each is defined by a data blueprint only, rendered procedurally in 3D
  * and 2D. To add a pet, append a row.
  */
@@ -10,7 +10,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'bubbo',
     name: 'Bubbo',
-    title: { en: 'the bubbly water pup', es: 'el cachorrito de burbujas', pt: 'o filhote de bolhas' },
+    title: { en: 'the bubbly water pup', es: 'el cachorrito de burbujas', pt: 'o filhote de bolhas', fr: 'le chiot des bulles' },
     catchphrase: 'Splish splash!',
     blueprint: { body: 'round', primary: '#4FC3F7', secondary: '#E1F5FE', accent: '#0288D1', ears: 'floppy', tail: 'fish', extra: 'fins', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'starter' },
@@ -19,7 +19,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'flicker',
     name: 'Flicker',
-    title: { en: 'the cozy fire fox', es: 'el zorrito de fuego', pt: 'a raposinha de fogo' },
+    title: { en: 'the cozy fire fox', es: 'el zorrito de fuego', pt: 'a raposinha de fogo', fr: 'le petit renard de feu' },
     catchphrase: 'I feel warm and happy!',
     blueprint: { body: 'tall', primary: '#FF8A3D', secondary: '#FFE0B2', accent: '#E65100', ears: 'cat', tail: 'fluffy', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'starter' },
@@ -28,7 +28,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'sprout',
     name: 'Sprout',
-    title: { en: 'the leafy bunny', es: 'el conejito de hojas', pt: 'o coelhinho de folhas' },
+    title: { en: 'the leafy bunny', es: 'el conejito de hojas', pt: 'o coelhinho de folhas', fr: 'le lapin feuillu' },
     catchphrase: "Let's grow together!",
     blueprint: { body: 'round', primary: '#7ED957', secondary: '#F1F8E9', accent: '#33691E', ears: 'bunny', tail: 'fluffy', extra: 'leaf', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'starter' },
@@ -38,7 +38,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'giggles',
     name: 'Giggles',
-    title: { en: 'the giggly kitten', es: 'la gatita risueña', pt: 'a gatinha risonha' },
+    title: { en: 'the giggly kitten', es: 'la gatita risueña', pt: 'a gatinha risonha', fr: 'la chatonne rieuse' },
     catchphrase: "Hee hee! I'm so happy!",
     blueprint: { body: 'round', primary: '#FF9EC4', secondary: '#FFF0F6', accent: '#D63384', ears: 'cat', tail: 'curly', extra: 'none', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'feelings' },
@@ -46,7 +46,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'prisma',
     name: 'Prisma',
-    title: { en: 'the rainbow bunny', es: 'la conejita arcoíris', pt: 'a coelhinha arco-íris' },
+    title: { en: 'the rainbow bunny', es: 'la conejita arcoíris', pt: 'a coelhinha arco-íris', fr: 'la lapine arc-en-ciel' },
     catchphrase: 'Colors are fun!',
     blueprint: { body: 'tall', primary: '#B39DDB', secondary: '#FFF59D', accent: '#F06292', ears: 'bunny', tail: 'fluffy', extra: 'horn', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'colors' },
@@ -54,7 +54,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'digit',
     name: 'Digit',
-    title: { en: 'the counting beetle-bot', es: 'el escarabajo contador', pt: 'o besouro contador' },
+    title: { en: 'the counting beetle-bot', es: 'el escarabajo contador', pt: 'o besouro contador', fr: 'le scarabée-robot qui compte' },
     catchphrase: 'One, two, three, go!',
     blueprint: { body: 'round', primary: '#4DD0E1', secondary: '#E0F7FA', accent: '#00838F', ears: 'antenna', tail: 'stub', extra: 'none', pattern: 'plain', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'numbers' },
@@ -62,7 +62,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'moomoo',
     name: 'Moomoo',
-    title: { en: 'the spotty calf', es: 'la ternerita con manchas', pt: 'a bezerrinha pintada' },
+    title: { en: 'the spotty calf', es: 'la ternerita con manchas', pt: 'a bezerrinha pintada', fr: 'le veau tacheté' },
     catchphrase: 'Moo! Hello, friend!',
     blueprint: { body: 'wide', primary: '#FFFFFF', secondary: '#FFCDD2', accent: '#424242', ears: 'horns', tail: 'long', extra: 'none', pattern: 'spots', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'farm' },
@@ -70,7 +70,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'berrybop',
     name: 'Berrybop',
-    title: { en: 'the berry sprite', es: 'el duendecillo fresa', pt: 'o duende morango' },
+    title: { en: 'the berry sprite', es: 'el duendecillo fresa', pt: 'o duende morango', fr: 'le lutin des baies' },
     catchphrase: 'Yummy, yummy!',
     blueprint: { body: 'round', primary: '#EF5350', secondary: '#FFCDD2', accent: '#2E7D32', ears: 'none', tail: 'stub', extra: 'leaf', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'fruits' },
@@ -78,7 +78,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'snuggle',
     name: 'Snuggle',
-    title: { en: 'the huggable bear', es: 'el osito abrazable', pt: 'o ursinho fofinho' },
+    title: { en: 'the huggable bear', es: 'el osito abrazable', pt: 'o ursinho fofinho', fr: "l'ours câlin" },
     catchphrase: 'I love hugs!',
     blueprint: { body: 'round', primary: '#A1887F', secondary: '#D7CCC8', accent: '#5D4037', ears: 'round', tail: 'stub', extra: 'none', pattern: 'belly', eyes: 'sleepy' },
     unlock: { type: 'world-boss', worldId: 'family' },
@@ -86,7 +86,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'bouncy',
     name: 'Bouncy',
-    title: { en: 'the jumping joey', es: 'el canguro saltarín', pt: 'o canguru saltitante' },
+    title: { en: 'the jumping joey', es: 'el canguro saltarín', pt: 'o canguru saltitante', fr: 'le bébé kangourou sauteur' },
     catchphrase: 'Jump with me!',
     blueprint: { body: 'tall', primary: '#FFB74D', secondary: '#FFF3E0', accent: '#EF6C00', ears: 'bunny', tail: 'long', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'body' },
@@ -94,7 +94,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'teddo',
     name: 'Teddo',
-    title: { en: 'the patchwork teddy', es: 'el osito de retazos', pt: 'o ursinho de retalhos' },
+    title: { en: 'the patchwork teddy', es: 'el osito de retazos', pt: 'o ursinho de retalhos', fr: 'le nounours rapiécé' },
     catchphrase: "Let's play!",
     blueprint: { body: 'round', primary: '#FFCC80', secondary: '#FFF8E1', accent: '#8D6E63', ears: 'round', tail: 'stub', extra: 'none', pattern: 'spots', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'toys' },
@@ -102,7 +102,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'muffin',
     name: 'Muffin',
-    title: { en: 'the sweet puff', es: 'la bolita dulce', pt: 'a bolinha doce' },
+    title: { en: 'the sweet puff', es: 'la bolita dulce', pt: 'a bolinha doce', fr: 'la petite boule sucrée' },
     catchphrase: "I'm hungry! Snack time!",
     blueprint: { body: 'wide', primary: '#D7A86E', secondary: '#FFF3E0', accent: '#F06292', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'belly', eyes: 'sleepy' },
     unlock: { type: 'world-boss', worldId: 'food' },
@@ -110,7 +110,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'fluffle',
     name: 'Fluffle',
-    title: { en: 'the woolly lamb', es: 'la ovejita lanuda', pt: 'a ovelhinha fofa' },
+    title: { en: 'the woolly lamb', es: 'la ovejita lanuda', pt: 'a ovelhinha fofa', fr: "l'agneau tout laineux" },
     catchphrase: 'Baa! I like your hat!',
     blueprint: { body: 'round', primary: '#FAFAFA', secondary: '#ECEFF1', accent: '#90A4AE', ears: 'floppy', tail: 'fluffy', extra: 'mane', pattern: 'plain', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'clothes' },
@@ -118,7 +118,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'cozy',
     name: 'Cozy',
-    title: { en: 'the sleepy house cat', es: 'el gato dormilón', pt: 'o gato dorminhoco' },
+    title: { en: 'the sleepy house cat', es: 'el gato dormilón', pt: 'o gato dorminhoco', fr: 'le chat qui fait la sieste' },
     catchphrase: 'Home, sweet home.',
     blueprint: { body: 'round', primary: '#90A4AE', secondary: '#ECEFF1', accent: '#455A64', ears: 'cat', tail: 'long', extra: 'none', pattern: 'belly', eyes: 'sleepy' },
     unlock: { type: 'world-boss', worldId: 'home' },
@@ -126,7 +126,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'inky',
     name: 'Inky',
-    title: { en: 'the bookworm owlet', es: 'el buhito lector', pt: 'a corujinha leitora' },
+    title: { en: 'the bookworm owlet', es: 'el buhito lector', pt: 'a corujinha leitora', fr: 'le petit hibou liseur' },
     catchphrase: "Let's read a book!",
     blueprint: { body: 'tall', primary: '#5C6BC0', secondary: '#E8EAF6', accent: '#FFCA28', ears: 'cat', tail: 'stub', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'school' },
@@ -134,7 +134,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'roary',
     name: 'Roary',
-    title: { en: 'the brave lion cub', es: 'el leoncito valiente', pt: 'o leãozinho corajoso' },
+    title: { en: 'the brave lion cub', es: 'el leoncito valiente', pt: 'o leãozinho corajoso', fr: 'le lionceau courageux' },
     catchphrase: 'Roar! I am brave!',
     blueprint: { body: 'round', primary: '#FFC107', secondary: '#FFF8E1', accent: '#E65100', ears: 'round', tail: 'long', extra: 'mane', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'wild' },
@@ -142,7 +142,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'splash',
     name: 'Splash',
-    title: { en: 'the splashy seal', es: 'la foquita juguetona', pt: 'a foquinha brincalhona' },
+    title: { en: 'the splashy seal', es: 'la foquita juguetona', pt: 'a foquinha brincalhona', fr: 'le petit phoque joueur' },
     catchphrase: "Let's swim!",
     blueprint: { body: 'wide', primary: '#26C6DA', secondary: '#E0F7FA', accent: '#00838F', ears: 'none', tail: 'fish', extra: 'fins', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'sea' },
@@ -150,7 +150,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'zappy',
     name: 'Zappy',
-    title: { en: 'the thunder chick', es: 'el pollito del trueno', pt: 'o pintinho do trovão' },
+    title: { en: 'the thunder chick', es: 'el pollito del trueno', pt: 'o pintinho do trovão', fr: 'le poussin du tonnerre' },
     catchphrase: 'Zap zap! Look at the sky!',
     blueprint: { body: 'round', primary: '#FFEB3B', secondary: '#FFFDE7', accent: '#F57F17', ears: 'none', tail: 'stub', extra: 'spikes', pattern: 'plain', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'weather' },
@@ -158,7 +158,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'mossy',
     name: 'Mossy',
-    title: { en: 'the mossy turtle', es: 'la tortuga musgosa', pt: 'a tartaruga musgosa' },
+    title: { en: 'the mossy turtle', es: 'la tortuga musgosa', pt: 'a tartaruga musgosa', fr: 'la tortue moussue' },
     catchphrase: 'Slow and happy.',
     blueprint: { body: 'wide', primary: '#81C784', secondary: '#C8E6C9', accent: '#795548', ears: 'none', tail: 'stub', extra: 'shell', pattern: 'plain', eyes: 'sleepy' },
     unlock: { type: 'world-boss', worldId: 'nature' },
@@ -166,7 +166,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'carroty',
     name: 'Carroty',
-    title: { en: 'the carrot pup', es: 'el perrito zanahoria', pt: 'o cachorrinho cenoura' },
+    title: { en: 'the carrot pup', es: 'el perrito zanahoria', pt: 'o cachorrinho cenoura', fr: 'le chiot carotte' },
     catchphrase: 'Crunch, crunch!',
     blueprint: { body: 'tall', primary: '#FF9800', secondary: '#FFE0B2', accent: '#43A047', ears: 'floppy', tail: 'stub', extra: 'leaf', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'garden' },
@@ -174,7 +174,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'zoom',
     name: 'Zoom',
-    title: { en: 'the speedy racer', es: 'el corredor veloz', pt: 'o corredor veloz' },
+    title: { en: 'the speedy racer', es: 'el corredor veloz', pt: 'o corredor veloz', fr: 'le coureur rapide' },
     catchphrase: 'Vroom, vroom!',
     blueprint: { body: 'wide', primary: '#E53935', secondary: '#FFCDD2', accent: '#212121', ears: 'none', tail: 'long', extra: 'fins', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'transport' },
@@ -182,7 +182,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'hopper',
     name: 'Hopper',
-    title: { en: 'the hoppy frog', es: 'la ranita saltarina', pt: 'o sapinho saltitante' },
+    title: { en: 'the hoppy frog', es: 'la ranita saltarina', pt: 'o sapinho saltitante', fr: 'la grenouille sauteuse' },
     catchphrase: 'Ribbit! Jump, jump!',
     blueprint: { body: 'wide', primary: '#8BC34A', secondary: '#F1F8E9', accent: '#33691E', ears: 'none', tail: 'none', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'actions' },
@@ -190,7 +190,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'champ',
     name: 'Champ',
-    title: { en: 'the sporty pup', es: 'el perrito deportista', pt: 'o cachorrinho atleta' },
+    title: { en: 'the sporty pup', es: 'el perrito deportista', pt: 'o cachorrinho atleta', fr: 'le chiot sportif' },
     catchphrase: 'Goal! We win!',
     blueprint: { body: 'round', primary: '#42A5F5', secondary: '#E3F2FD', accent: '#FFC107', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'sports' },
@@ -198,7 +198,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'melody',
     name: 'Melody',
-    title: { en: 'the singing songbird', es: 'el pajarito cantor', pt: 'o passarinho cantor' },
+    title: { en: 'the singing songbird', es: 'el pajarito cantor', pt: 'o passarinho cantor', fr: "l'oiseau chanteur" },
     catchphrase: 'La, la, la!',
     blueprint: { body: 'round', primary: '#CE93D8', secondary: '#F3E5F5', accent: '#8E24AA', ears: 'none', tail: 'fluffy', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'music' },
@@ -206,7 +206,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'twinkle',
     name: 'Twinkle',
-    title: { en: 'the star sprite', es: 'la estrellita mágica', pt: 'a estrelinha mágica' },
+    title: { en: 'the star sprite', es: 'la estrellita mágica', pt: 'a estrelinha mágica', fr: 'le lutin étoilé' },
     catchphrase: 'Twinkle, twinkle!',
     blueprint: { body: 'round', primary: '#FFD54F', secondary: '#FFF8E1', accent: '#FF6F00', ears: 'antenna', tail: 'none', extra: 'spikes', pattern: 'plain', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'shapes' },
@@ -214,7 +214,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'snooze',
     name: 'Snooze',
-    title: { en: 'the moon owl', es: 'el búho de la luna', pt: 'a coruja da lua' },
+    title: { en: 'the moon owl', es: 'el búho de la luna', pt: 'a coruja da lua', fr: 'le hibou de la lune' },
     catchphrase: 'Good night, sleep tight!',
     blueprint: { body: 'tall', primary: '#3949AB', secondary: '#C5CAE9', accent: '#FFF59D', ears: 'cat', tail: 'none', extra: 'wings', pattern: 'belly', eyes: 'sleepy' },
     unlock: { type: 'world-boss', worldId: 'time' },
@@ -222,7 +222,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'buddy',
     name: 'Buddy',
-    title: { en: 'the helpful pup', es: 'el perrito ayudante', pt: 'o cachorrinho ajudante' },
+    title: { en: 'the helpful pup', es: 'el perrito ayudante', pt: 'o cachorrinho ajudante', fr: 'le chiot serviable' },
     catchphrase: 'I can help you!',
     blueprint: { body: 'round', primary: '#BCAAA4', secondary: '#EFEBE9', accent: '#1E88E5', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'spots', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'jobs' },
@@ -230,7 +230,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'wander',
     name: 'Wander',
-    title: { en: 'the explorer fox', es: 'el zorro explorador', pt: 'a raposa exploradora' },
+    title: { en: 'the explorer fox', es: 'el zorro explorador', pt: 'a raposa exploradora', fr: 'le renard explorateur' },
     catchphrase: "Let's explore the city!",
     blueprint: { body: 'tall', primary: '#8D6E63', secondary: '#FFE0B2', accent: '#2E7D32', ears: 'cat', tail: 'fluffy', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'places' },
@@ -238,7 +238,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'drago',
     name: 'Drago',
-    title: { en: 'the baby dragon', es: 'el bebé dragón', pt: 'o bebê dragão' },
+    title: { en: 'the baby dragon', es: 'el bebé dragón', pt: 'o bebê dragão', fr: 'le bébé dragon' },
     catchphrase: 'Rawr! I can fly!',
     blueprint: { body: 'round', primary: '#66BB6A', secondary: '#FFF59D', accent: '#C62828', ears: 'horns', tail: 'long', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'fantasy' },
@@ -247,7 +247,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'atlas',
     name: 'Atlas',
-    title: { en: 'the world-traveler pup', es: 'el cachorrito viajero', pt: 'o filhote viajante' },
+    title: { en: 'the world-traveler pup', es: 'el cachorrito viajero', pt: 'o filhote viajante', fr: 'le chiot globe-trotteur' },
     catchphrase: "Let's see the world!",
     blueprint: { body: 'round', primary: '#26A69A', secondary: '#E0F2F1', accent: '#FFCA28', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'spots', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'countries' },
@@ -255,7 +255,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'plume',
     name: 'Plume',
-    title: { en: 'the peacock chick', es: 'el pollito pavo real', pt: 'o pintinho pavão' },
+    title: { en: 'the peacock chick', es: 'el pollito pavo real', pt: 'o pintinho pavão', fr: 'le poussin paon' },
     catchphrase: 'Tweet, tweet! Look at my feathers!',
     blueprint: { body: 'round', primary: '#29B6F6', secondary: '#E1F5FE', accent: '#66BB6A', ears: 'none', tail: 'fluffy', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'birds' },
@@ -263,7 +263,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'sprinkles',
     name: 'Sprinkles',
-    title: { en: 'the donut bear', es: 'el osito dona', pt: 'o ursinho rosquinha' },
+    title: { en: 'the donut bear', es: 'el osito dona', pt: 'o ursinho rosquinha', fr: "l'ourson beignet" },
     catchphrase: 'Sweet treats for everyone!',
     blueprint: { body: 'round', primary: '#F48FB1', secondary: '#FFF3E0', accent: '#8D6E63', ears: 'round', tail: 'stub', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'sweets' },
@@ -271,7 +271,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'nugget',
     name: 'Nugget',
-    title: { en: 'the little chef hamster', es: 'el hámster cocinero', pt: 'o hamster cozinheiro' },
+    title: { en: 'the little chef hamster', es: 'el hámster cocinero', pt: 'o hamster cozinheiro', fr: 'le hamster petit chef' },
     catchphrase: "What's cooking?",
     blueprint: { body: 'wide', primary: '#FFCC80', secondary: '#FFFFFF', accent: '#FF7043', ears: 'round', tail: 'stub', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'kitchen' },
@@ -279,7 +279,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'fizz',
     name: 'Fizz',
-    title: { en: 'the bubbly otter', es: 'la nutria burbujeante', pt: 'a lontra borbulhante' },
+    title: { en: 'the bubbly otter', es: 'la nutria burbujeante', pt: 'a lontra borbulhante', fr: 'la loutre pétillante' },
     catchphrase: 'Squeaky clean!',
     blueprint: { body: 'tall', primary: '#80DEEA', secondary: '#FFFFFF', accent: '#00ACC1', ears: 'round', tail: 'long', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'health' },
@@ -287,7 +287,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'gizmo',
     name: 'Gizmo',
-    title: { en: 'the handy beaver', es: 'el castor habilidoso', pt: 'o castor habilidoso' },
+    title: { en: 'the handy beaver', es: 'el castor habilidoso', pt: 'o castor habilidoso', fr: 'le castor bricoleur' },
     catchphrase: 'I can fix it!',
     blueprint: { body: 'wide', primary: '#A1887F', secondary: '#FFE0B2', accent: '#5D4037', ears: 'round', tail: 'fish', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'tools' },
@@ -295,7 +295,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'confetti',
     name: 'Confetti',
-    title: { en: 'the party kitty', es: 'la gatita fiestera', pt: 'a gatinha festeira' },
+    title: { en: 'the party kitty', es: 'la gatita fiestera', pt: 'a gatinha festeira', fr: 'la minette de la fête' },
     catchphrase: "Let's celebrate!",
     blueprint: { body: 'round', primary: '#CE93D8', secondary: '#FFF59D', accent: '#FF4081', ears: 'cat', tail: 'fluffy', extra: 'horn', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'celebrations' },
@@ -303,16 +303,49 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'byte',
     name: 'Byte',
-    title: { en: 'the robot bunny', es: 'el conejito robot', pt: 'o coelhinho robô' },
+    title: { en: 'the robot bunny', es: 'el conejito robot', pt: 'o coelhinho robô', fr: 'le lapin robot' },
     catchphrase: 'Beep! Hello, inventor!',
     blueprint: { body: 'tall', primary: '#90A4AE', secondary: '#E0F7FA', accent: '#00E5FF', ears: 'antenna', tail: 'stub', extra: 'none', pattern: 'plain', eyes: 'round' },
     unlock: { type: 'world-boss', worldId: 'tech' },
+  },
+  // World pets for v1.3 worlds 35–38.
+  {
+    id: 'polly',
+    name: 'Polly',
+    title: { en: 'the polite parrot', es: 'la lorita educada', pt: 'a papagainha educada', fr: 'la perruche polie' },
+    catchphrase: 'Please and thank you!',
+    blueprint: { body: 'tall', primary: '#4CAF50', secondary: '#FFF59D', accent: '#E53935', ears: 'none', tail: 'long', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
+    unlock: { type: 'world-boss', worldId: 'manners' },
+  },
+  {
+    id: 'dawn',
+    name: 'Dawn',
+    title: { en: 'the morning hedgehog', es: 'el erizo mañanero', pt: 'o ouriço madrugador', fr: 'le hérisson du matin' },
+    catchphrase: 'Good morning! Time to start the day!',
+    blueprint: { body: 'round', primary: '#FFB74D', secondary: '#FFF3E0', accent: '#6D4C41', ears: 'round', tail: 'stub', extra: 'spikes', pattern: 'belly', eyes: 'sleepy' },
+    unlock: { type: 'world-boss', worldId: 'routine' },
+  },
+  {
+    id: 'penny',
+    name: 'Penny',
+    title: { en: 'the piggy bank piglet', es: 'la cerdita alcancía', pt: 'a porquinha cofrinho', fr: 'la petite tirelire cochon' },
+    catchphrase: 'Save a coin, share a smile!',
+    blueprint: { body: 'wide', primary: '#F8BBD0', secondary: '#FCE4EC', accent: '#FFD54F', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'spots', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'shopping' },
+  },
+  {
+    id: 'hue',
+    name: 'Hue',
+    title: { en: 'the color-changing chameleon', es: 'el camaleón de colores', pt: 'o camaleão colorido', fr: 'le caméléon qui change de couleur' },
+    catchphrase: 'All feelings are okay!',
+    blueprint: { body: 'tall', primary: '#80DEEA', secondary: '#FFF9C4', accent: '#BA68C8', ears: 'none', tail: 'curly', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
+    unlock: { type: 'world-boss', worldId: 'emotions' },
   },
   // Badge pets: hatch from eggs earned with achievements.
   {
     id: 'mochi',
     name: 'Mochi',
-    title: { en: 'the squishy snow bun', es: 'el conejito de nieve', pt: 'o coelhinho de neve' },
+    title: { en: 'the squishy snow bun', es: 'el conejito de nieve', pt: 'o coelhinho de neve', fr: 'le lapin des neiges tout doux' },
     catchphrase: 'Squish, squish!',
     blueprint: { body: 'round', primary: '#FFFFFF', secondary: '#FCE4EC', accent: '#F48FB1', ears: 'bunny', tail: 'fluffy', extra: 'none', pattern: 'plain', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'word-explorer' },
@@ -320,7 +353,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'sparkle',
     name: 'Sparkle',
-    title: { en: 'the dreamy unicorn', es: 'el unicornio soñador', pt: 'o unicórnio sonhador' },
+    title: { en: 'the dreamy unicorn', es: 'el unicornio soñador', pt: 'o unicórnio sonhador', fr: 'la licorne rêveuse' },
     catchphrase: 'Magic is everywhere!',
     blueprint: { body: 'tall', primary: '#F8BBD0', secondary: '#FFFFFF', accent: '#BA68C8', ears: 'cat', tail: 'fluffy', extra: 'horn', pattern: 'plain', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'word-wizard' },
@@ -328,7 +361,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'glowbug',
     name: 'Glowbug',
-    title: { en: 'the firefly friend', es: 'la luciérnaga amiga', pt: 'o vaga-lume amigo' },
+    title: { en: 'the firefly friend', es: 'la luciérnaga amiga', pt: 'o vaga-lume amigo', fr: 'la luciole amie' },
     catchphrase: 'I glow when you shine!',
     blueprint: { body: 'round', primary: '#FFF176', secondary: '#FFFDE7', accent: '#33691E', ears: 'antenna', tail: 'stub', extra: 'wings', pattern: 'plain', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'perfect-five' },
@@ -336,7 +369,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'pebble',
     name: 'Pebble',
-    title: { en: 'the rock buddy', es: 'la piedrita amiga', pt: 'a pedrinha amiga' },
+    title: { en: 'the rock buddy', es: 'la piedrita amiga', pt: 'a pedrinha amiga', fr: 'le caillou copain' },
     catchphrase: "I'm small but strong!",
     blueprint: { body: 'wide', primary: '#9E9E9E', secondary: '#E0E0E0', accent: '#616161', ears: 'none', tail: 'none', extra: 'spikes', pattern: 'spots', eyes: 'sleepy' },
     unlock: { type: 'achievement', achievementId: 'five-days' },
@@ -344,7 +377,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'coral',
     name: 'Coral',
-    title: { en: 'the reef axolotl', es: 'el ajolote del arrecife', pt: 'o axolote do recife' },
+    title: { en: 'the reef axolotl', es: 'el ajolote del arrecife', pt: 'o axolote do recife', fr: "l'axolotl du récif" },
     catchphrase: 'Blub, blub! Thank you!',
     blueprint: { body: 'tall', primary: '#FF8A80', secondary: '#FFEBEE', accent: '#D81B60', ears: 'none', tail: 'fish', extra: 'fins', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'pet-chef' },
@@ -352,7 +385,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'nimbus',
     name: 'Nimbus',
-    title: { en: 'the cloud kitten', es: 'el gatito nube', pt: 'o gatinho nuvem' },
+    title: { en: 'the cloud kitten', es: 'el gatito nube', pt: 'o gatinho nuvem', fr: 'le chaton nuage' },
     catchphrase: "I'm light as a cloud!",
     blueprint: { body: 'round', primary: '#E3F2FD', secondary: '#FFFFFF', accent: '#64B5F6', ears: 'cat', tail: 'fluffy', extra: 'wings', pattern: 'plain', eyes: 'sleepy' },
     unlock: { type: 'achievement', achievementId: 'fifteen-days' },
@@ -360,7 +393,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'ember',
     name: 'Ember',
-    title: { en: 'the lava dragon', es: 'el dragón de lava', pt: 'o dragão de lava' },
+    title: { en: 'the lava dragon', es: 'el dragón de lava', pt: 'o dragão de lava', fr: 'le dragon de lave' },
     catchphrase: 'Hot, hot, hot!',
     blueprint: { body: 'tall', primary: '#FF7043', secondary: '#FFCCBC', accent: '#4E342E', ears: 'horns', tail: 'long', extra: 'spikes', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'world-hero' },
@@ -368,7 +401,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'echo',
     name: 'Echo',
-    title: { en: 'the chatty bat', es: 'el murcielaguito parlanchín', pt: 'o morceguinho tagarela' },
+    title: { en: 'the chatty bat', es: 'el murcielaguito parlanchín', pt: 'o morceguinho tagarela', fr: 'la chauve-souris bavarde' },
     catchphrase: 'I love to hear you talk!',
     blueprint: { body: 'round', primary: '#7E57C2', secondary: '#EDE7F6', accent: '#FFCA28', ears: 'cat', tail: 'none', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'chatterbox' },
@@ -376,7 +409,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'page',
     name: 'Page',
-    title: { en: 'the storybook owl', es: 'el búho cuentacuentos', pt: 'a coruja contadora de histórias' },
+    title: { en: 'the storybook owl', es: 'el búho cuentacuentos', pt: 'a coruja contadora de histórias', fr: 'le hibou conteur' },
     catchphrase: 'Once upon a time...',
     blueprint: { body: 'tall', primary: '#FFB74D', secondary: '#FFF8E1', accent: '#6D4C41', ears: 'cat', tail: 'stub', extra: 'wings', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'storyteller' },
@@ -384,7 +417,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'tempo',
     name: 'Tempo',
-    title: { en: 'the beat frog', es: 'la ranita del ritmo', pt: 'o sapinho do ritmo' },
+    title: { en: 'the beat frog', es: 'la ranita del ritmo', pt: 'o sapinho do ritmo', fr: 'la grenouille du rythme' },
     catchphrase: 'Ribbit! Clap the beat!',
     blueprint: { body: 'wide', primary: '#66BB6A', secondary: '#F1F8E9', accent: '#FDD835', ears: 'none', tail: 'none', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'little-singer' },
@@ -392,7 +425,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'flexo',
     name: 'Flexo',
-    title: { en: 'the strong armadillo', es: 'el armadillo fuerte', pt: 'o tatu fortão' },
+    title: { en: 'the strong armadillo', es: 'el armadillo fuerte', pt: 'o tatu fortão', fr: 'le tatou costaud' },
     catchphrase: "Let's train our brains!",
     blueprint: { body: 'wide', primary: '#A1887F', secondary: '#EFEBE9', accent: '#5D4037', ears: 'round', tail: 'long', extra: 'shell', pattern: 'plain', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'word-athlete' },
@@ -400,7 +433,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'bloop',
     name: 'Bloop',
-    title: { en: 'the bubble jellyfish', es: 'la medusa de burbujas', pt: 'a água-viva de bolhas' },
+    title: { en: 'the bubble jellyfish', es: 'la medusa de burbujas', pt: 'a água-viva de bolhas', fr: 'la méduse à bulles' },
     catchphrase: 'Pop, pop, hooray!',
     blueprint: { body: 'round', primary: '#B388FF', secondary: '#F3E5F5', accent: '#7C4DFF', ears: 'antenna', tail: 'fish', extra: 'fins', pattern: 'spots', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'game-champ' },
@@ -408,7 +441,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'scout',
     name: 'Scout',
-    title: { en: 'the explorer pup', es: 'el cachorro explorador', pt: 'o filhote explorador' },
+    title: { en: 'the explorer pup', es: 'el cachorro explorador', pt: 'o filhote explorador', fr: 'le chiot explorateur' },
     catchphrase: 'Adventure time!',
     blueprint: { body: 'tall', primary: '#D7A86E', secondary: '#FFF3E0', accent: '#2E7D32', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'quest-hero' },
@@ -416,7 +449,7 @@ export const PET_SPECIES: readonly PetSpecies[] = [
   {
     id: 'goldie',
     name: 'Goldie',
-    title: { en: 'the golden lion cub', es: 'el cachorro de león dorado', pt: 'o filhote de leão dourado' },
+    title: { en: 'the golden lion cub', es: 'el cachorro de león dorado', pt: 'o filhote de leão dourado', fr: 'le lionceau doré' },
     catchphrase: 'Shine like gold!',
     blueprint: { body: 'round', primary: '#FFC107', secondary: '#FFF8E1', accent: '#FF8F00', ears: 'round', tail: 'long', extra: 'mane', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'achievement', achievementId: 'golden-stickers' },

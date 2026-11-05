@@ -2,7 +2,7 @@
  * Languages the app UI and instructions can be shown in.
  * The *target* language being learned is always English.
  */
-export const SUPPORTED_LOCALES = ['es', 'pt', 'en'] as const;
+export const SUPPORTED_LOCALES = ['es', 'pt', 'fr', 'en'] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -23,6 +23,7 @@ export function localize(text: LocalizedText, locale: Locale): string {
 export const SPEECH_LANGUAGE_TAG: Readonly<Record<Locale, string>> = {
   es: 'es-MX',
   pt: 'pt-BR',
+  fr: 'fr-FR',
   en: 'en-US',
 };
 

@@ -1,8 +1,8 @@
 # iaLingo privacy policy
 
-*Last updated: November 5, 2026. Applies to iaLingo 1.2 for iOS and Android.*
+*Last updated: November 5, 2026. Applies to iaLingo 1.3 for iOS and Android.*
 
-[English](#english) · [Español](#español) · [Português](#português)
+[English](#english) · [Español](#español) · [Português](#português) · [Français](#français)
 
 ---
 
@@ -81,3 +81,29 @@ O iaLingo é um jogo para crianças aprenderem inglês. Nós o criamos para que 
 **Leis de privacidade infantil.** Como o iaLingo não coleta informações pessoais, ele não pede consentimento para coletá-las. Nós o projetamos pensando na COPPA (Estados Unidos), no RGPD (União Europeia), na LGPD (Brasil) e na Lei 25 do Quebec. Se alguma versão futura precisar enviar dados para fora do aparelho, ela pedirá permissão a um adulto primeiro, e esta política mudará antes do lançamento.
 
 **Contato.** Dúvidas ou pedidos: abra uma issue em https://github.com/binnicordova/ialingo/issues (não inclua informações sobre seu filho).
+
+---
+
+## Français
+
+iaLingo est un jeu pour apprendre l'anglais destiné aux enfants. Nous l'avons conçu pour qu'un enfant puisse jouer sans adulte à côté et sans donner la moindre information personnelle.
+
+**Ce que nous recueillons : rien.** iaLingo n'a pas de compte et ne demande jamais de nom, d'e-mail, de numéro de téléphone, de date de naissance, de photo ni de localisation. Il n'y a ni publicité, ni statistiques, ni pistage, ni achats intégrés. L'application ne fait aucune connexion à internet d'elle-même.
+
+**Ce qui est enregistré sur l'appareil.** Pour garder les progrès de votre enfant, l'application enregistre uniquement sur l'appareil : les réglages, les étoiles des leçons, les mots travaillés et le jour où ils l'ont été, les animaux et leurs surnoms prédéfinis, les baies, les badges, les quêtes du jour et les minutes jouées. Jusqu'à quatre enfants peuvent avoir chacun leur propre sauvegarde sur le même appareil. Ces informations ne quittent pas l'appareil, sauf si vous faites vous-même une sauvegarde ou changez d'appareil.
+
+**Micro.** Le micro n'est utilisé que lorsque votre enfant touche le bouton du micro dans un exercice d'oral, ou enregistre une carte postale vocale si un adulte a activé cette option. Avant la première demande d'autorisation du système, un adulte doit passer le contrôle parental.
+
+- *Pratique de l'oral :* le système de reconnaissance vocale de l'appareil transforme la voix en texte, sur l'appareil dès que c'est possible. Le texte est comparé au mot attendu, puis effacé. Rien n'est enregistré ni conservé. Sur Android, vous pouvez télécharger le modèle d'anglais hors ligne depuis l'espace adultes ; c'est Android qui effectue le téléchargement.
+- *Reconnaissance en ligne* (seulement si l'appareil ne reconnaît pas l'anglais hors ligne) : elle reste désactivée sauf si un adulte active « Autoriser la reconnaissance en ligne ». Dans ce cas, l'audio est traité par Apple ou Google selon leurs propres conditions.
+- *Journal vocal* (désactivé par défaut) : si un adulte l'active, l'enfant peut enregistrer une courte carte postale une fois par semaine. Les enregistrements restent dans le dossier privé de l'application sur l'appareil. Désactiver le journal efface tous les enregistrements.
+
+**Lecture à voix haute.** Les mots et les consignes sont lus par la voix intégrée de l'appareil. Certains appareils Android peuvent utiliser une voix en ligne ; c'est un réglage de l'appareil.
+
+**Partage.** Les certificats et les cartes postales vocales ne peuvent être partagés que par un adulte, avec le menu de partage du système, après le contrôle parental.
+
+**Effacer les données.** Dans l'espace adultes, vous pouvez supprimer le profil d'un enfant ou effacer tous les progrès. Désinstaller l'application efface aussi tout ce qu'elle a enregistré.
+
+**Lois sur la protection de la vie privée des enfants.** Comme iaLingo ne recueille aucune information personnelle, il ne demande pas de consentement pour en recueillir. Nous l'avons conçu en tenant compte de la COPPA (États-Unis), du RGPD (Union européenne), de la LGPD (Brésil) et de la Loi 25 du Québec. Si une future version devait envoyer des données hors de l'appareil, elle demanderait d'abord l'accord d'un adulte, et cette politique serait modifiée avant sa publication.
+
+**Contact.** Questions ou demandes : ouvrez une demande sur https://github.com/binnicordova/ialingo/issues (n'indiquez aucune information sur votre enfant).

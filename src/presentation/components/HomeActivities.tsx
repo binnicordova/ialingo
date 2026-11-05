@@ -53,7 +53,7 @@ export function QuestCard({ onPlay }: { onPlay: () => void }) {
             testID={`quest-${quest.kind}`}
             accessibilityRole="button"
             accessibilityLabel={`${t(QUEST_LABEL[quest.kind])}, ${quest.progress}/${quest.target}`}
-            accessibilityState={{ checked: quest.done }}
+            aria-checked={quest.done}
             onPress={() => go(quest.kind)}
             style={({ pressed }) => [styles.questRow, quest.done && styles.questDone, { opacity: pressed ? 0.85 : 1 }]}
           >

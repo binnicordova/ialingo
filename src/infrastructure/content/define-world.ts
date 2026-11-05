@@ -2,12 +2,19 @@ import { levelForOrder } from '@/domain/curriculum/levels';
 import type { CharacterId, SpeciesId, World, WorldId, YleLevel } from '@/domain/curriculum/types';
 import type { LocalizedText } from '@/domain/shared/locale';
 
-/** [english, emoji, spanish, portuguese] */
-export type WordRow = readonly [en: string, emoji: string, es: string, pt: string];
-/** [english sentence, emoji, spanish, portuguese] */
-export type SentenceRow = readonly [en: string, emoji: string, es: string, pt: string];
-/** [english line, emoji, spanish, portuguese, key word (English text of a word in the same world)] */
-export type StoryLineRow = readonly [en: string, emoji: string, es: string, pt: string, keyword: string];
+/** [english, emoji, spanish, portuguese, french] */
+export type WordRow = readonly [en: string, emoji: string, es: string, pt: string, fr: string];
+/** [english sentence, emoji, spanish, portuguese, french] */
+export type SentenceRow = readonly [en: string, emoji: string, es: string, pt: string, fr: string];
+/** [english line, emoji, spanish, portuguese, french, key word (English text of a word in the same world)] */
+export type StoryLineRow = readonly [
+  en: string,
+  emoji: string,
+  es: string,
+  pt: string,
+  fr: string,
+  keyword: string,
+];
 
 export interface StorySource {
   readonly title: LocalizedText;
@@ -51,19 +58,19 @@ export function defineWorld(source: WorldSource): World {
     color: source.color,
     guideId: source.guideId,
     rewardSpeciesId: source.rewardSpeciesId,
-    words: source.words.map(([en, emoji, es, pt]) => ({
+    words: source.words.map(([en, emoji, es, pt, fr]) => ({
       id: `${source.id}.${slug(en)}`,
       worldId: source.id,
       en,
       emoji,
-      meaning: { en, es, pt },
+      meaning: { en, es, pt, fr },
     })),
-    sentences: source.sentences.map(([en, emoji, es, pt], i) => ({
+    sentences: source.sentences.map(([en, emoji, es, pt, fr], i) => ({
       id: `${source.id}.s${i + 1}`,
       worldId: source.id,
       en,
       emoji,
-      meaning: { en, es, pt },
+      meaning: { en, es, pt, fr },
     })),
   };
 }
@@ -77,10 +84,10 @@ export function attachStory(world: World, source: StorySource | undefined): Worl
       id: `${world.id}.story`,
       worldId: world.id,
       title: source.title,
-      lines: source.lines.map(([en, emoji, es, pt, keyword]) => ({
+      lines: source.lines.map(([en, emoji, es, pt, fr, keyword]) => ({
         en,
         emoji,
-        meaning: { en, es, pt },
+        meaning: { en, es, pt, fr },
         keyWordId: `${world.id}.${slug(keyword)}`,
       })),
     },
@@ -96,10 +103,10 @@ export function attachSong(world: World, source: StorySource | undefined): World
       id: `${world.id}.song`,
       worldId: world.id,
       title: source.title,
-      lines: source.lines.map(([en, emoji, es, pt, keyword]) => ({
+      lines: source.lines.map(([en, emoji, es, pt, fr, keyword]) => ({
         en,
         emoji,
-        meaning: { en, es, pt },
+        meaning: { en, es, pt, fr },
         keyWordId: `${world.id}.${slug(keyword)}`,
       })),
     },

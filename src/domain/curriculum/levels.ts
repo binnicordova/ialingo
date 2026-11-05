@@ -19,21 +19,21 @@ export const YLE_LEVELS: readonly LevelInfo[] = [
     cefr: 'Pre-A1',
     emoji: '🌱',
     color: '#3CC46B',
-    title: { en: 'Starters', es: 'Starters (inicial)', pt: 'Starters (inicial)' },
+    title: { en: 'Starters', es: 'Starters (inicial)', pt: 'Starters (inicial)', fr: 'Starters (débutant)' },
   },
   {
     id: 'movers',
     cefr: 'A1',
     emoji: '🚀',
     color: '#59C3FF',
-    title: { en: 'Movers', es: 'Movers (básico)', pt: 'Movers (básico)' },
+    title: { en: 'Movers', es: 'Movers (básico)', pt: 'Movers (básico)', fr: 'Movers (élémentaire)' },
   },
   {
     id: 'flyers',
     cefr: 'A2',
     emoji: '🦅',
     color: '#FF8A3D',
-    title: { en: 'Flyers', es: 'Flyers (intermedio)', pt: 'Flyers (intermediário)' },
+    title: { en: 'Flyers', es: 'Flyers (intermedio)', pt: 'Flyers (intermediário)', fr: 'Flyers (intermédiaire)' },
   },
 ];
 

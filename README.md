@@ -4,23 +4,23 @@
 
 No login, no ads, no purchases, and no network calls of its own: everything stays on the device.
 
-| What | v1.2 |
+| What | v1.3 |
 | --- | --- |
-| Worlds | 34, in 3 levels: Starters (CEFR Pre-A1) · Movers (A1) · Flyers (A2) |
-| English words | 503, each with a picture and Spanish / Portuguese translations |
-| Sentences | 138 |
-| Picture stories | 34 (170 narrated pages), one per world |
-| **Sing-along chants** | **34 original chants (136 lines), sung line by line with an echo pause and a clap beat** |
-| Lessons | **302** per child: learn · story · **song** · speak · review · boss, generated from data and different on every replay, plus the unlimited **Word Gym** |
-| Exercise types | 12: learn card, listen & pick, picture & pick, true/false, match pairs, spell, build a sentence, say the word, say the sentence, story page, **sing-along**, **missing word** |
-| Practice and play | **Word Gym** (spaced-repetition practice of every word met), **sticker album** (503 stickers that shine when learned and turn gold when mastered), **Play Park** (Bubble Pop, Memory Match), **daily quests** with a chest |
-| Pets | **51** original procedural 3D pets (3 starters, 34 world bosses, 14 badges) |
+| Worlds | **38**, in 3 levels: Starters (CEFR Pre-A1) · Movers (A1) · Flyers (A2). New: Magic Words, Every Day, Let's Go Shopping, Big Feelings |
+| English words | **557**, each with a picture and Spanish / Portuguese / **French** translations |
+| Sentences | 158 |
+| Picture stories | 38 (190 narrated pages), one per world |
+| Sing-along chants | 38 original chants (152 lines), sung line by line with an echo pause and a clap beat |
+| Lessons | **338** per child: learn · story · song · speak · review · boss, generated from data and different on every replay, plus the unlimited Word Gym |
+| Exercise types | 12: learn card, listen & pick, picture & pick, true/false, match pairs, spell, build a sentence, say the word, say the sentence, story page, sing-along, missing word |
+| Practice and play | Word Gym, sticker album (557 stickers), **Play Park with 4 games** (Bubble Pop, Memory Match, **I Spy**, **Odd One Out**), daily quests with a chest |
+| Pets | **55** original procedural 3D pets (3 starters, 38 world bosses, 14 badges) |
 | Badges | 19 |
 | Guide characters | 10, each with their own voice |
 | Family | Up to 4 child profiles per device ("Who's playing?") |
-| Parents | Progress dashboard, daily time limit with bedtime, speaking and privacy controls (including the Android offline English download), **voice diary** ("progress you can hear"), **level certificates** to share |
-| UI languages | Español, Português, English |
-| Store kit | App Store metadata (EAS Metadata), Google Play listings, privacy policy, data safety answers, screenshot plan: [`store/`](store/README.md) |
+| Parents | Progress dashboard, daily time limit with bedtime, speaking and privacy controls (including the Android offline English download), voice diary ("progress you can hear"), level certificates to share |
+| UI languages | Español, Português, **Français**, English (every instruction, story, song and translation) |
+| Store kit | App Store metadata (EAS Metadata), Google Play listings in 6 locales (en-US, es-MX/419, es-ES, pt-BR, **fr-FR, fr-CA**), privacy policy in 4 languages, data safety answers, screenshot plan: [`store/`](store/README.md) |
 
 ---
 
@@ -55,11 +55,11 @@ Builds are configured in `eas.json` (`development`, `development-simulator`, `pr
 | Command | What it does |
 | --- | --- |
 | `npm run start:go` / `start:dev-client` | Dev server for Expo Go / the development build |
-| `npm test` | Jest unit + integration tests (187 tests) |
+| `npm test` | Jest unit + integration tests (212 tests) |
 | `npm run typecheck` · `npm run lint` · `npm run verify` | Strict TypeScript, ESLint (React Compiler rules), all three together |
 | `npm run prebuild` | Regenerate `ios/` and `android/` from `app.json` and config plugins |
 | `npm run build:*` | EAS builds (development, preview, production) |
-| `node scripts/qa-walkthrough.cjs` | Drives the web build end to end with Playwright and saves screenshots to `production/qa/evidence/` (set `QA_VIEWPORT=430x932` and scale `3` for store screenshots) |
+| `node scripts/qa-walkthrough.cjs` | Drives the web build end to end with Playwright and saves screenshots to `production/qa/evidence/` (`QA_LANG=fr` for another UI language; `QA_VIEWPORT=430x932` and scale `3` for store screenshots) |
 | `node scripts/generate-sfx.mjs` · `generate-icons.cjs` | Re-create the synthesized sounds and the app icons |
 
 ## How it plays
@@ -69,7 +69,7 @@ Builds are configured in `eas.json` (`development`, `development-simulator`, `pr
 3. **Each world:** about 4 *learn* lessons (new words, each with one speaking exercise) → a **story** (picture book read aloud by the guide, then comprehension questions) → a **sing-along** (the guide chants each line, the child echoes it, then "which word is missing?") → a **speaking** lesson → review → the **boss** challenge, which wins that world's pet egg.
 4. **Speaking practice:** the child hears the word, taps the microphone and says it. The device recognizes the speech **on the device**, and child-friendly scoring gives "Great!", "Almost, listen again" or "Try again" (up to 3 tries, never a dead end). Without a recognizer it falls back to self-check.
 5. **Pets (3D):** feed, play, dress up, choose who joins the adventure; pets grow from Baby to Junior to Grown-up through learning only.
-6. **Practice and play:** the **Word Gym** brings back the words that are due (unlimited, never new words); the **sticker album** shows every word met, learned and mastered; the **Play Park** has Bubble Pop and Memory Match with learned words (game berries are capped per day); **daily quests** (always "finish lessons", plus two the child can do today) open a chest. Nothing is lost if a day is skipped.
+6. **Practice and play:** the **Word Gym** brings back the words that are due (unlimited, never new words); the **sticker album** shows every word met, learned and mastered; the **Play Park** has Bubble Pop, Memory Match, I Spy (find the word the guide says in a scene) and Odd One Out (three words from one category and one that doesn't belong) with learned words (game berries are capped per day); **daily quests** (always "finish lessons", plus two the child can do today) open a chest. Nothing is lost if a day is skipped.
 7. **Healthy limits:** a daily limit (30 min by default). When it runs out, the pet falls asleep; a grown-up can add 10 minutes.
 8. **For families:** up to 4 children, each with their own pets and progress; a "Who's playing?" picker on launch.
 9. **For parents (behind the gate):** progress per world, speaking settings, the opt-in **voice diary** (a weekly 5-second voice postcard, week 1 next to today), and **certificates** for Starters / Movers / Flyers (printable; the child's name is handwritten, never stored).
@@ -98,7 +98,7 @@ No accounts and no personal data. Pet names are presets and profiles are identif
 
 ## Adding content
 
-Content is data. Add a world in `src/infrastructure/content/worlds-part*.ts` (rows like `['word', '🙂', 'es', 'pt']`), its story in `stories.ts`, its chant in `songs.ts` (each line repeats one of the world's words), and a reward pet in `pets.ts`. Lessons, exercises, distractors, comprehension and missing-word questions are generated. `tests/unit/content/catalog-integrity.test.ts` checks every reference and generates every lesson; `store-metadata.test.ts` keeps the store copy in sync with the numbers.
+Content is data. Add a world in `src/infrastructure/content/worlds-part*.ts` (rows like `['word', '🙂', 'es', 'pt', 'fr']`), its story in `stories.ts`, its chant in `songs.ts` (each line repeats one of the world's words), its semantic category in `categories.ts`, and a reward pet in `pets.ts`. Lessons, exercises, distractors, comprehension and missing-word questions are generated. `tests/unit/content/catalog-integrity.test.ts` checks every reference and generates every lesson; `store-metadata.test.ts` keeps the store copy in sync with the numbers.
 
 ## Credits
 

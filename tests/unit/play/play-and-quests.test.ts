@@ -4,9 +4,12 @@ import { createProgress, recordPracticeCompletion } from '@/domain/learning/prog
 import {
   berriesLeftToday,
   canPlayGames,
+  canPlayOddOneOut,
   closeOpenCards,
   createBubbleRounds,
   createMemoryBoard,
+  createOddOneOutRounds,
+  createSpyScene,
   createPlayState,
   flipCard,
   isBoardSolved,
@@ -27,6 +30,7 @@ import {
   rollQuestDay,
 } from '@/domain/quests/quests';
 import { createRng } from '@/domain/shared/rng';
+import { defineWorld } from '@/infrastructure/content/define-world';
 import { makeWorld, TODAY, TOMORROW } from '../../helpers/fixtures';
 
 const world = makeWorld();
@@ -165,5 +169,73 @@ describe('Word Gym progress', () => {
     const second = recordPracticeCompletion(first.progress, { accuracy: 0.5, wordResults: [], today: TODAY });
     expect(second.firstCompletion).toBe(false);
     expect(second.stars).toBe(1);
+  });
+});
+
+describe('I Spy and Odd One Out', () => {
+  const fruits = defineWorld({
+    id: 'fruits',
+    order: 2,
+    title: { en: 'Fruits', es: 'Frutas', pt: 'Frutas', fr: 'Fruits' },
+    emoji: '🍎',
+    color: '#FFFFFF',
+    guideId: 'coco',
+    rewardSpeciesId: 'berrybop',
+    words: [
+      ['apple', '🍎', 'manzana', 'maçã', 'pomme'],
+      ['banana', '🍌', 'plátano', 'banana', 'banane'],
+      ['grapes', '🍇', 'uvas', 'uvas', 'raisin'],
+      ['lemon', '🍋', 'limón', 'limão', 'citron'],
+    ],
+    sentences: [],
+  });
+  const wild = makeWorld('wild', 3);
+  const words = [...world.words, ...fruits.words, ...wild.words];
+  const categories = {
+    animals: { theme: 'animals', coherent: true },
+    wild: { theme: 'animals', coherent: true },
+    fruits: { theme: 'food', coherent: true },
+  } as const;
+
+  it('lays out an I Spy scene without overlaps and asks only for what is there', () => {
+    const scene = createSpyScene(createRng(5), words);
+    expect(scene.items).toHaveLength(PLAY_TUNING.spyItems);
+    expect(scene.targets).toHaveLength(PLAY_TUNING.spyRounds);
+    const ids = new Set(scene.items.map((i) => i.wordId));
+    for (const target of scene.targets) expect(ids.has(target)).toBe(true);
+    const cells = scene.items.map((i) => `${Math.floor(i.x * 3)}-${Math.floor(i.y * 3)}`);
+    expect(new Set(cells).size).toBe(cells.length);
+    for (const item of scene.items) {
+      expect(item.x).toBeGreaterThan(0);
+      expect(item.x).toBeLessThan(1);
+      expect(item.y).toBeGreaterThan(0);
+      expect(item.y).toBeLessThan(1);
+    }
+    const emojis = scene.items.map((i) => words.find((w) => w.id === i.wordId)?.emoji);
+    expect(new Set(emojis).size).toBe(emojis.length);
+  });
+
+  it('always takes the odd one from a different theme', () => {
+    const rounds = createOddOneOutRounds(createRng(11), words, categories);
+    expect(rounds).toHaveLength(PLAY_TUNING.oddRounds);
+    for (const round of rounds) {
+      expect(new Set(round.optionIds).size).toBe(4);
+      expect(round.optionIds).toContain(round.oddId);
+      const worldOf = (id: string) => words.find((w) => w.id === id)!.worldId;
+      const group = round.optionIds.filter((id) => id !== round.oddId);
+      expect(group.every((id) => worldOf(id) === round.groupWorldId)).toBe(true);
+      expect(categories[round.oddWorldId as keyof typeof categories].theme).not.toBe(
+        categories[round.groupWorldId as keyof typeof categories].theme,
+      );
+    }
+  });
+
+  it('needs two different themes, and ignores mixed worlds', () => {
+    const animalsOnly = [...world.words, ...wild.words];
+    expect(canPlayOddOneOut(animalsOnly, categories)).toBe(false);
+    expect(createOddOneOutRounds(createRng(1), animalsOnly, categories)).toEqual([]);
+    expect(canPlayOddOneOut(words, categories)).toBe(true);
+    const mixed = { ...categories, fruits: { theme: 'food', coherent: false } } as const;
+    expect(canPlayOddOneOut(words, mixed)).toBe(false);
   });
 });

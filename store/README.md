@@ -1,13 +1,13 @@
-# Store listing kit (v1.2)
+# Store listing kit (v1.3)
 
-Everything needed to publish iaLingo in the App Store and Google Play, in English, Latin American Spanish, Spain Spanish and Brazilian Portuguese.
+Everything needed to publish iaLingo in the App Store and Google Play, in English, Latin American Spanish, Spain Spanish, Brazilian Portuguese, and French for France and Canada.
 
 | File | What it is |
 | --- | --- |
 | `store.config.json` | App Store metadata in [EAS Metadata](https://docs.expo.dev/eas/metadata/) format: titles, subtitles, descriptions, keywords, release notes, categories, age rating and Kids age band. `eas.json` points `submit.production.ios.metadataPath` here. |
 | `google-play/listings.json` | Google Play listing text per locale (title, short and full description, what's new). Play has no EAS Metadata support, so paste it into Play Console or use it with a Play publishing tool. |
 | `google-play/data-safety.md` | Answers for Play's Data safety, target audience, permissions and content rating forms. |
-| `privacy-policy.md` | Parent-facing privacy policy (en, es, pt), linked as the privacy policy URL. |
+| `privacy-policy.md` | Parent-facing privacy policy (en, es, pt, fr), linked as the privacy policy URL. |
 
 `tests/unit/content/store-metadata.test.ts` checks every store character limit and that the numbers in the descriptions match the real content (worlds, words, sentences, stories, songs, pets).
 
@@ -33,7 +33,7 @@ Answer **"No, we do not collect data from this app."** That is accurate because:
 - [x] No links out of the app and no purchases.
 - [x] **Parental gate before**: the parent area, sharing certificates and postcards, and (new in 1.2) **every microphone permission prompt**: the first speaking exercise and the first voice postcard.
 - [x] Microphone use is explained to parents in the permission texts (`app.json`).
-- [x] Human-readable privacy policy in the child's languages.
+- [x] Human-readable privacy policy in the child's languages (English, Spanish, Portuguese, French).
 
 ## Naming and claims
 
@@ -49,6 +49,8 @@ Answer **"No, we do not collect data from this app."** That is accurate because:
 | Mexico, LATAM, US Hispanic (`es-MX`, Play `es-419`) | "iaLingo: Inglés para niños" | aprender, vocabulario, hablar, canciones, cuentos, mascotas, juegos, escuela |
 | Spain (`es-ES`) | same | as above, with "colegio" instead of "escuela" |
 | Brazil (`pt-BR`) | "iaLingo: Inglês para crianças" | aprender, vocabulário, falar, músicas, histórias, bichinhos, jogos, escola |
+| France, Belgium, Switzerland (`fr-FR`) | "iaLingo : anglais pour enfants" | apprendre, vocabulaire, parler, chansons, histoires, animaux, jeux, école, CP, CE1, CE2 (French primary grades for ages 6–9) |
+| Québec, Canada (`fr-CA`) | same | as above, with "langue seconde" (Québec schools teach *anglais, langue seconde*) and "primaire" instead of the French grade names |
 
 The title carries the highest-volume search ("English for kids", "inglés para niños", "inglês para crianças"). Apple keywords never repeat words already in the title or subtitle. The subtitle is the differentiator: *speaking* with *3D pets*.
 

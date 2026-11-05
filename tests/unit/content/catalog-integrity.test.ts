@@ -51,6 +51,24 @@ describe('content catalog integrity', () => {
     }
   });
 
+  it('really translates content into French (not English copies)', () => {
+    const items = worlds.flatMap((w) => [...w.words, ...w.sentences]);
+    const copies = items.filter((item) => item.meaning.fr.toLowerCase() === item.en.toLowerCase());
+    // Cognates such as "pizza", "robot" or "taxi" are fine, but they stay rare.
+    expect(copies.length / items.length).toBeLessThan(0.12);
+    for (const world of worlds) {
+      expect(world.title.fr).not.toBe(world.title.en);
+      for (const line of [...(world.story?.lines ?? []), ...(world.song?.lines ?? [])]) {
+        expect(line.meaning.fr).not.toBe(line.en);
+      }
+    }
+  });
+
+  it('places every world in a semantic category for sorting games', () => {
+    for (const world of worlds) expect(world.category).toBeDefined();
+    expect(worlds.filter((w) => w.category?.coherent).length).toBeGreaterThanOrEqual(20);
+  });
+
   it('spreads worlds over the three YLE levels in map order', () => {
     const levels = [...worlds].sort((a, b) => a.order - b.order).map((w) => w.level);
     expect(levels[0]).toBe('starters');

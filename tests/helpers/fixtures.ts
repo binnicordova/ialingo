@@ -8,15 +8,15 @@ export const TODAY = '2026-03-10';
 export const TOMORROW = '2026-03-11';
 
 const ANIMAL_ROWS: readonly WordRow[] = [
-  ['dog', '🐶', 'perro', 'cachorro'],
-  ['cat', '🐱', 'gato', 'gato'],
-  ['cow', '🐮', 'vaca', 'vaca'],
-  ['pig', '🐷', 'cerdo', 'porco'],
-  ['duck', '🦆', 'pato', 'pato'],
-  ['frog', '🐸', 'rana', 'sapo'],
-  ['bee', '🐝', 'abeja', 'abelha'],
-  ['goat', '🐐', 'cabra', 'cabra'],
-  ['teddy bear', '🧸', 'osito', 'ursinho'],
+  ['dog', '🐶', 'perro', 'cachorro', 'chien'],
+  ['cat', '🐱', 'gato', 'gato', 'chat'],
+  ['cow', '🐮', 'vaca', 'vaca', 'vache'],
+  ['pig', '🐷', 'cerdo', 'porco', 'cochon'],
+  ['duck', '🦆', 'pato', 'pato', 'canard'],
+  ['frog', '🐸', 'rana', 'sapo', 'grenouille'],
+  ['bee', '🐝', 'abeja', 'abelha', 'abeille'],
+  ['goat', '🐐', 'cabra', 'cabra', 'chèvre'],
+  ['teddy bear', '🧸', 'osito', 'ursinho', 'nounours'],
 ];
 
 /** A small world built with the real authoring helper. */
@@ -24,17 +24,17 @@ export function makeWorld(id = 'animals', order = 1, wordCount = ANIMAL_ROWS.len
   return defineWorld({
     id,
     order,
-    title: { en: id, es: id, pt: id },
+    title: { en: id, es: id, pt: id, fr: id },
     emoji: '🐾',
     color: '#FFFFFF',
     guideId: 'luna',
     rewardSpeciesId: 'giggles',
     words: ANIMAL_ROWS.slice(0, wordCount).map(
-      ([en, emoji, es, pt]) => [`${en}`, emoji, es, pt] as const,
+      ([en, emoji, es, pt, fr]) => [`${en}`, emoji, es, pt, fr] as const,
     ),
     sentences: [
-      ['The dog is happy.', '🐶', 'El perro está feliz.', 'O cachorro está feliz.'],
-      ['I have a cat.', '🐱', 'Tengo un gato.', 'Eu tenho um gato.'],
+      ['The dog is happy.', '🐶', 'El perro está feliz.', 'O cachorro está feliz.', 'Le chien est content.'],
+      ['I have a cat.', '🐱', 'Tengo un gato.', 'Eu tenho um gato.', "J'ai un chat."],
     ],
   });
 }

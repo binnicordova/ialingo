@@ -48,7 +48,7 @@ Text-to-speech uses the operating system's voice engine. On some Android devices
 - **Requested:** microphone (speaking practice, voice diary) and, on iOS, speech recognition.
 - **Blocked** in `app.json`: fine and coarse location, external storage read/write.
 - Sharing (certificates, postcards) uses the system share sheet and only runs after the parental gate or in the parent area.
-- Store answers built from this page: `store/privacy-policy.md` (parent-facing, en/es/pt), Apple App Privacy "Data Not Collected", and `store/google-play/data-safety.md`.
+- Store answers built from this page: `store/privacy-policy.md` (parent-facing, en/es/pt/fr), Apple App Privacy "Data Not Collected", and `store/google-play/data-safety.md`.
 
 ## Mapping to regulations (orientation, not legal advice)
 
