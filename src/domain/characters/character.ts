@@ -1,7 +1,17 @@
 import type { CharacterId } from '../curriculum/types';
 import type { LocalizedText } from '../shared/locale';
 
-export type CharacterKind = 'owl' | 'mouse' | 'robot' | 'dino' | 'turtle' | 'coconut' | 'cloud' | 'lion';
+export type CharacterKind =
+  | 'owl'
+  | 'mouse'
+  | 'robot'
+  | 'dino'
+  | 'turtle'
+  | 'coconut'
+  | 'cloud'
+  | 'lion'
+  | 'parrot'
+  | 'beaver';
 
 /** Look parameters for the 2D SVG renderer. */
 export interface CharacterLook {

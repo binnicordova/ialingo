@@ -8,7 +8,7 @@ All gameplay numbers live in code as named, documented constants (data-driven, n
 | --- | --- | --- |
 | `wordsPerLesson` | 4 | Young children's working memory holds about 4 new chunks |
 | Chunking | `ceil(n/4)` lessons, sizes differ by ≤ 1 | Never leaves a 1–2 word lesson (14 → 4+4+3+3) |
-| Lessons per world | learn × ~4 + review + boss | 155 lessons in total |
+| Lessons per world | learn × ~4 + story + speak + review + boss | 268 lessons in total |
 | `easyOptionCount` / `hardOptionCount` | 3 / 4 | Boss lessons are harder |
 | `learnReviewCount` | 2 | Spaced-repetition reviews mixed into every learn lesson |
 | Spell length | 3–7 letters, plus 2 distractor letters | Short plain words only |
@@ -73,3 +73,31 @@ About 1 lesson reaches level 2, about 5 lessons level 5 (first growth), about 20
 ## Parental gate (`domain/parental/gate.ts`)
 
 - `a × b` with a and b from 6–9 (answers 36–81). A new question after each wrong answer.
+
+## Speaking (`domain/learning/pronunciation.ts`)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `goodSimilarity` | 0.6 | Text or sound similarity for "good" (a gentle tip) |
+| `greatTextFloor` | 0.6 | A sound-alike counts as "great" only if it is also spelled similarly |
+| `sentenceGreat` / `sentenceGood` | 0.85 / 0.5 | Share of a sentence's words heard |
+| `maxAttempts` | 3 | Tries before moving on |
+| Recognizer | on-device, 5 alternatives, no biasing, about 6 s max | Error-preserving (see ADR 0003) |
+
+Each learn lesson has 1 "say the word". A speaking lesson has 9 exercises (6 speak, 1 listening warm-up, 1 picture, 1 sentence).
+
+## Stories (`lesson-generator.ts`)
+
+5 pages read aloud, then `STORY_TUNING.questions` = 3 questions about the story's key words, plus 1 true/false.
+
+## Rewards for new lesson kinds (`economy.ts`)
+
+`storyBonusBerries` = 2, `speakBonusBerries` = 3 (on top of the base formula). Badges: *Chatterbox* (3 speaking lessons → Echo) and *Story Lover* (5 stories → Page).
+
+## Voice diary (`domain/voice/voice-diary.ts`)
+
+One postcard every 7 days, at most 6 s. The first 2 and the 10 newest are kept (12 total); turning the diary off deletes all.
+
+## Family profiles (`domain/profiles/profiles.ts`)
+
+At most 4 profiles per device; ids p1–p4 (p1 keeps the v1.0 save key).

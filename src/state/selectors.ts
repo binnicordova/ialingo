@@ -15,7 +15,8 @@ import type { OwnedPet } from '@/domain/pets/pet';
 import type { PetSpecies } from '@/domain/pets/species';
 import { isLimitReached, secondsLeft } from '@/domain/wellbeing/screen-time';
 
-import { contentAtom, gameStateAtom, todayAtom } from './core';
+import { contentAtom, gameStateAtom, recognitionAtom, todayAtom } from './core';
+import { canRecordPostcard } from '@/domain/voice/voice-diary';
 
 /** Small derived atoms: each screen re-renders only when its slice changes. */
 export const settingsAtom = atom((get) => get(gameStateAtom).settings);
@@ -146,3 +147,28 @@ export const screenTimeAtom = atom((get) => {
 export const canClaimGiftAtom = atom((get) => canClaimDailyGift(get(gameStateAtom), get(todayAtom)));
 
 export const eggsAtom = atom((get) => get(gameStateAtom).pets.eggs);
+
+/**
+ * How speaking exercises run right now: 'recognition' when the device can
+ * recognize speech within the parent's privacy settings, else 'self-check'
+ * (Expo Go, web, microphone denied, or online-only recognizer without consent).
+ */
+export type SpeakMode = 'recognition' | 'self-check';
+
+export const speakModeAtom = atom<SpeakMode>((get) => {
+  const settings = get(settingsAtom);
+  const capability = get(recognitionAtom);
+  if (settings.speaking !== 'recognition') return 'self-check';
+  if (!capability.installed || !capability.available) return 'self-check';
+  if (!capability.onDevice && !settings.allowOnlineRecognition) return 'self-check';
+  if (capability.permission === 'denied') return 'self-check';
+  return 'recognition';
+});
+
+export const voiceDiaryAtom = atom((get) => get(gameStateAtom).voiceDiary);
+
+/** Offer a voice postcard (diary on, and none recorded in the last week). */
+export const canRecordPostcardAtom = atom((get) => {
+  const state = get(gameStateAtom);
+  return state.settings.voiceDiary && canRecordPostcard(state.voiceDiary, get(todayAtom));
+});

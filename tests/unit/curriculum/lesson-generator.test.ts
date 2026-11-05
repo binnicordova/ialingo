@@ -3,6 +3,7 @@ import { generateLesson, isSpellable, LESSON_TUNING } from '@/domain/curriculum/
 import { buildLessonPlans } from '@/domain/curriculum/lesson-plans';
 import type { World } from '@/domain/curriculum/types';
 import { recordAnswer } from '@/domain/learning/mastery';
+import { attachStory } from '@/infrastructure/content/define-world';
 import { makeWorld, TODAY } from '../../helpers/fixtures';
 
 function lookupFor(worlds: readonly World[]) {
@@ -105,6 +106,53 @@ describe('generateLesson', () => {
     const lesson = generateLesson({ plan: boss, worlds, mastery: {}, today: TODAY, seed: 11 });
     const pick = lesson.exercises.find((e) => e.kind === 'listen-pick-picture');
     expect(pick && 'optionIds' in pick ? pick.optionIds.length : 0).toBe(LESSON_TUNING.hardOptionCount);
+  });
+});
+
+describe('story and speaking lessons', () => {
+  const base = makeWorld();
+  const world = attachStory(base, {
+    title: { en: 'A day', es: 'Un día', pt: 'Um dia' },
+    lines: [
+      ['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'dog'],
+      ['The cat sleeps.', '🐱', 'El gato duerme.', 'O gato dorme.', 'cat'],
+      ['The cow eats.', '🐮', 'La vaca come.', 'A vaca come.', 'cow'],
+      ['The pig plays.', '🐷', 'El cerdo juega.', 'O porco brinca.', 'pig'],
+    ],
+  });
+  const worlds = [world];
+  const plans = buildLessonPlans(world);
+
+  it('orders follow-up lessons story → speak → review → boss', () => {
+    expect(plans.filter((p) => p.kind !== 'learn').map((p) => p.kind)).toEqual(['story', 'speak', 'review', 'boss']);
+  });
+
+  it('reads every story page first, then asks about the story words', () => {
+    const plan = plans.find((p) => p.kind === 'story')!;
+    const lesson = generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 5 });
+    const pages = lesson.exercises.filter((e) => e.kind === 'story-page');
+    expect(pages).toHaveLength(4);
+    expect(lesson.exercises.slice(0, 4).every((e) => e.kind === 'story-page')).toBe(true);
+    const keyIds = new Set(world.story!.lines.map((l) => l.keyWordId));
+    const asked = lesson.exercises
+      .slice(4)
+      .map((e) => ('answerId' in e ? e.answerId : 'spokenWordId' in e ? e.spokenWordId : ''));
+    expect(asked.length).toBeGreaterThanOrEqual(3);
+    for (const id of asked) expect(keyIds.has(id)).toBe(true);
+  });
+
+  it('makes speaking lessons mostly speaking', () => {
+    const plan = plans.find((p) => p.kind === 'speak')!;
+    const lesson = generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 9 });
+    const speaking = lesson.exercises.filter((e) => e.kind === 'speak-word' || e.kind === 'speak-sentence');
+    expect(speaking.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('adds one speaking exercise to every learn lesson', () => {
+    for (const plan of plans.filter((p) => p.kind === 'learn')) {
+      const lesson = generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 2 });
+      expect(lesson.exercises.filter((e) => e.kind === 'speak-word')).toHaveLength(1);
+    }
   });
 });
 

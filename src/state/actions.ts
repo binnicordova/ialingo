@@ -2,17 +2,20 @@ import { atom, type Getter, type Setter } from 'jotai';
 
 import * as commands from '@/application/commands';
 import type { CommandContext, CommandResult } from '@/application/commands';
-import type { HapticKind, SoundEffect } from '@/application/ports';
+import type { HapticKind, RecognitionOutcome, SoundEffect } from '@/application/ports';
 import type { LessonId, SpeciesId } from '@/domain/curriculum/types';
 import type { GameState, Settings } from '@/domain/game/game-state';
+import { VOICE_DIARY_TUNING } from '@/domain/voice/voice-diary';
 import type { WordResult } from '@/domain/learning/lesson-session';
 import type { AccessoryId } from '@/domain/pets/pet';
 import { SPEECH_LANGUAGE_TAG, TARGET_LANGUAGE_TAG, type Locale } from '@/domain/shared/locale';
 
 import {
+  activeProfileIdAtom,
   contentAtom,
   gameStateAtom,
   pendingEventsAtom,
+  recognitionAtom,
   servicesAtom,
   todayAtom,
 } from './core';
@@ -32,6 +35,12 @@ function run(
   const result = command(before, ctx);
   if (result.state !== before) set(gameStateAtom, result.state);
   if (result.events.length > 0) set(pendingEventsAtom, (prev) => [...prev, ...result.events]);
+  // Side effect requested by the domain: delete recordings from disk.
+  for (const event of result.events) {
+    if (event.type === 'voice-files-removed' && event.fileNames.length > 0) {
+      void get(servicesAtom).voiceStore.remove(get(activeProfileIdAtom), event.fileNames);
+    }
+  }
   return result;
 }
 
@@ -146,3 +155,64 @@ export const tapFeedbackAtom = atom(null, (_get, set) => {
   set(playSfxAtom, 'tap');
   set(hapticAtom, 'tap');
 });
+
+/* ---------------------------------------------------------- Speaking */
+
+/** Asks the OS for microphone + speech permission (shown to a grown-up first). */
+export const requestMicPermissionAtom = atom(null, async (get, set) => {
+  const granted = await get(servicesAtom).recognition.requestPermission();
+  set(recognitionAtom, (prev) => ({ ...prev, permission: granted ? 'granted' : 'denied' }));
+  return granted;
+});
+
+/** Listens once for English speech, on the device when possible. */
+export const listenAtom = atom(
+  null,
+  async (get, set, input: { onPartial?: (text: string) => void }): Promise<RecognitionOutcome> => {
+    get(servicesAtom).speech.stop();
+    const capability = get(recognitionAtom);
+    const outcome = await get(servicesAtom).recognition.listen({
+      language: TARGET_LANGUAGE_TAG,
+      onDevice: capability.onDevice,
+      maxSeconds: 6,
+      onPartial: input.onPartial,
+    });
+    if (outcome.status === 'denied') set(recognitionAtom, (prev) => ({ ...prev, permission: 'denied' }));
+    return outcome;
+  },
+);
+
+export const stopListeningAtom = atom(null, (get) => get(servicesAtom).recognition.stop());
+
+/* --------------------------------------------------------- Voice diary */
+
+/** Keeps a finished recording as this week's postcard (parent opt-in only). */
+export const savePostcardAtom = atom(
+  null,
+  async (get, set, input: { recordingUri: string; durationMs: number; prompt: string }) => {
+    const state = get(gameStateAtom);
+    if (!state.settings.voiceDiary) return false;
+    const services = get(servicesAtom);
+    const today = get(todayAtom);
+    const id = `${today}-${services.clock.now().toString(36)}`;
+    const fileName = `${id}.m4a`;
+    const stored = await services.voiceStore.keep(get(activeProfileIdAtom), input.recordingUri, fileName);
+    if (!stored) return false;
+    run(get, set, (s) =>
+      commands.addVoicePostcard(s, {
+        entry: {
+          id,
+          day: today,
+          fileName: stored,
+          prompt: input.prompt,
+          durationMs: Math.min(input.durationMs, VOICE_DIARY_TUNING.maxSeconds * 1000),
+        },
+      }),
+    );
+    return true;
+  },
+);
+
+export const deletePostcardAtom = atom(null, (get, set, id: string) =>
+  run(get, set, (s) => commands.deleteVoicePostcard(s, { id })),
+);

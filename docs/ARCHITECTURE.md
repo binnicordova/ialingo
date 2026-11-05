@@ -21,8 +21,10 @@ app (routes)  →  presentation  →  state (Jotai)  →  application  →  doma
 
 | Context | Files | Responsibility |
 | --- | --- | --- |
-| Curriculum | `domain/curriculum/*` | Worlds, words, sentences, lesson plans (balanced chunks of 4 words), the **lesson generator** (7 exercise types, distractors with unique pictures and words, deterministic seeds), answer evaluation, unlock rules |
-| Learning | `domain/learning/*` | **Leitner spaced repetition** (6 boxes, gentle demotion), the lesson session (a missed exercise is re-queued once; only the first attempt is scored), stars and progress |
+| Curriculum | `domain/curriculum/*` | Worlds, words, sentences, **stories**, YLE **levels**, lesson plans (learn × n → story → speak → review → boss), the **lesson generator** (10 exercise types, distractors with unique pictures and words, deterministic seeds), answer evaluation, unlock rules |
+| Learning | `domain/learning/*` | **Leitner spaced repetition**, the lesson session (a missed exercise is re-queued once; only the first attempt is scored), stars and progress, and **pronunciation scoring** (`pronunciation.ts`: normalization, phonetic folding, edit distance, verdicts) |
+| Profiles | `domain/profiles/*` | Family profile index (up to 4, ids p1–p4, never removes the last), validation of the stored index |
+| Voice | `domain/voice/*` | Voice diary rules: one postcard per week, keep the first 2 plus the 10 newest |
 | Pets | `domain/pets/*` | Species blueprints, owned pets (XP, happiness with a floor so pets are never sad), the leveling curve and growth stages, the collection (eggs, hatching, active pet), accessories |
 | Economy | `domain/economy/*` | Berries wallet (never negative), lesson rewards formula |
 | Wellbeing | `domain/wellbeing/*` | Daily play budget with a midnight rollover and parent-granted extra time |
@@ -44,7 +46,9 @@ Examples: `completeOnboarding`, `finishLesson` (stars → mastery → berries �
 
 Events (`application/events.ts`) such as `pet-leveled-up`, `egg-earned` and `achievement-unlocked` let the UI celebrate without diffing state.
 
-**Ports** (`application/ports.ts`) describe side effects: `GameRepository`, `SpeechService`, `SoundEffectsService`, `HapticsService`, `Clock`. `createNoopServices()` is the in-memory test double.
+**Ports** (`application/ports.ts`) describe side effects: `GameRepository` (per-profile saves and the profile index), `SpeechService` (TTS), `SpeechRecognitionService` (capability, permission, listen), `VoiceStore` (private postcard files), `SoundEffectsService`, `HapticsService`, `Clock`. `createNoopServices()` is the in-memory test double; it can simulate a recognizer.
+
+Commands that need a side effect emit an event instead of doing I/O. For example, `voice-files-removed` is emitted by `deleteVoicePostcard`, by turning the diary off, or by a reset; the state layer then deletes the files.
 
 ## State (Jotai, atomic)
 
@@ -52,6 +56,9 @@ Events (`application/events.ts`) such as `pet-leveled-up`, `egg-earned` and `ach
 - `selectors.ts`: small derived read atoms (`activePetAtom`, `worldViewsAtom`, `statsAtom`, `screenTimeAtom`…). A component re-renders only when its slice changes.
 - `actions.ts`: write-only action atoms. Each runs one application command, stores the new state, and queues its events. Side-effect atoms (`speakAtom`, `playSfxAtom`, `hapticAtom`) apply the parent's settings in one place.
 - `lesson.ts`: the transient lesson being played (not persisted: an interrupted 3-minute lesson simply restarts).
+- `profiles.ts`: profile summaries, `switchProfileAtom` / `addProfileAtom` / `deleteProfileAtom` (async: flush the save, load the other child, update the index).
+- Speaking: `recognitionAtom` (capability and permission, probed at boot), `speakModeAtom` ('recognition' or 'self-check', from capability plus parent settings), `listenAtom`, `requestMicPermissionAtom`.
+- Voice diary: `savePostcardAtom`, `deletePostcardAtom`, `canRecordPostcardAtom`.
 - `bootstrap.ts`: loads and restores the save, starts the day, then **autosaves** through `store.sub(gameStateAtom)` (debounced 400 ms, flushed when the app goes to the background).
 
 ```
@@ -62,8 +69,8 @@ gameStateAtom ──store.sub──▶ debounced repository.save() (AsyncStorage
 
 ## Presentation
 
-- **Screens** (`presentation/screens`): Welcome (onboarding), Home (map), World, Lesson (player + results), Pets, Pet room, Hatch, Guides, Badges, Parents (gate + dashboard), Bedtime.
-- **Exercises** (`presentation/exercises/ExerciseViews.tsx`): one view per exercise type. Audio plays automatically; the instruction is spoken (in the child's language) the first time each type appears in a lesson.
+- **Screens** (`presentation/screens`): Welcome (onboarding), Profiles ("Who's playing?"), Home (map with level headers), World, Lesson (player + results), Pets, Pet room, Hatch, Guides, Badges, Certificates, Postcard (voice diary recorder), Parents (gate + dashboard: progress, settings, players, speaking, voice diary), Bedtime.
+- **Exercises** (`presentation/exercises/ExerciseViews.tsx`, `SpeakAndStoryViews.tsx`): one view per exercise type. Audio plays automatically; the instruction is spoken (in the child's language) the first time each type appears in a lesson. `SpeakView` switches between recognition (mic button, live transcript, 3 attempts) and self-check.
 - **Art:** `art/PetPortrait.tsx` and `art/CharacterAvatar.tsx` draw SVG from the same data blueprints used by the 3D models, so lists stay cheap (no WebGL context per card).
 - **3D** (`presentation/three`): `ThreeStage` hosts three.js on expo-gl; `pet-model.ts` builds a pet rig from a blueprint; `accessory-model.ts`, `egg-model.ts`; `pet-scene.ts` is the animation state machine (idle breathing, blinking, ear twitches, tail wag, plus jump / spin / eat / love / wobble / hatch). See ADR 0001.
 - **i18n** (`presentation/i18n`): typed dictionaries. Every locale must have every key (compile-time check).
@@ -78,7 +85,10 @@ gameStateAtom ──store.sub──▶ debounced repository.save() (AsyncStorage
 | `tests/unit/rules` | Economy, screen time, parental gate, RNG, days, save restore and repair |
 | `tests/unit/content` | Catalog integrity: unique ids, emoji unique per world, every reference resolves, every lesson of every world generates |
 | `tests/integration/game-flow` | A child's journey on the real content: onboard → lessons → unlock → boss egg → hatch → feed → shop → daily gift → reset |
-| `tests/integration/state` | The Jotai wiring: boot, onboard, play a whole lesson through the atoms, autosave, restore on the next boot |
+| `tests/integration/state` | The Jotai wiring: boot, onboard, play a whole lesson, autosave and restore; **profiles** (switch, restart, delete); **voice diary** opt-in and deletion; **speak mode** with and without a recognizer |
+| `tests/unit/learning/pronunciation` | Normalization, phonetic folding, verdicts for words and sentences |
+| `tests/unit/profiles` | Profile index rules and voice diary retention |
+| `tests/unit/infrastructure` | The speech-recognition adapter against a fake native module (results, silence, denial, timeout, Expo Go) |
 | `scripts/qa-walkthrough.cjs` | Visual evidence: drives the real UI in Chromium and saves screenshots |
 
 ## Adding things
@@ -87,3 +97,8 @@ gameStateAtom ──store.sub──▶ debounced repository.save() (AsyncStorage
 - **A pet:** add one `PetSpecies` with a blueprint (body, colors, ears, tail, extra, pattern, eyes).
 - **An exercise type:** add a variant to `Exercise` and its `evaluateAnswer` case, a builder slot in the generator, and one view. The compiler's exhaustive switches point to every place to update.
 - **A UI language:** add the locale to `SUPPORTED_LOCALES`, a dictionary in `strings.ts`, and translations in content rows.
+
+## Builds
+
+- **Expo Go:** `npm run start:go`. Every module except speech recognition is available, and speaking falls back to self-check.
+- **Development build:** `expo-dev-client` plus `expo-speech-recognition` (config plugin sets iOS usage strings, Android `RECORD_AUDIO` and speech-service package queries). `eas.json` has development / development-simulator / preview / production profiles. `ios/` and `android/` are generated by `npx expo prebuild` and are not committed.

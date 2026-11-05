@@ -1,6 +1,8 @@
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
+import * as Sharing from 'expo-sharing';
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { worldStars } from '@/domain/curriculum/unlock-policy';
@@ -8,14 +10,26 @@ import { createGateChallenge, verifyGate, type GateChallenge } from '@/domain/pa
 import { createRng } from '@/domain/shared/rng';
 import { SUPPORTED_LOCALES } from '@/domain/shared/locale';
 import { EXTRA_TIME_MINUTES, SCREEN_TIME_OPTIONS_MINUTES } from '@/domain/wellbeing/screen-time';
+import { levelForXp, stageForLevel } from '@/domain/pets/leveling';
+import { MAX_PROFILES } from '@/domain/profiles/profiles';
 import {
+  deletePostcardAtom,
   grantExtraTimeAtom,
   resetGameAtom,
   tapFeedbackAtom,
   updateSettingsAtom,
 } from '@/state/actions';
-import { contentAtom, servicesAtom } from '@/state/core';
-import { progressAtom, screenTimeAtom, settingsAtom, statsAtom } from '@/state/selectors';
+import { activeProfileIdAtom, contentAtom, recognitionAtom, servicesAtom } from '@/state/core';
+import {
+  addProfileAtom,
+  canAddProfileAtom,
+  deleteProfileAtom,
+  profilesAtom,
+  switchProfileAtom,
+} from '@/state/profiles';
+import { progressAtom, screenTimeAtom, settingsAtom, statsAtom, voiceDiaryAtom } from '@/state/selectors';
+
+import { EggPortrait, PetPortrait } from '../art/PetPortrait';
 
 import { NumberPad, SectionTitle } from '../components/game';
 import { AppText, BigButton, Card, ProgressBar, Screen, TopBar } from '../components/ui';
@@ -184,6 +198,12 @@ function Dashboard() {
             <Choice label={t('off')} selected={!settings.haptics} onPress={() => update({ haptics: false })} />
           </View>
 
+          <AppText variant="heading">{t('reducedMotion')}</AppText>
+          <View style={styles.choices}>
+            <Choice label={t('on')} selected={settings.reducedMotion} onPress={() => update({ reducedMotion: true })} />
+            <Choice label={t('off')} selected={!settings.reducedMotion} onPress={() => update({ reducedMotion: false })} />
+          </View>
+
           <AppText variant="heading">{t('dailyLimit')}</AppText>
           <View style={styles.choices}>
             {SCREEN_TIME_OPTIONS_MINUTES.map((minutes) => (
@@ -211,6 +231,15 @@ function Dashboard() {
             />
           ) : null}
         </Card>
+
+        <SectionTitle>{t('profiles')}</SectionTitle>
+        <PlayersSection />
+
+        <SectionTitle>{t('speakingPractice')}</SectionTitle>
+        <SpeakingSection />
+
+        <SectionTitle>{t('voiceDiary')}</SectionTitle>
+        <VoiceDiarySection />
 
         <SectionTitle>{t('privacyTitle')}</SectionTitle>
         <Card>
@@ -246,7 +275,198 @@ function Dashboard() {
   );
 }
 
+function PlayersSection() {
+  const { t } = useT();
+  const profiles = useAtomValue(profilesAtom);
+  const activeId = useAtomValue(activeProfileIdAtom);
+  const canAdd = useAtomValue(canAddProfileAtom);
+  const content = useAtomValue(contentAtom);
+  const switchProfile = useSetAtom(switchProfileAtom);
+  const addProfile = useSetAtom(addProfileAtom);
+  const deleteProfile = useSetAtom(deleteProfileAtom);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const starter = content.species('sprout');
+
+  return (
+    <Card style={styles.settings}>
+      {profiles.map((profile) => {
+        const species = profile.petSpeciesId ? content.species(profile.petSpeciesId) : undefined;
+        const active = profile.id === activeId;
+        return (
+          <View key={profile.id} style={styles.playerRow}>
+            {species ? (
+              <PetPortrait blueprint={species.blueprint} stage={stageForLevel(levelForXp(profile.petXp))} size={52} />
+            ) : starter ? (
+              <EggPortrait blueprint={starter.blueprint} size={48} />
+            ) : null}
+            <View style={styles.flex}>
+              <AppText variant="heading" numberOfLines={1}>
+                {profile.petNickname ?? t('newPlayer')}
+              </AppText>
+              <AppText variant="tiny" color={colors.inkSoft}>
+                {active ? t('playingNow') : t('lessonsDone') + `: ${profile.lessonsCompleted}`}
+              </AppText>
+            </View>
+            {!active ? (
+              <Choice
+                label={t('switchPlayer')}
+                selected={false}
+                onPress={async () => {
+                  await switchProfile(profile.id);
+                  router.replace(profile.onboarded ? '/home' : '/welcome');
+                }}
+              />
+            ) : null}
+            {profiles.length > 1 ? (
+              <Choice label="🗑️" selected={false} onPress={() => setConfirm(profile.id)} />
+            ) : null}
+          </View>
+        );
+      })}
+      {canAdd ? (
+        <BigButton
+          label={t('addPlayer')}
+          icon="➕"
+          tone="primary"
+          compact
+          onPress={async () => {
+            const id = await addProfile();
+            if (id) router.replace('/welcome');
+          }}
+          testID="add-player"
+        />
+      ) : null}
+      <AppText variant="tiny" color={colors.inkSoft}>
+        {t('maxPlayers', { n: MAX_PROFILES })}
+      </AppText>
+      <Modal transparent visible={confirm !== null} animationType="fade" onRequestClose={() => setConfirm(null)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <AppText variant="heading" center>
+              {t('deletePlayerConfirm')}
+            </AppText>
+            <BigButton
+              label={t('deletePlayer')}
+              tone="danger"
+              onPress={async () => {
+                const id = confirm;
+                setConfirm(null);
+                if (id) await deleteProfile(id);
+              }}
+            />
+            <BigButton label={t('cancel')} tone="neutral" compact onPress={() => setConfirm(null)} />
+          </View>
+        </View>
+      </Modal>
+    </Card>
+  );
+}
+
+function SpeakingSection() {
+  const { t } = useT();
+  const settings = useAtomValue(settingsAtom);
+  const recognition = useAtomValue(recognitionAtom);
+  const update = useSetAtom(updateSettingsAtom);
+  const usable = recognition.installed && recognition.available;
+  const status = !usable
+    ? t('recognitionUnavailable')
+    : recognition.onDevice
+      ? t('recognitionOnDevice')
+      : t('recognitionOnline');
+  return (
+    <Card style={styles.settings}>
+      <AppText variant="small" color={colors.inkSoft}>
+        🎤 {status}
+      </AppText>
+      <View style={styles.choices}>
+        <Choice
+          label={t('speakingRecognition')}
+          selected={settings.speaking === 'recognition'}
+          onPress={() => update({ speaking: 'recognition' })}
+          testID="speaking-recognition"
+        />
+        <Choice
+          label={t('speakingSelfCheck')}
+          selected={settings.speaking === 'self-check'}
+          onPress={() => update({ speaking: 'self-check' })}
+          testID="speaking-self-check"
+        />
+      </View>
+      {usable && !recognition.onDevice ? (
+        <>
+          <AppText variant="heading">{t('allowOnline')}</AppText>
+          <View style={styles.choices}>
+            <Choice label={t('on')} selected={settings.allowOnlineRecognition} onPress={() => update({ allowOnlineRecognition: true })} />
+            <Choice label={t('off')} selected={!settings.allowOnlineRecognition} onPress={() => update({ allowOnlineRecognition: false })} />
+          </View>
+        </>
+      ) : null}
+    </Card>
+  );
+}
+
+function VoiceDiarySection() {
+  const { t } = useT();
+  const settings = useAtomValue(settingsAtom);
+  const entries = useAtomValue(voiceDiaryAtom);
+  const services = useAtomValue(servicesAtom);
+  const profileId = useAtomValue(activeProfileIdAtom);
+  const update = useSetAtom(updateSettingsAtom);
+  const deletePostcard = useSetAtom(deletePostcardAtom);
+  const player = useRef<AudioPlayer | null>(null);
+
+  useEffect(() => () => player.current?.remove(), []);
+
+  const play = (fileName: string) => {
+    const uri = services.voiceStore.uriFor(profileId, fileName);
+    if (!uri) return;
+    player.current?.remove();
+    player.current = createAudioPlayer(uri);
+    player.current.play();
+  };
+
+  const share = async (fileName: string) => {
+    const uri = services.voiceStore.uriFor(profileId, fileName);
+    if (uri && (await Sharing.isAvailableAsync())) await Sharing.shareAsync(uri, { mimeType: 'audio/mp4' });
+  };
+
+  return (
+    <Card style={styles.settings}>
+      <AppText variant="small" color={colors.inkSoft}>
+        💌 {t('voiceDiaryInfo')}
+      </AppText>
+      <View style={styles.choices}>
+        <Choice label={t('on')} selected={settings.voiceDiary} onPress={() => update({ voiceDiary: true })} testID="voice-diary-on" />
+        <Choice label={t('off')} selected={!settings.voiceDiary} onPress={() => update({ voiceDiary: false })} testID="voice-diary-off" />
+      </View>
+      {settings.voiceDiary && entries.length === 0 ? (
+        <AppText variant="small" color={colors.inkSoft}>
+          {t('noPostcards')}
+        </AppText>
+      ) : null}
+      {entries.map((entry, i) => (
+        <View key={entry.id} style={styles.playerRow}>
+          <View style={styles.flex}>
+            <AppText variant="small" numberOfLines={1}>
+              {i === 0 ? `⭐ ${t('firstPostcard')} · ` : i === entries.length - 1 ? `🆕 ${t('latestPostcard')} · ` : ''}
+              {entry.day}
+            </AppText>
+            <AppText variant="tiny" color={colors.inkSoft} numberOfLines={1}>
+              “{entry.prompt}”
+            </AppText>
+          </View>
+          <Choice label="▶️" selected={false} onPress={() => play(entry.fileName)} />
+          <Choice label="📤" selected={false} onPress={() => void share(entry.fileName)} />
+          <Choice label="🗑️" selected={false} onPress={() => deletePostcard(entry.id)} />
+        </View>
+      ))}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  playerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  flex: { flex: 1 },
   gate: { flex: 1, padding: spacing.xl, gap: spacing.lg, justifyContent: 'center' },
   inputBox: {
     alignSelf: 'center',

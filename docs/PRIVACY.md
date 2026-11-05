@@ -1,45 +1,65 @@
 # Privacy by design
 
-iaLingo is meant to be used by a child **without an adult in the learning loop**. The only adult touchpoints are optional: settings and the time limit, behind the parental gate. That makes privacy a product requirement, not a legal afterthought.
+iaLingo is meant to be used by a child **without an adult in the learning loop**. The only adult touchpoints are optional: settings, the time limit, the voice diary, profiles and certificates, all behind the parental gate. That makes privacy a product requirement, not a legal afterthought.
 
 ## What the app does not do
 
-- **No accounts or login.** No email, phone number, name or birthday is ever asked for.
-- **No free text.** Pet names are chosen from presets, so a child cannot type personal information.
-- **No network.** There is no analytics SDK, crash reporter, remote config, ads, in-app purchases, links out or social features. The app makes no HTTP requests of its own.
-- **No voice or camera.** Nothing is recorded. Microphone and location permissions are blocked in `app.json` (`android.blockedPermissions`, and the `expo-audio` plugin is configured with `microphonePermission: false`).
+- **No accounts or login.** No email, phone number, name or birthday is ever asked for. Family profiles are identified by their pet.
+- **No free text from children.** Pet names are presets. (Certificates have a blank line to write a name *by hand* after printing.)
+- **No network calls of its own.** No analytics SDK, crash reporter, remote config, ads, in-app purchases, links out or social features.
 - **No profiling or emotion inference.** Adaptivity is a plain spaced-repetition schedule over words, computed on the device.
+
+## The microphone (v1.1)
+
+The microphone is used in exactly two places, only when the child taps a microphone or record button:
+
+| Feature | What happens to audio | Default |
+| --- | --- | --- |
+| **Speaking practice** (dev or store build) | Recognized by the operating system's recognizer **on the device** (`requiresOnDeviceRecognition`). Only the text alternatives reach the app; they are scored and discarded. Nothing is recorded or saved. | On (on-device only). Parents can switch to "No microphone" (self-check). |
+| Online recognition (fallback) | Only if the device cannot recognize offline **and** a parent enables "Allow online recognition". Audio is then processed by Apple or Google under their terms. | **Off** |
+| **Voice diary** | A 5-second postcard, once a week, saved in the app's private documents folder (`documents/voice-diary/<profile>/`). Never uploaded. Parents can play it, share it themselves, or delete it. | **Off** (parent opt-in). Turning it off deletes every recording. |
+
+In **Expo Go** there is no recognizer, so speaking exercises use self-check and the microphone is never opened.
+
+Before the OS permission prompt, the app shows an "Ask a grown-up" card. Permission texts (iOS `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`) are written for parents.
 
 ## What is stored, and where
 
-One JSON document under the AsyncStorage key `ialingo.save.v1`, on the device only:
+Per child profile, one JSON document in AsyncStorage (`ialingo.save.v1`, `ialingo.save.v1.p2`…), plus the profile index (`ialingo.profiles.v1`):
 
 | Data | Example | Why |
 | --- | --- | --- |
-| Settings | UI language, voice speed, sounds, daily limit | Parent preferences |
+| Settings | UI language, voice speed, sounds, daily limit, speaking mode, voice diary on/off | Parent preferences |
 | Progress | Lesson stars, per-word Leitner box and last review **day** | Learning and spaced repetition |
 | Pets | Species, preset nickname, XP, happiness, accessory | Game state |
 | Wallet, badges, daily gift day | Berries, badge ids | Game state |
 | Screen time | Today's date and seconds played | Daily limit |
+| Voice diary index | Day, file name and the English prompt for up to 12 postcards | So parents can find the recordings |
 
-Only calendar days are stored, never timestamps or locations. The play-day list is capped at 400 entries. **Delete all progress** in the parent area wipes it.
+Only calendar days are stored, never timestamps or locations. Voice diary retention: the first 2 postcards (the "before") and the 10 most recent are kept, and older ones in between are deleted automatically. **Delete all progress** or deleting a profile wipes that child's data and recordings.
 
-Text-to-speech uses the operating system's voice engine through `expo-speech`. On some Android devices the system TTS engine may itself use a network voice; that is a device setting outside the app.
+Text-to-speech uses the operating system's voice engine. On some Android devices the system TTS engine may use a network voice; that is a device setting outside the app.
+
+## Permissions
+
+- **Requested:** microphone (speaking practice, voice diary) and, on iOS, speech recognition.
+- **Blocked** in `app.json`: fine and coarse location, external storage read/write.
+- Sharing (certificates, postcards) uses the system share sheet and only runs after the parental gate or in the parent area.
 
 ## Mapping to regulations (orientation, not legal advice)
 
 | Regulation | Relevant requirement | How the design responds |
 | --- | --- | --- |
-| **US COPPA** (amended rule, compliance from Apr 22, 2026) | Verifiable parental consent before collecting children's personal information; separate consent for third-party disclosure such as AI training; data retention limits | No personal information is collected or disclosed, so there is nothing to consent to or retain. Revisit before adding any online feature |
-| **EU GDPR, Art. 8** (consent age 13–16 by country) and the **AI Act** | Parental consent for information-society services; transparency and risk limits for AI in education | No personal data processing. No AI model and no automated decisions about the child; the "adaptive" part is a deterministic word schedule |
-| **Brazil LGPD, Art. 14** | Processing of children's data in their best interest, with parental consent | No processing of personal data off the device |
-| **Québec Law 25** (under 14) | Parental consent; privacy by default | Privacy-by-default configuration; nothing collected |
-| **California SB 243** (companion chatbots, 2026) | Disclosures and safeguards for AI companions used by minors | Pets and guides are scripted, not generative chatbots. No open-ended conversation and no emotional-dependency mechanics (pets never get sad or guilt-trip) |
-| **Apple Kids Category / Google Families** | No third-party analytics or ads, parental gate before settings and external links | No analytics or ads; parental gate (multiplication with factors 6–9) protects the settings and data deletion |
+| **US COPPA** (amended rule, compliance from Apr 22, 2026) | Verifiable parental consent before collecting children's personal information; separate consent for third-party disclosure (for example AI training); retention limits | No personal information is collected or disclosed by the app. Voice is processed on the device. The voice diary is opt-in, local and bounded. Online recognition needs explicit parent consent in the gated area |
+| **EU GDPR Art. 8** and the **AI Act** | Parental consent for information-society services; transparency for AI in education; emotion recognition restricted | No data leaves the device. Speech scoring is a deterministic, explainable rule set, and there are no automated decisions about the child. No emotion inference |
+| **Brazil LGPD Art. 14** | Children's data processed in their best interest, with parental consent | Local only. Diary and online recognition are opt-in by a parent |
+| **Québec Law 25** (under 14) | Parental consent; privacy by default | Every optional data feature is off by default |
+| **California SB 243** (companion chatbots) | Disclosures and safeguards for AI companions | Pets and guides are scripted, not generative chatbots; no open conversation, no dependency mechanics |
+| **Apple Kids Category / Google Families** | No third-party analytics or ads, parental gate before settings and external actions | None included; parental gate before settings, sharing and data deletion |
 
 ## Rules for future changes
 
 1. Any feature that sends data off the device needs a privacy review and, for under-13s, verifiable parental consent *before* it ships.
 2. Never add free-text input for children.
-3. Keep data minimization: store days, not timestamps; aggregates, not raw events.
-4. Speech recording (phase 2) must be opt-in by a parent, processed on the device, and never persisted by default.
+3. Keep data minimization: days, not timestamps; aggregates, not raw events; bounded retention for recordings.
+4. Keep the microphone tap-to-use only. No background listening, ever.

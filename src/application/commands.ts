@@ -1,13 +1,15 @@
 import { newlyEarned, type AchievementMetrics } from '@/domain/achievements/achievement';
 import { isWorldCompleted, isWorldUnlocked } from '@/domain/curriculum/unlock-policy';
-import type { LessonId, SpeciesId, WorldId } from '@/domain/curriculum/types';
+import type { LessonId, LessonKind, SpeciesId, WorldId } from '@/domain/curriculum/types';
 import { credit, debit, ECONOMY_TUNING, lessonReward } from '@/domain/economy/economy';
 import type { CatalogIndex } from '@/domain/game/catalog';
 import {
   createInitialGameState,
   type GameState,
   type Settings,
+  type VoiceDiaryEntry,
 } from '@/domain/game/game-state';
+import { addDiaryEntry, removeDiaryEntry } from '@/domain/voice/voice-diary';
 import type { WordResult } from '@/domain/learning/lesson-session';
 import {
   countCompletedLessons,
@@ -69,7 +71,13 @@ export function computeMetrics(state: GameState, content: CatalogIndex): Achieve
     daysPlayed: state.progress.daysPlayed.length,
     petsFed: totalTimesFed(state.pets),
     worldsCompleted: content.orderedWorlds.filter((w) => isWorldCompleted(w, state.progress)).length,
+    storiesCompleted: countCompletedOfKind(state, content, 'story'),
+    speakLessonsCompleted: countCompletedOfKind(state, content, 'speak'),
   };
+}
+
+function countCompletedOfKind(state: GameState, content: CatalogIndex, kind: LessonKind): number {
+  return Object.keys(state.progress.lessons).filter((id) => content.lessonPlan(id)?.kind === kind).length;
 }
 
 /** Grants any newly met achievements (berries and/or an egg). */
@@ -359,7 +367,35 @@ export function grantExtraTime(
 }
 
 export function updateSettings(state: GameState, input: Partial<Settings>): CommandResult {
-  return { state: { ...state, settings: { ...state.settings, ...input } }, events: [] };
+  const next: GameState = { ...state, settings: { ...state.settings, ...input } };
+  // Turning the voice diary off deletes every recording (privacy by default).
+  if (input.voiceDiary === false && state.voiceDiary.length > 0) {
+    return {
+      state: { ...next, voiceDiary: [] },
+      events: [{ type: 'voice-files-removed', fileNames: state.voiceDiary.map((e) => e.fileName) }],
+    };
+  }
+  return { state: next, events: [] };
+}
+
+/** Keeps a new voice postcard (only when a parent turned the diary on). */
+export function addVoicePostcard(state: GameState, input: { entry: VoiceDiaryEntry }): CommandResult {
+  if (!state.settings.voiceDiary) {
+    return { state, events: [{ type: 'voice-files-removed', fileNames: [input.entry.fileName] }] };
+  }
+  const { entries, removed } = addDiaryEntry(state.voiceDiary, input.entry);
+  const events: GameEvent[] = [{ type: 'postcard-saved' }];
+  if (removed.length > 0) events.push({ type: 'voice-files-removed', fileNames: removed.map((e) => e.fileName) });
+  return { state: { ...state, voiceDiary: entries }, events };
+}
+
+export function deleteVoicePostcard(state: GameState, input: { id: string }): CommandResult {
+  const { entries, removed } = removeDiaryEntry(state.voiceDiary, input.id);
+  if (removed.length === 0) return unchanged(state);
+  return {
+    state: { ...state, voiceDiary: entries },
+    events: [{ type: 'voice-files-removed', fileNames: removed.map((e) => e.fileName) }],
+  };
 }
 
 /** Runs at app start and resume: resets the daily budget and eases pet happiness. */
@@ -379,5 +415,11 @@ export function startDay(state: GameState, ctx: CommandContext): CommandResult {
 
 /** Deletes all progress (parent area). Keeps only the UI language. */
 export function resetGame(state: GameState, ctx: CommandContext): CommandResult {
-  return { state: createInitialGameState(ctx.today, state.settings.uiLocale), events: [] };
+  return {
+    state: createInitialGameState(ctx.today, state.settings.uiLocale),
+    events:
+      state.voiceDiary.length > 0
+        ? [{ type: 'voice-files-removed', fileNames: state.voiceDiary.map((e) => e.fileName) }]
+        : [],
+  };
 }

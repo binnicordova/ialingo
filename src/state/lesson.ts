@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import { evaluateAnswer, type ExerciseAnswer, type ExerciseLookup } from '@/domain/curriculum/exercises';
+import { evaluateAnswer, isScored, type ExerciseAnswer, type ExerciseLookup } from '@/domain/curriculum/exercises';
 import { generateLesson, type GeneratedLesson } from '@/domain/curriculum/lesson-generator';
 import type { LessonId } from '@/domain/curriculum/types';
 import type { CatalogIndex } from '@/domain/game/catalog';
@@ -84,7 +84,7 @@ export const submitAnswerAtom = atom(null, (get, set, answer: ExerciseAnswer) =>
   const exercise = currentExercise(active.session);
   if (!exercise) return null;
   const correct = evaluateAnswer(exercise, answer, lookupFromContent(get(contentAtom)));
-  if (exercise.kind !== 'learn-card') {
+  if (isScored(exercise)) {
     set(playSfxAtom, correct ? 'correct' : 'wrong');
     set(hapticAtom, correct ? 'success' : 'warning');
   }

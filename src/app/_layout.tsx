@@ -80,6 +80,7 @@ function AppShell({ onBackground }: { onBackground: () => void }) {
         <Stack.Screen name="lesson/[lessonId]" options={{ gestureEnabled: false, animation: 'fade_from_bottom' }} />
         <Stack.Screen name="bedtime" options={{ gestureEnabled: false, animation: 'fade' }} />
         <Stack.Screen name="welcome" options={{ gestureEnabled: false, animation: 'fade' }} />
+        <Stack.Screen name="profiles" options={{ gestureEnabled: false, animation: 'fade' }} />
       </Stack>
       <CelebrationOverlay />
     </>

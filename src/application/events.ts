@@ -40,6 +40,9 @@ export type GameEvent =
       readonly reason: 'daily-gift' | 'achievement' | 'welcome';
     }
   | { readonly type: 'accessory-bought'; readonly accessoryId: AccessoryId }
+  | { readonly type: 'postcard-saved' }
+  /** Recordings to delete from disk (pruned, deleted, or the diary was turned off). */
+  | { readonly type: 'voice-files-removed'; readonly fileNames: readonly string[] }
   | { readonly type: 'not-enough-berries'; readonly needed: number };
 
 export type GameEventType = GameEvent['type'];

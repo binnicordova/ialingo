@@ -2,7 +2,7 @@ import { pickReviewWords, type WordMastery } from '../learning/mastery';
 import type { DayKey } from '../shared/day';
 import { createRng, type Rng } from '../shared/rng';
 import { tokenizeSentence, type Exercise } from './exercises';
-import type { LessonId, LessonPlan, Sentence, VocabularyItem, WordId, World } from './types';
+import type { LessonId, LessonPlan, Sentence, Story, VocabularyItem, WordId, World } from './types';
 
 /**
  * Lesson generation tuning. Values are deliberately small: about 12 exercises
@@ -22,13 +22,30 @@ export const LESSON_TUNING = {
   sentenceDistractorTiles: 1,
 } as const;
 
-type Slot = 'listen' | 'picture' | 'true-false' | 'match' | 'spell' | 'sentence';
+type Slot =
+  | 'listen'
+  | 'picture'
+  | 'true-false'
+  | 'match'
+  | 'spell'
+  | 'sentence'
+  | 'speak-word'
+  | 'speak-sentence';
 
 /** Slot sequence for review lessons (10 exercises). */
 const REVIEW_RECIPE: readonly Slot[] = [
   'listen', 'picture', 'true-false', 'listen', 'spell',
   'picture', 'sentence', 'listen', 'match', 'sentence',
 ];
+
+/** Slot sequence for speaking lessons (9 exercises): warm-up listening, then talking. */
+const SPEAK_RECIPE: readonly Slot[] = [
+  'listen', 'speak-word', 'speak-word', 'picture', 'speak-word',
+  'speak-sentence', 'speak-word', 'speak-word', 'speak-sentence',
+];
+
+/** Comprehension questions after a story. */
+export const STORY_TUNING = { questions: 3 } as const;
 
 /** Slot sequence for boss lessons (12 exercises, harder options). */
 const BOSS_RECIPE: readonly Slot[] = [
@@ -173,6 +190,18 @@ class LessonBuilder {
     this.push({ kind: 'spell-word', id: this.nextId(), wordId: word.id, letters: tiles });
   }
 
+  speakWord(word: VocabularyItem): void {
+    this.push({ kind: 'speak-word', id: this.nextId(), wordId: word.id });
+  }
+
+  speakSentence(sentence: Sentence): void {
+    this.push({ kind: 'speak-sentence', id: this.nextId(), sentenceId: sentence.id });
+  }
+
+  storyPage(story: Story, lineIndex: number): void {
+    this.push({ kind: 'story-page', id: this.nextId(), storyId: story.id, lineIndex });
+  }
+
   sentence(sentence: Sentence): void {
     const tokens = tokenizeSentence(sentence.en);
     const extras = this.rng
@@ -208,8 +237,11 @@ export function generateLesson(input: GenerateLessonInput): GeneratedLesson {
 
   if (plan.kind === 'learn') {
     buildLearnLesson(builder, plan, world, worlds, words, mastery, today, rng);
+  } else if (plan.kind === 'story' && world.story) {
+    buildStoryLesson(builder, world.story, words, rng);
   } else {
-    const recipe = plan.kind === 'boss' ? BOSS_RECIPE : REVIEW_RECIPE;
+    const recipe =
+      plan.kind === 'boss' ? BOSS_RECIPE : plan.kind === 'speak' ? SPEAK_RECIPE : REVIEW_RECIPE;
     buildFromRecipe(builder, recipe, world, mastery, today, rng);
   }
 
@@ -244,6 +276,8 @@ function buildLearnLesson(
   tail.push(() => builder.match(rng.sample(newWords, LESSON_TUNING.matchPairCount)));
   const spellable = newWords.filter(isSpellable);
   if (spellable.length > 0) tail.push(() => builder.spell(rng.pick(spellable)));
+  // Speaking from the very first lesson: one "say it" per lesson.
+  tail.push(() => builder.speakWord(rng.pick(newWords)));
   if (plan.index >= 2 && world.sentences.length > 0) {
     const sentence = world.sentences[(plan.index - 2) % world.sentences.length];
     if (sentence) tail.push(() => builder.sentence(sentence));
@@ -262,6 +296,23 @@ function buildLearnLesson(
   }
 
   for (const step of rng.shuffle(tail)) step();
+}
+
+/** Picture-book pages read aloud, then questions about the words in the story. */
+function buildStoryLesson(
+  builder: LessonBuilder,
+  story: Story,
+  words: Map<WordId, VocabularyItem>,
+  rng: Rng,
+): void {
+  story.lines.forEach((_, i) => builder.storyPage(story, i));
+  const keyWords = [...new Set(story.lines.map((line) => line.keyWordId))]
+    .map((id) => words.get(id))
+    .filter((w): w is VocabularyItem => w !== undefined);
+  const asked = rng.sample(keyWords, STORY_TUNING.questions);
+  asked.forEach((word, i) => (i % 2 === 0 ? builder.listen(word) : builder.picture(word)));
+  const extra = keyWords.find((w) => !asked.includes(w)) ?? keyWords[0];
+  if (extra) builder.trueFalse(extra);
 }
 
 function buildFromRecipe(
@@ -318,6 +369,16 @@ function buildFromRecipe(
         sentenceCursor += 1;
         if (sentence) builder.sentence(sentence);
         else builder.picture(nextWord());
+        break;
+      }
+      case 'speak-word':
+        builder.speakWord(nextWord());
+        break;
+      case 'speak-sentence': {
+        const sentence = sentences[sentenceCursor % Math.max(1, sentences.length)];
+        sentenceCursor += 1;
+        if (sentence) builder.speakSentence(sentence);
+        else builder.speakWord(nextWord());
         break;
       }
     }

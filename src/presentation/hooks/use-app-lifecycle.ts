@@ -11,7 +11,7 @@ import { onboardedAtom, screenTimeAtom } from '@/state/selectors';
 export const PLAY_TICK_SECONDS = 15;
 
 /** Screens that stay open when the daily limit is reached. */
-const ALLOWED_AFTER_LIMIT = ['/bedtime', '/parents'];
+const ALLOWED_AFTER_LIMIT = ['/bedtime', '/parents', '/profiles'];
 
 /**
  * App-wide lifecycle:

@@ -15,6 +15,8 @@ export const ECONOMY_TUNING = {
   perfectBonusBerries: 3,
   bossBonusBerries: 10,
   reviewBonusBerries: 2,
+  storyBonusBerries: 2,
+  speakBonusBerries: 3,
   dailyGiftBerries: 10,
   welcomeBerries: 15,
   feedCost: 1,
@@ -58,8 +60,14 @@ export function lessonReward(
   xpMultiplier = 1,
   tuning = ECONOMY_TUNING,
 ): LessonReward {
-  const kindBonus =
-    kind === 'boss' ? tuning.bossBonusBerries : kind === 'review' ? tuning.reviewBonusBerries : 0;
+  const KIND_BONUS: Readonly<Record<LessonKind, number>> = {
+    learn: 0,
+    story: tuning.storyBonusBerries,
+    speak: tuning.speakBonusBerries,
+    review: tuning.reviewBonusBerries,
+    boss: tuning.bossBonusBerries,
+  };
+  const kindBonus = KIND_BONUS[kind];
   const berries =
     tuning.lessonBaseBerries +
     stars * tuning.berriesPerStar +

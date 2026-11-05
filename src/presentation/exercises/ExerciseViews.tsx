@@ -13,6 +13,7 @@ import { AppText, BigButton, Card } from '../components/ui';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
 import { colors, radii, spacing } from '../theme/tokens';
+import { SpeakView, StoryPageView } from './SpeakAndStoryViews';
 
 export interface ExerciseViewProps {
   readonly exercise: Exercise;
@@ -41,6 +42,11 @@ export function ExerciseView(props: ExerciseViewProps) {
       return <SpellWordView {...props} />;
     case 'build-sentence':
       return <BuildSentenceView {...props} />;
+    case 'speak-word':
+    case 'speak-sentence':
+      return <SpeakView {...props} />;
+    case 'story-page':
+      return <StoryPageView {...props} />;
   }
 }
 

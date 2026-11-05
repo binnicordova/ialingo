@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { levelInfo } from '@/domain/curriculum/levels';
 import type { LessonPlan } from '@/domain/curriculum/types';
 import { tapFeedbackAtom } from '@/state/actions';
 import { contentAtom } from '@/state/core';
@@ -68,6 +69,13 @@ export function WorldScreen({ worldId }: { worldId: string }) {
           </Pressable>
         ) : null}
 
+        <View style={styles.levelRow}>
+          <Pill
+            label={`${levelInfo(world.level).emoji} ${l(levelInfo(world.level).title)} · ${levelInfo(world.level).cefr}`}
+            color={levelInfo(world.level).color}
+          />
+        </View>
+
         <View style={styles.path}>
           {lessons.map((lesson, i) => (
             <Animated.View key={lesson.plan.id} entering={FadeInDown.delay(i * 60).springify()}>
@@ -75,6 +83,7 @@ export function WorldScreen({ worldId }: { worldId: string }) {
                 lesson={lesson}
                 color={world.color}
                 wordsEmoji={lesson.plan.newWordIds.map((id) => content.word(id)?.emoji ?? '').join(' ')}
+                storyTitle={world.story ? l(world.story.title) : undefined}
                 rewardEgg={
                   lesson.plan.kind === 'boss' && rewardSpecies && !rewardOwned ? (
                     <EggPortrait blueprint={rewardSpecies.blueprint} size={54} />
@@ -108,25 +117,45 @@ export function WorldScreen({ worldId }: { worldId: string }) {
 }
 
 function lessonTitle(plan: LessonPlan, t: ReturnType<typeof useT>['t']): string {
-  if (plan.kind === 'learn') return t('lessonLearn', { n: plan.index });
-  return plan.kind === 'review' ? t('lessonReview') : t('lessonBoss');
+  switch (plan.kind) {
+    case 'learn':
+      return t('lessonLearn', { n: plan.index });
+    case 'story':
+      return t('lessonStory');
+    case 'speak':
+      return t('lessonSpeak');
+    case 'review':
+      return t('lessonReview');
+    case 'boss':
+      return t('lessonBoss');
+  }
 }
+
+const KIND_ICON: Readonly<Record<LessonPlan['kind'], string>> = {
+  learn: '',
+  story: '📖',
+  speak: '🎤',
+  review: '🔁',
+  boss: '👑',
+};
 
 function LessonNode({
   lesson,
   color,
   wordsEmoji,
   rewardEgg,
+  storyTitle,
 }: {
   lesson: LessonView;
   color: string;
   wordsEmoji: string;
   rewardEgg: React.ReactNode;
+  storyTitle?: string;
 }) {
   const { t } = useT();
   const feedback = useSetAtom(tapFeedbackAtom);
   const { plan, unlocked, stars } = lesson;
-  const icon = plan.kind === 'learn' ? String(plan.index) : plan.kind === 'review' ? '🔁' : '👑';
+  const icon = plan.kind === 'learn' ? String(plan.index) : KIND_ICON[plan.kind];
   const tone = unlocked ? (plan.kind === 'boss' ? colors.orange : color) : colors.locked;
   return (
     <Pressable
@@ -153,6 +182,10 @@ function LessonNode({
           </AppText>
         ) : plan.kind === 'boss' ? (
           <Pill label={t('bossReward')} color={colors.orange} />
+        ) : plan.kind === 'story' && storyTitle ? (
+          <AppText variant="small" color={colors.inkSoft} numberOfLines={1}>
+            {storyTitle}
+          </AppText>
         ) : null}
         {stars > 0 ? <StarRow stars={stars} size={18} /> : null}
       </View>
@@ -166,6 +199,7 @@ const styles = StyleSheet.create({
   guideRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   bubble: { flex: 1 },
   path: { gap: spacing.md },
+  levelRow: { flexDirection: 'row' },
   lesson: {
     flexDirection: 'row',
     alignItems: 'center',
