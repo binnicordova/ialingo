@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tapFeedbackAtom } from '@/state/actions';
 
+import { useT } from '../i18n/use-t';
+
 import { colors, fonts, radii, shade, shadow, spacing, TAP_TARGET, typeScale } from '../theme/tokens';
 
 /* ------------------------------------------------------------------ Text */
@@ -259,8 +261,9 @@ export function StarRow({ stars, max = 3, size = 22 }: { stars: number; max?: nu
 }
 
 export function BerryPill({ amount, style }: { amount: number; style?: StyleProp<ViewStyle> }) {
+  const { t } = useT();
   return (
-    <View style={[styles.pill, shadow, style]} accessibilityLabel={`${amount} berries`}>
+    <View style={[styles.pill, shadow, style]} accessible accessibilityLabel={t('berriesA11y', { n: amount })}>
       <Text style={styles.pillIcon}>🍓</Text>
       <AppText variant="heading" color={colors.berry}>
         {amount}
@@ -292,12 +295,13 @@ export function TopBar({
   right?: ReactNode;
   color?: string;
 }) {
+  const { t } = useT();
   return (
     <View style={styles.topBar}>
       <View style={styles.topBarSide}>
-        {onBack ? <IconButton icon="⬅️" label="Back" onPress={onBack} size={48} /> : null}
+        {onBack ? <IconButton icon="⬅️" label={t('back')} onPress={onBack} size={48} testID="top-back" /> : null}
       </View>
-      <AppText variant="heading" color={color} center numberOfLines={1} style={styles.topBarTitle}>
+      <AppText variant="heading" color={color} center numberOfLines={1} style={styles.topBarTitle} accessibilityRole="header">
         {title ?? ''}
       </AppText>
       <View style={[styles.topBarSide, styles.topBarRight]}>{right}</View>

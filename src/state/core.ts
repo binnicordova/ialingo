@@ -73,5 +73,6 @@ export const recognitionAtom = atom<RecognitionCapability & { readonly permissio
   installed: false,
   available: false,
   onDevice: false,
+  offlineModel: 'unsupported',
   permission: 'unknown',
 });

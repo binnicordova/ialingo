@@ -1,7 +1,7 @@
 import type { PetSpecies } from '@/domain/pets/species';
 
 /**
- * The 46 original pets: 3 starters, 34 world pets (one per boss) and 9 badge
+ * The 51 original pets: 3 starters, 34 world pets (one per boss) and 14 badge
  * pets. Each is defined by a data blueprint only, rendered procedurally in 3D
  * and 2D. To add a pet, append a row.
  */
@@ -380,6 +380,46 @@ export const PET_SPECIES: readonly PetSpecies[] = [
     catchphrase: 'Once upon a time...',
     blueprint: { body: 'tall', primary: '#FFB74D', secondary: '#FFF8E1', accent: '#6D4C41', ears: 'cat', tail: 'stub', extra: 'wings', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'storyteller' },
+  },
+  {
+    id: 'tempo',
+    name: 'Tempo',
+    title: { en: 'the beat frog', es: 'la ranita del ritmo', pt: 'o sapinho do ritmo' },
+    catchphrase: 'Ribbit! Clap the beat!',
+    blueprint: { body: 'wide', primary: '#66BB6A', secondary: '#F1F8E9', accent: '#FDD835', ears: 'none', tail: 'none', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
+    unlock: { type: 'achievement', achievementId: 'little-singer' },
+  },
+  {
+    id: 'flexo',
+    name: 'Flexo',
+    title: { en: 'the strong armadillo', es: 'el armadillo fuerte', pt: 'o tatu fortão' },
+    catchphrase: "Let's train our brains!",
+    blueprint: { body: 'wide', primary: '#A1887F', secondary: '#EFEBE9', accent: '#5D4037', ears: 'round', tail: 'long', extra: 'shell', pattern: 'plain', eyes: 'round' },
+    unlock: { type: 'achievement', achievementId: 'word-athlete' },
+  },
+  {
+    id: 'bloop',
+    name: 'Bloop',
+    title: { en: 'the bubble jellyfish', es: 'la medusa de burbujas', pt: 'a água-viva de bolhas' },
+    catchphrase: 'Pop, pop, hooray!',
+    blueprint: { body: 'round', primary: '#B388FF', secondary: '#F3E5F5', accent: '#7C4DFF', ears: 'antenna', tail: 'fish', extra: 'fins', pattern: 'spots', eyes: 'sparkle' },
+    unlock: { type: 'achievement', achievementId: 'game-champ' },
+  },
+  {
+    id: 'scout',
+    name: 'Scout',
+    title: { en: 'the explorer pup', es: 'el cachorro explorador', pt: 'o filhote explorador' },
+    catchphrase: 'Adventure time!',
+    blueprint: { body: 'tall', primary: '#D7A86E', secondary: '#FFF3E0', accent: '#2E7D32', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'belly', eyes: 'round' },
+    unlock: { type: 'achievement', achievementId: 'quest-hero' },
+  },
+  {
+    id: 'goldie',
+    name: 'Goldie',
+    title: { en: 'the golden lion cub', es: 'el cachorro de león dorado', pt: 'o filhote de leão dourado' },
+    catchphrase: 'Shine like gold!',
+    blueprint: { body: 'round', primary: '#FFC107', secondary: '#FFF8E1', accent: '#FF8F00', ears: 'round', tail: 'long', extra: 'mane', pattern: 'belly', eyes: 'sparkle' },
+    unlock: { type: 'achievement', achievementId: 'golden-stickers' },
   },
 ];
 

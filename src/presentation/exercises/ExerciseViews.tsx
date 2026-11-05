@@ -10,9 +10,11 @@ import { contentAtom } from '@/state/core';
 
 import { SpeakerButton, Tile, type TileState } from '../components/game';
 import { AppText, BigButton, Card } from '../components/ui';
+import { useExerciseIntro } from '../hooks/use-exercise-intro';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
 import { colors, radii, spacing } from '../theme/tokens';
+import { LyricGapView, SongView } from './SongViews';
 import { SpeakView, StoryPageView } from './SpeakAndStoryViews';
 
 export interface ExerciseViewProps {
@@ -47,24 +49,11 @@ export function ExerciseView(props: ExerciseViewProps) {
       return <SpeakView {...props} />;
     case 'story-page':
       return <StoryPageView {...props} />;
+    case 'song':
+      return <SongView {...props} />;
+    case 'lyric-gap':
+      return <LyricGapView {...props} />;
   }
-}
-
-/** Speaks the instruction (native language) and then the prompt (English), once per exercise. */
-function useIntro(id: string, introduce: boolean, instruction: string, guide: Character | undefined, prompt?: () => void) {
-  const { native } = useSpeak();
-  const latest = useRef({ introduce, instruction, guide, prompt });
-  useEffect(() => {
-    latest.current = { introduce, instruction, guide, prompt };
-  });
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const l = latest.current;
-      if (l.introduce) native(l.instruction, l.guide, l.prompt);
-      else l.prompt?.();
-    }, 280);
-    return () => clearTimeout(timer);
-  }, [id, native]);
 }
 
 function useWords(ids: readonly string[]): VocabularyItem[] {
@@ -96,7 +85,7 @@ function LearnCardView({ exercise, onAnswer, introduce, guide, locked }: Exercis
   const { t, l } = useT();
   const { english } = useSpeak();
   const [word] = useWords(exercise.kind === 'learn-card' ? [exercise.wordId] : []);
-  useIntro(exercise.id, introduce, t('instrLearn'), guide, () => word && english(word.en));
+  useExerciseIntro(exercise.id, introduce, t('instrLearn'), guide, () => word && english(word.en));
   if (!word) return null;
   return (
     <View style={styles.center}>
@@ -127,7 +116,7 @@ function ListenPickView({ exercise, onAnswer, locked, introduce, guide }: Exerci
   const options = useWords(ex?.optionIds ?? []);
   const answer = options.find((o) => o.id === ex?.answerId);
   const [chosen, setChosen] = useState<string | null>(null);
-  useIntro(exercise.id, introduce, t('instrListen'), guide, () => answer && english(answer.en));
+  useExerciseIntro(exercise.id, introduce, t('instrListen'), guide, () => answer && english(answer.en));
   if (!ex || !answer) return null;
   return (
     <View style={styles.center}>
@@ -166,7 +155,7 @@ function PicturePickView({ exercise, onAnswer, locked, introduce, guide }: Exerc
   const options = useWords(ex?.optionIds ?? []);
   const answer = options.find((o) => o.id === ex?.answerId);
   const [chosen, setChosen] = useState<string | null>(null);
-  useIntro(exercise.id, introduce, t('instrPicture'), guide);
+  useExerciseIntro(exercise.id, introduce, t('instrPicture'), guide);
   if (!ex || !answer) return null;
   return (
     <View style={styles.center}>
@@ -207,7 +196,7 @@ function TrueFalseView({ exercise, onAnswer, locked, introduce, guide }: Exercis
   const [spoken, shown] = useWords(ex ? [ex.spokenWordId, ex.shownWordId] : []);
   const shownWord = ex && ex.spokenWordId === ex.shownWordId ? spoken : shown;
   const [chosen, setChosen] = useState<boolean | null>(null);
-  useIntro(exercise.id, introduce, t('instrTrueFalse'), guide, () => spoken && english(spoken.en));
+  useExerciseIntro(exercise.id, introduce, t('instrTrueFalse'), guide, () => spoken && english(spoken.en));
   if (!ex || !spoken || !shownWord) return null;
   const truth = ex.spokenWordId === ex.shownWordId;
   const stateFor = (value: boolean): TileState => {
@@ -267,7 +256,7 @@ function MatchPairsView({ exercise, onAnswer, locked, introduce, guide }: Exerci
   const [wrongPair, setWrongPair] = useState<readonly string[] | null>(null);
   const [mistakes, setMistakes] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  useIntro(exercise.id, introduce, t('instrMatch'), guide);
+  useExerciseIntro(exercise.id, introduce, t('instrMatch'), guide);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   /** Matching happens in the tap handler: a pair is checked as soon as both sides are chosen. */
@@ -353,7 +342,7 @@ function SpellWordView({ exercise, onAnswer, locked, introduce, guide }: Exercis
   const ex = exercise.kind === 'spell-word' ? exercise : null;
   const [word] = useWords(ex ? [ex.wordId] : []);
   const [placed, setPlaced] = useState<readonly number[]>([]);
-  useIntro(exercise.id, introduce, t('instrSpell'), guide, () => word && english(word.en));
+  useExerciseIntro(exercise.id, introduce, t('instrSpell'), guide, () => word && english(word.en));
   const length = word?.en.length ?? 0;
 
   useEffect(() => {
@@ -415,7 +404,7 @@ function BuildSentenceView({ exercise, onAnswer, locked, introduce, guide }: Exe
   const sentence = ex ? content.sentence(ex.sentenceId) : undefined;
   const expected = useMemo(() => (sentence ? tokenizeSentence(sentence.en).length : 0), [sentence]);
   const [placed, setPlaced] = useState<readonly number[]>([]);
-  useIntro(exercise.id, introduce, t('instrSentence'), guide, () => sentence && english(sentence.en));
+  useExerciseIntro(exercise.id, introduce, t('instrSentence'), guide, () => sentence && english(sentence.en));
 
   useEffect(() => {
     if (!ex || expected === 0 || placed.length !== expected || locked) return;

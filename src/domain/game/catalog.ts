@@ -8,6 +8,8 @@ import type {
   Sentence,
   SentenceId,
   SpeciesId,
+  Song,
+  SongId,
   Story,
   StoryId,
   VocabularyItem,
@@ -35,6 +37,7 @@ export interface CatalogIndex {
   word(id: WordId): VocabularyItem | undefined;
   sentence(id: SentenceId): Sentence | undefined;
   story(id: StoryId): Story | undefined;
+  song(id: SongId): Song | undefined;
   species(id: SpeciesId): PetSpecies | undefined;
   character(id: CharacterId): Character | undefined;
   accessory(id: AccessoryId): Accessory | undefined;
@@ -49,10 +52,12 @@ export function createCatalogIndex(catalog: ContentCatalog): CatalogIndex {
   const words = new Map<WordId, VocabularyItem>();
   const sentences = new Map<SentenceId, Sentence>();
   const stories = new Map<StoryId, Story>();
+  const songs = new Map<SongId, Song>();
   for (const world of catalog.worlds) {
     for (const word of world.words) words.set(word.id, word);
     for (const sentence of world.sentences) sentences.set(sentence.id, sentence);
     if (world.story) stories.set(world.story.id, world.story);
+    if (world.song) songs.set(world.song.id, world.song);
   }
   const species = new Map(catalog.species.map((s) => [s.id, s]));
   const characters = new Map(catalog.characters.map((c) => [c.id, c]));
@@ -67,6 +72,7 @@ export function createCatalogIndex(catalog: ContentCatalog): CatalogIndex {
     word: (id) => words.get(id),
     sentence: (id) => sentences.get(id),
     story: (id) => stories.get(id),
+    song: (id) => songs.get(id),
     species: (id) => species.get(id),
     character: (id) => characters.get(id),
     accessory: (id) => accessories.get(id),

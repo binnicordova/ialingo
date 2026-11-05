@@ -8,6 +8,7 @@ import type { GameState, Settings } from '@/domain/game/game-state';
 import { VOICE_DIARY_TUNING } from '@/domain/voice/voice-diary';
 import type { WordResult } from '@/domain/learning/lesson-session';
 import type { AccessoryId } from '@/domain/pets/pet';
+import type { MiniGameKind } from '@/domain/play/mini-games';
 import { SPEECH_LANGUAGE_TAG, TARGET_LANGUAGE_TAG, type Locale } from '@/domain/shared/locale';
 
 import {
@@ -32,7 +33,8 @@ function run(
 ): CommandResult {
   const ctx: CommandContext = { today: get(todayAtom), content: get(contentAtom) };
   const before = get(gameStateAtom);
-  const result = command(before, ctx);
+  // Every command's events also move today's quests forward.
+  const result = commands.trackQuests(command(before, ctx), ctx);
   if (result.state !== before) set(gameStateAtom, result.state);
   if (result.events.length > 0) set(pendingEventsAtom, (prev) => [...prev, ...result.events]);
   // Side effect requested by the domain: delete recordings from disk.
@@ -90,6 +92,16 @@ export const equipAccessoryAtom = atom(
 
 export const claimDailyGiftAtom = atom(null, (get, set) =>
   run(get, set, (s, c) => commands.claimDailyGift(s, c)),
+);
+
+export const finishMiniGameAtom = atom(
+  null,
+  (get, set, input: { kind: MiniGameKind; correct: number; total: number }) =>
+    run(get, set, (s, c) => commands.finishMiniGame(s, input, c)),
+);
+
+export const claimQuestChestAtom = atom(null, (get, set) =>
+  run(get, set, (s, c) => commands.claimQuestChest(s, c)),
 );
 
 export const recordPlayTimeAtom = atom(null, (get, set, seconds: number) =>
@@ -157,6 +169,23 @@ export const tapFeedbackAtom = atom(null, (_get, set) => {
 });
 
 /* ---------------------------------------------------------- Speaking */
+
+/** Probes the recognizer again (for example after the offline model downloads). */
+export const refreshRecognitionAtom = atom(null, async (get, set) => {
+  try {
+    const capability = await get(servicesAtom).recognition.capability(TARGET_LANGUAGE_TAG);
+    set(recognitionAtom, (prev) => ({ ...capability, permission: prev.permission }));
+  } catch {
+    // Keep what we knew.
+  }
+});
+
+/** Parent area, Android: asks the OS to download the offline English model. */
+export const downloadOfflineModelAtom = atom(null, async (get, set) => {
+  const result = await get(servicesAtom).recognition.downloadOfflineModel(TARGET_LANGUAGE_TAG);
+  if (result === 'downloaded' || result === 'started') await set(refreshRecognitionAtom);
+  return result;
+});
 
 /** Asks the OS for microphone + speech permission (shown to a grown-up first). */
 export const requestMicPermissionAtom = atom(null, async (get, set) => {

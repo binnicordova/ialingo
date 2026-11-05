@@ -101,3 +101,55 @@ One postcard every 7 days, at most 6 s. The first 2 and the 10 newest are kept (
 ## Family profiles (`domain/profiles/profiles.ts`)
 
 At most 4 profiles per device; ids p1–p4 (p1 keeps the v1.0 save key).
+
+## Sing-along (`lesson-generator.ts`, `presentation/exercises/SongViews.tsx`)
+
+- A song lesson: the chant (unscored) → `SONG_TUNING.gaps` = 3 missing-word lines → `SONG_TUNING.questions` = 2 picture questions → 1 true/false → 1 "say the word" (8 exercises).
+- Chant timing (`SONG_TIMING`): the guide's voice × 1.08 pitch and × 0.85 rate; a clap after each line; an echo pause of 900 ms + 380 ms per word for the child to repeat it; 260 ms before the next line; a safety timer of (1600 + 520 × words) ms ÷ rate if TTS never reports the end.
+- Every line contains its key word as a whole word (tested), and the gap blanks every occurrence so repetition never gives the answer away. The line's picture is hidden until the answer.
+- Reward: `songBonusBerries` = 2. Badges: *Little Singer* (5 songs → Tempo) and *Pop Star* (20 songs → 60 berries).
+
+## Word Gym (`lesson-generator.ts`)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `PRACTICE_TUNING.minWords` | 4 | Words met before the gym opens (after the first lesson) |
+| `PRACTICE_TUNING.focusWords` | 8 | Words per session: due first, then lower boxes, then the oldest |
+| Recipe | 10 exercises | listen, picture, spell, listen, true/false, picture, match, say the word, listen, picture |
+| `practiceBonusBerries` | 1 | On top of the base lesson formula |
+
+Practice updates mastery and counts `progress.practiceSessions`, but never stores a lesson record, so it never unlocks anything. Badge: *Word Athlete* (10 sessions → Flexo).
+
+## Leitner promotion (`domain/learning/mastery.ts`)
+
+A correct answer moves a word up one box **only when it is due** (or new). Correct answers before the due day (the same word again in one session) are counted but keep the box and the schedule. So "learned" (box 2) needs a second day, and "mastered" (box 4) needs at least 4 review days spread over about a week. See ADR 0006.
+
+## Play Park (`domain/play/mini-games.ts`)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `minWords` | 6 | Words met before the park opens |
+| `berriesPerCorrect` | 1 | First-try bubble or matched pair |
+| `dailyBerryCap` | 20 | Game berries per day (a 3-star lesson pays about 11) |
+| `bubbleRounds` / `bubbleOptions` | 8 / 4 | Bubble Pop |
+| `memoryPairs` | 6 | Memory Match (12 cards: picture + word) |
+| `poolSize` | 24 | Met words drawn from (due and weak first) |
+
+Games give the active pet XP equal to the berries earned, and never change mastery (fast tapping isn't evidence of recall). Badge: *Game Champion* (15 games → Bloop).
+
+## Daily quests (`domain/quests/quests.ts`)
+
+| Quest | Target | Emoji |
+| --- | --- | --- |
+| Finish lessons (always offered) | 2 | 📚 |
+| Get 3 stars in a lesson | 1 | ⭐ |
+| Feed your pet | 2 | 🍓 |
+| Play in the Play Park (once ≥ 6 words met) | 1 | 🎡 |
+| Train in the Word Gym (once ≥ 4 words met) | 1 | 🏋️ |
+| Finish a story or a song (once one is open) | 1 | 🎵 |
+
+3 quests per day, picked deterministically from the day. The chest pays a fixed 15 berries. Unfinished quests expire at midnight with no penalty. Badges: *Quest Hero* (7 chests → Scout) and *Quest Legend* (30 chests → 150 berries).
+
+## Album (`domain/learning/album.ts`)
+
+Sticker states: locked (never met) → met → learned (box ≥ 2, blue frame) → gold (box ≥ 4, gold frame and star). Badge: *Golden Stickers* (50 mastered words → Goldie).

@@ -1,4 +1,4 @@
-import { tokenizeSentence } from '@/domain/curriculum/exercises';
+import { gapLine, tokenizeSentence } from '@/domain/curriculum/exercises';
 import { generateLesson } from '@/domain/curriculum/lesson-generator';
 import { buildLessonPlans } from '@/domain/curriculum/lesson-plans';
 import { SUPPORTED_LOCALES } from '@/domain/shared/locale';
@@ -15,12 +15,12 @@ const { worlds, species, characters, accessories, achievements } = CONTENT_CATAL
 describe('content catalog integrity', () => {
   it('has the promised scale', () => {
     expect(worlds.length).toBeGreaterThanOrEqual(34);
-    expect(species.length).toBeGreaterThanOrEqual(46);
+    expect(species.length).toBeGreaterThanOrEqual(51);
     expect(characters.length).toBeGreaterThanOrEqual(10);
     const words = worlds.flatMap((w) => w.words).length;
     const lessons = worlds.flatMap((w) => buildLessonPlans(w)).length;
     expect(words).toBeGreaterThanOrEqual(500);
-    expect(lessons).toBeGreaterThanOrEqual(260);
+    expect(lessons).toBeGreaterThanOrEqual(300);
   });
 
   it('gives every world a story whose key words exist in that world', () => {
@@ -32,6 +32,22 @@ describe('content catalog integrity', () => {
         for (const locale of SUPPORTED_LOCALES) expect(line.meaning[locale].trim()).not.toBe('');
       }
       expect(world.story?.lines.length).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('gives every world a sing-along whose key words can be blanked out', () => {
+    for (const world of worlds) {
+      expect(world.song).toBeDefined();
+      const byId = new Map(world.words.map((w) => [w.id, w]));
+      for (const line of world.song?.lines ?? []) {
+        const word = byId.get(line.keyWordId);
+        expect(word).toBeDefined();
+        expect(gapLine(line.en, word?.en ?? '')).not.toBeNull();
+        for (const locale of SUPPORTED_LOCALES) expect(line.meaning[locale].trim()).not.toBe('');
+      }
+      expect(world.song?.lines.length).toBe(4);
+      const keys = world.song?.lines.map((l) => l.keyWordId) ?? [];
+      expect(new Set(keys).size).toBe(keys.length);
     }
   });
 

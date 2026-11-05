@@ -3,6 +3,8 @@ import { createWallet, type Wallet } from '../economy/economy';
 import { createProgress, type LearnerProgress } from '../learning/progress';
 import { createCollection, type PetCollection } from '../pets/collection';
 import type { AccessoryId } from '../pets/pet';
+import { createPlayState, type PlayState } from '../play/mini-games';
+import { BASE_QUEST_KINDS, createQuestBoard, type QuestBoard } from '../quests/quests';
 import type { DayKey } from '../shared/day';
 import type { Locale } from '../shared/locale';
 import {
@@ -68,6 +70,10 @@ export interface GameState {
   readonly dailyGiftClaimedOn: DayKey | null;
   readonly screenTime: ScreenTime;
   readonly voiceDiary: readonly VoiceDiaryEntry[];
+  /** Play Park counters (daily berry cap). */
+  readonly play: PlayState;
+  /** Today's quests and chest. */
+  readonly quests: QuestBoard;
 }
 
 export function createDefaultSettings(locale: Locale): Settings {
@@ -98,5 +104,7 @@ export function createInitialGameState(today: DayKey, locale: Locale): GameState
     dailyGiftClaimedOn: null,
     screenTime: createScreenTime(today),
     voiceDiary: [],
+    play: createPlayState(today),
+    quests: createQuestBoard(today, BASE_QUEST_KINDS),
   };
 }

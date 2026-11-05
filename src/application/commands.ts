@@ -1,5 +1,7 @@
 import { newlyEarned, type AchievementMetrics } from '@/domain/achievements/achievement';
-import { isWorldCompleted, isWorldUnlocked } from '@/domain/curriculum/unlock-policy';
+import { canPractice, PRACTICE_LESSON_ID } from '@/domain/curriculum/lesson-generator';
+import { buildLessonPlans } from '@/domain/curriculum/lesson-plans';
+import { isLessonUnlocked, isWorldCompleted, isWorldUnlocked } from '@/domain/curriculum/unlock-policy';
 import type { LessonId, LessonKind, SpeciesId, WorldId } from '@/domain/curriculum/types';
 import { credit, debit, ECONOMY_TUNING, lessonReward } from '@/domain/economy/economy';
 import type { CatalogIndex } from '@/domain/game/catalog';
@@ -14,8 +16,21 @@ import type { WordResult } from '@/domain/learning/lesson-session';
 import {
   countCompletedLessons,
   countLearnedWords,
+  countMasteredWords,
   recordLessonCompletion,
+  recordPracticeCompletion,
 } from '@/domain/learning/progress';
+import { canPlayGames, rollPlayDay, settleMiniGame, type MiniGameKind } from '@/domain/play/mini-games';
+import {
+  advanceQuest,
+  canClaimChest,
+  claimChest,
+  isQuestDone,
+  QUEST_TUNING,
+  rollQuestDay,
+  type QuestBoard,
+  type QuestKind,
+} from '@/domain/quests/quests';
 import {
   activePet,
   addEgg,
@@ -73,6 +88,11 @@ export function computeMetrics(state: GameState, content: CatalogIndex): Achieve
     worldsCompleted: content.orderedWorlds.filter((w) => isWorldCompleted(w, state.progress)).length,
     storiesCompleted: countCompletedOfKind(state, content, 'story'),
     speakLessonsCompleted: countCompletedOfKind(state, content, 'speak'),
+    songsCompleted: countCompletedOfKind(state, content, 'song'),
+    practiceSessions: state.progress.practiceSessions,
+    miniGamesPlayed: state.play.totalGames,
+    questChests: state.quests.chestsOpened,
+    wordsMastered: countMasteredWords(state.progress),
   };
 }
 
@@ -146,24 +166,25 @@ export function finishLesson(
   input: { lessonId: LessonId; accuracy: number; wordResults: readonly WordResult[] },
   ctx: CommandContext,
 ): CommandResult {
-  const plan = ctx.content.lessonPlan(input.lessonId);
+  const isPractice = input.lessonId === PRACTICE_LESSON_ID;
+  const plan = isPractice ? null : ctx.content.lessonPlan(input.lessonId);
   const world = plan ? ctx.content.world(plan.worldId) : undefined;
-  if (!plan || !world) return unchanged(state);
+  if (!isPractice && (!plan || !world)) return unchanged(state);
+  const kind: LessonKind = plan?.kind ?? 'practice';
+  const lessonId = plan?.id ?? PRACTICE_LESSON_ID;
 
   const unlockedBefore = unlockedWorldIds(state, ctx);
-  const completion = recordLessonCompletion(state.progress, {
-    lessonId: plan.id,
-    accuracy: input.accuracy,
-    wordResults: input.wordResults,
-    today: ctx.today,
-  });
+  const answers = { accuracy: input.accuracy, wordResults: input.wordResults, today: ctx.today };
+  const completion = isPractice
+    ? recordPracticeCompletion(state.progress, answers)
+    : recordLessonCompletion(state.progress, { ...answers, lessonId });
 
   const pet = activePet(state.pets);
-  const reward = lessonReward(plan.kind, completion.stars, completion.perfect, pet ? xpMultiplier(pet) : 1);
+  const reward = lessonReward(kind, completion.stars, completion.perfect, pet ? xpMultiplier(pet) : 1);
   const events: GameEvent[] = [
     {
       type: 'lesson-completed',
-      lessonId: plan.id,
+      lessonId,
       stars: completion.stars,
       perfect: completion.perfect,
       berries: reward.berries,
@@ -192,7 +213,7 @@ export function finishLesson(
     }
   }
 
-  if (plan.kind === 'boss' && completion.firstCompletion) {
+  if (plan?.kind === 'boss' && world && completion.firstCompletion) {
     const speciesId = world.rewardSpeciesId;
     if (!ownsSpecies(next.pets, speciesId) && !next.pets.eggs.includes(speciesId)) {
       next = { ...next, pets: addEgg(next.pets, speciesId) };
@@ -408,9 +429,127 @@ export function startDay(state: GameState, ctx: CommandContext): CommandResult {
       ...state,
       screenTime: rollOverDay(state.screenTime, ctx.today),
       pets: { ...state.pets, owned },
+      play: rollPlayDay(state.play, ctx.today),
+      quests: rollQuestDay(state.quests, ctx.today, availableQuestKinds(state, ctx)),
     },
     events: [],
   };
+}
+
+/* ------------------------------------------------------- Play and quests */
+
+/** Pays a finished Play Park game (daily cap) and gives the pet a little XP. */
+export function finishMiniGame(
+  state: GameState,
+  input: { kind: MiniGameKind; correct: number; total: number },
+  ctx: CommandContext,
+): CommandResult {
+  const settled = settleMiniGame(state.play, ctx.today, input.correct);
+  let next: GameState = { ...state, play: settled.play, wallet: credit(state.wallet, settled.berries) };
+  const events: GameEvent[] = [
+    {
+      type: 'mini-game-finished',
+      kind: input.kind,
+      correct: input.correct,
+      total: input.total,
+      berries: settled.berries,
+      capped: settled.capped,
+    },
+  ];
+  const pet = activePet(next.pets);
+  if (pet && settled.berries > 0) {
+    const grown = gainXp(pet, settled.berries);
+    next = { ...next, pets: updatePet(next.pets, grown.pet) };
+    if (grown.leveledUp) {
+      events.push({
+        type: 'pet-leveled-up',
+        speciesId: pet.speciesId,
+        level: grown.level,
+        stage: grown.stage,
+        stageChanged: grown.stageChanged,
+      });
+    }
+  }
+  const achievements = applyAchievements(next, ctx);
+  return { state: achievements.state, events: [...events, ...achievements.events] };
+}
+
+/** Opens the quest chest once all of today's quests are done (fixed reward). */
+export function claimQuestChest(state: GameState, ctx: CommandContext): CommandResult {
+  const board = rollQuestDay(state.quests, ctx.today, availableQuestKinds(state, ctx));
+  if (!canClaimChest(board)) return unchanged(state);
+  const next: GameState = {
+    ...state,
+    quests: claimChest(board),
+    wallet: credit(state.wallet, QUEST_TUNING.chestBerries),
+  };
+  const achievements = applyAchievements(next, ctx);
+  return {
+    state: achievements.state,
+    events: [
+      { type: 'berries-earned', amount: QUEST_TUNING.chestBerries, reason: 'quest-chest' },
+      ...achievements.events,
+    ],
+  };
+}
+
+/** Quests a child can actually do today, so a board never asks the impossible. */
+export function availableQuestKinds(state: GameState, ctx: CommandContext): QuestKind[] {
+  const kinds: QuestKind[] = ['lessons', 'perfect', 'feed'];
+  const { mastery } = state.progress;
+  if (canPractice(mastery)) kinds.push('practice');
+  if (canPlayGames(mastery)) kinds.push('game');
+  const worlds = ctx.content.orderedWorlds;
+  const listeningOpen = worlds.some((world) =>
+    buildLessonPlans(world).some(
+      (plan) =>
+        (plan.kind === 'story' || plan.kind === 'song') &&
+        isLessonUnlocked(plan, world, worlds, state.progress),
+    ),
+  );
+  if (listeningOpen) kinds.push('listen');
+  return kinds;
+}
+
+/** Which quests an event moves forward. */
+function questSignals(event: GameEvent, ctx: CommandContext): QuestKind[] {
+  switch (event.type) {
+    case 'lesson-completed': {
+      const signals: QuestKind[] = ['lessons'];
+      if (event.stars === 3) signals.push('perfect');
+      if (event.lessonId === PRACTICE_LESSON_ID) signals.push('practice');
+      const kind = ctx.content.lessonPlan(event.lessonId)?.kind;
+      if (kind === 'story' || kind === 'song') signals.push('listen');
+      return signals;
+    }
+    case 'pet-fed':
+      return ['feed'];
+    case 'mini-game-finished':
+      return ['game'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Applies a command's events to today's quests (run after every command by
+ * the state layer). Emits 'quest-completed' when a quest is finished.
+ */
+export function trackQuests(result: CommandResult, ctx: CommandContext): CommandResult {
+  const signals = result.events.flatMap((event) => questSignals(event, ctx));
+  if (signals.length === 0) return result;
+  const before: QuestBoard = rollQuestDay(
+    result.state.quests,
+    ctx.today,
+    availableQuestKinds(result.state, ctx),
+  );
+  let board = before;
+  for (const signal of signals) board = advanceQuest(board, signal);
+  if (board === result.state.quests) return result;
+  const completed: GameEvent[] = board.kinds
+    .filter((kind) => isQuestDone(board, kind) && !isQuestDone(before, kind))
+    .map((kind) => ({ type: 'quest-completed', kind }));
+  return { state: { ...result.state, quests: board }, events: [...result.events, ...completed] };
 }
 
 /** Deletes all progress (parent area). Keeps only the UI language. */

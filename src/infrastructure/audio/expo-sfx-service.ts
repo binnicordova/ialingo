@@ -11,6 +11,7 @@ const SOURCES: Readonly<Record<SoundEffect, number>> = {
   coin: require('@/assets/sfx/coin.wav'),
   'level-up': require('@/assets/sfx/level-up.wav'),
   hatch: require('@/assets/sfx/hatch.wav'),
+  clap: require('@/assets/sfx/clap.wav'),
 };
 
 /**

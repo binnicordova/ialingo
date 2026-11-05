@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 
 import type {
   ListenOptions,
+  OfflineModelDownload,
+  OfflineModelStatus,
   RecognitionCapability,
   RecognitionOutcome,
   SpeechRecognitionService,
@@ -17,6 +19,18 @@ interface RecognizerModule {
   supportsOnDeviceRecognition(): boolean;
   isRecognitionAvailable(): boolean;
   addListener(event: string, listener: (payload: unknown) => void): { remove(): void };
+  getSupportedLocales?(options: {
+    androidRecognitionServicePackage?: string;
+  }): Promise<{ locales: string[]; installedLocales: string[] }>;
+  androidTriggerOfflineModelDownload?(options: { locale: string }): Promise<{ status: string }>;
+}
+
+/** Google's on-device recognition service (Android System Intelligence). */
+const ANDROID_ON_DEVICE_SERVICE = 'com.google.android.as';
+
+function sameLanguage(a: string, b: string): boolean {
+  const norm = (tag: string) => tag.toLowerCase().replace('_', '-');
+  return norm(a) === norm(b);
 }
 
 const NATIVE_NAME = 'ExpoSpeechRecognition';
@@ -44,7 +58,9 @@ interface ResultPayload {
   readonly results: readonly { readonly transcript: string }[];
 }
 
-export function createExpoSpeechRecognitionService(): SpeechRecognitionService {
+export function createExpoSpeechRecognitionService(
+  { platform = Platform.OS }: { platform?: string } = {},
+): SpeechRecognitionService {
   let module: RecognizerModule | null | undefined;
   const get = () => {
     if (module === undefined) module = loadRecognizer();
@@ -52,18 +68,51 @@ export function createExpoSpeechRecognitionService(): SpeechRecognitionService {
   };
   let active: (() => void) | null = null;
 
+  /** Android: is the on-device model for this language downloaded? */
+  const offlineModelStatus = async (language: string): Promise<OfflineModelStatus> => {
+    const recognizer = get();
+    if (platform !== 'android' || !recognizer?.getSupportedLocales) return 'unsupported';
+    try {
+      const { locales, installedLocales } = await recognizer.getSupportedLocales({
+        androidRecognitionServicePackage: ANDROID_ON_DEVICE_SERVICE,
+      });
+      if (installedLocales.some((tag) => sameLanguage(tag, language))) return 'installed';
+      // Android 12 and below report no locales at all: we cannot tell.
+      if (locales.length === 0 && installedLocales.length === 0) return 'unsupported';
+      return 'missing';
+    } catch {
+      // For example "package_not_found" on phones without Google's service.
+      return 'unsupported';
+    }
+  };
+
   return {
-    async capability(): Promise<RecognitionCapability> {
+    async capability(language: string): Promise<RecognitionCapability> {
       const recognizer = get();
-      if (!recognizer) return { installed: false, available: false, onDevice: false };
+      if (!recognizer) return { installed: false, available: false, onDevice: false, offlineModel: 'unsupported' };
       try {
+        const offlineModel = await offlineModelStatus(language);
         return {
           installed: true,
           available: recognizer.isRecognitionAvailable(),
-          onDevice: recognizer.supportsOnDeviceRecognition(),
+          // The device may support on-device recognition, but not for
+          // English until its model is downloaded.
+          onDevice: recognizer.supportsOnDeviceRecognition() && offlineModel !== 'missing',
+          offlineModel,
         };
       } catch {
-        return { installed: true, available: false, onDevice: false };
+        return { installed: true, available: false, onDevice: false, offlineModel: 'unsupported' };
+      }
+    },
+
+    async downloadOfflineModel(language: string): Promise<OfflineModelDownload> {
+      const recognizer = get();
+      if (platform !== 'android' || !recognizer?.androidTriggerOfflineModelDownload) return 'unsupported';
+      try {
+        const { status } = await recognizer.androidTriggerOfflineModelDownload({ locale: language });
+        return status === 'download_success' ? 'downloaded' : 'started';
+      } catch {
+        return 'failed';
       }
     },
 

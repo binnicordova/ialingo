@@ -16,7 +16,9 @@ export const ECONOMY_TUNING = {
   bossBonusBerries: 10,
   reviewBonusBerries: 2,
   storyBonusBerries: 2,
+  songBonusBerries: 2,
   speakBonusBerries: 3,
+  practiceBonusBerries: 1,
   dailyGiftBerries: 10,
   welcomeBerries: 15,
   feedCost: 1,
@@ -63,7 +65,9 @@ export function lessonReward(
   const KIND_BONUS: Readonly<Record<LessonKind, number>> = {
     learn: 0,
     story: tuning.storyBonusBerries,
+    song: tuning.songBonusBerries,
     speak: tuning.speakBonusBerries,
+    practice: tuning.practiceBonusBerries,
     review: tuning.reviewBonusBerries,
     boss: tuning.bossBonusBerries,
   };

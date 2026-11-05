@@ -11,7 +11,12 @@ export type AchievementCondition =
   | { readonly type: 'pets-fed'; readonly count: number }
   | { readonly type: 'worlds-completed'; readonly count: number }
   | { readonly type: 'stories-completed'; readonly count: number }
-  | { readonly type: 'speak-lessons-completed'; readonly count: number };
+  | { readonly type: 'speak-lessons-completed'; readonly count: number }
+  | { readonly type: 'songs-completed'; readonly count: number }
+  | { readonly type: 'practice-sessions'; readonly count: number }
+  | { readonly type: 'mini-games-played'; readonly count: number }
+  | { readonly type: 'quest-chests'; readonly count: number }
+  | { readonly type: 'words-mastered'; readonly count: number };
 
 export interface AchievementReward {
   readonly berries?: number;
@@ -37,6 +42,11 @@ export interface AchievementMetrics {
   readonly worldsCompleted: number;
   readonly storiesCompleted: number;
   readonly speakLessonsCompleted: number;
+  readonly songsCompleted: number;
+  readonly practiceSessions: number;
+  readonly miniGamesPlayed: number;
+  readonly questChests: number;
+  readonly wordsMastered: number;
 }
 
 export function metricFor(condition: AchievementCondition, metrics: AchievementMetrics): number {
@@ -57,6 +67,16 @@ export function metricFor(condition: AchievementCondition, metrics: AchievementM
       return metrics.storiesCompleted;
     case 'speak-lessons-completed':
       return metrics.speakLessonsCompleted;
+    case 'songs-completed':
+      return metrics.songsCompleted;
+    case 'practice-sessions':
+      return metrics.practiceSessions;
+    case 'mini-games-played':
+      return metrics.miniGamesPlayed;
+    case 'quest-chests':
+      return metrics.questChests;
+    case 'words-mastered':
+      return metrics.wordsMastered;
   }
 }
 

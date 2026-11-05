@@ -3,6 +3,8 @@ import type { LessonId, SpeciesId, WorldId } from '@/domain/curriculum/types';
 import type { Stars } from '@/domain/learning/progress';
 import type { GrowthStage } from '@/domain/pets/leveling';
 import type { AccessoryId } from '@/domain/pets/pet';
+import type { MiniGameKind } from '@/domain/play/mini-games';
+import type { QuestKind } from '@/domain/quests/quests';
 
 /**
  * Domain events emitted by commands. The UI uses them for celebrations
@@ -37,9 +39,19 @@ export type GameEvent =
   | {
       readonly type: 'berries-earned';
       readonly amount: number;
-      readonly reason: 'daily-gift' | 'achievement' | 'welcome';
+      readonly reason: 'daily-gift' | 'achievement' | 'welcome' | 'quest-chest';
     }
   | { readonly type: 'accessory-bought'; readonly accessoryId: AccessoryId }
+  | {
+      readonly type: 'mini-game-finished';
+      readonly kind: MiniGameKind;
+      readonly correct: number;
+      readonly total: number;
+      readonly berries: number;
+      /** True when the daily game-berry cap cut the reward. */
+      readonly capped: boolean;
+    }
+  | { readonly type: 'quest-completed'; readonly kind: QuestKind }
   | { readonly type: 'postcard-saved' }
   /** Recordings to delete from disk (pruned, deleted, or the diary was turned off). */
   | { readonly type: 'voice-files-removed'; readonly fileNames: readonly string[] }

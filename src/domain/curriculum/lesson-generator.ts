@@ -1,8 +1,17 @@
 import { pickReviewWords, type WordMastery } from '../learning/mastery';
 import type { DayKey } from '../shared/day';
 import { createRng, type Rng } from '../shared/rng';
-import { tokenizeSentence, type Exercise } from './exercises';
-import type { LessonId, LessonPlan, Sentence, Story, VocabularyItem, WordId, World } from './types';
+import { gapLine, tokenizeSentence, type Exercise } from './exercises';
+import type {
+  LessonId,
+  LessonPlan,
+  Sentence,
+  Song,
+  Story,
+  VocabularyItem,
+  WordId,
+  World,
+} from './types';
 
 /**
  * Lesson generation tuning. Values are deliberately small: about 12 exercises
@@ -46,6 +55,25 @@ const SPEAK_RECIPE: readonly Slot[] = [
 
 /** Comprehension questions after a story. */
 export const STORY_TUNING = { questions: 3 } as const;
+
+/**
+ * After the sing-along: missing-word lines, picture questions, a true/false
+ * and one "sing it back" speaking exercise (8 exercises with the song).
+ */
+export const SONG_TUNING = { gaps: 3, questions: 2 } as const;
+
+/**
+ * Word Gym: unlimited cross-world practice of words already met, most-due
+ * and weakest first. It never introduces new words.
+ */
+export const PRACTICE_LESSON_ID: LessonId = 'gym';
+export const PRACTICE_TUNING = { minWords: 4, focusWords: 8 } as const;
+
+/** Slot sequence for Word Gym sessions (10 exercises). */
+const PRACTICE_RECIPE: readonly Slot[] = [
+  'listen', 'picture', 'spell', 'listen', 'true-false',
+  'picture', 'match', 'speak-word', 'listen', 'picture',
+];
 
 /** Slot sequence for boss lessons (12 exercises, harder options). */
 const BOSS_RECIPE: readonly Slot[] = [
@@ -202,6 +230,21 @@ class LessonBuilder {
     this.push({ kind: 'story-page', id: this.nextId(), storyId: story.id, lineIndex });
   }
 
+  song(song: Song): void {
+    this.push({ kind: 'song', id: this.nextId(), songId: song.id });
+  }
+
+  lyricGap(song: Song, lineIndex: number, word: VocabularyItem): void {
+    this.push({
+      kind: 'lyric-gap',
+      id: this.nextId(),
+      songId: song.id,
+      lineIndex,
+      answerId: word.id,
+      optionIds: this.options(word),
+    });
+  }
+
   sentence(sentence: Sentence): void {
     const tokens = tokenizeSentence(sentence.en);
     const extras = this.rng
@@ -235,10 +278,15 @@ export function generateLesson(input: GenerateLessonInput): GeneratedLesson {
     plan.kind === 'boss' ? LESSON_TUNING.hardOptionCount : LESSON_TUNING.easyOptionCount;
   const builder = new LessonBuilder(plan.id, rng, world.words, globalPool, optionCount);
 
+  if (plan.kind === 'practice') {
+    throw new Error('Word Gym sessions are built with generatePracticeLesson');
+  }
   if (plan.kind === 'learn') {
     buildLearnLesson(builder, plan, world, worlds, words, mastery, today, rng);
   } else if (plan.kind === 'story' && world.story) {
     buildStoryLesson(builder, world.story, words, rng);
+  } else if (plan.kind === 'song' && world.song) {
+    buildSongLesson(builder, world.song, words, rng);
   } else {
     const recipe =
       plan.kind === 'boss' ? BOSS_RECIPE : plan.kind === 'speak' ? SPEAK_RECIPE : REVIEW_RECIPE;
@@ -315,6 +363,92 @@ function buildStoryLesson(
   if (extra) builder.trueFalse(extra);
 }
 
+/** The chant first, then lines with a missing word, then questions about its words. */
+function buildSongLesson(
+  builder: LessonBuilder,
+  song: Song,
+  words: Map<WordId, VocabularyItem>,
+  rng: Rng,
+): void {
+  builder.song(song);
+  const gappable = song.lines
+    .map((line, index) => ({ index, word: words.get(line.keyWordId), line }))
+    .filter(
+      (x): x is { index: number; word: VocabularyItem; line: (typeof song.lines)[number] } =>
+        x.word !== undefined && gapLine(x.line.en, x.word.en) !== null,
+    );
+  const gaps = rng.sample(gappable, SONG_TUNING.gaps).sort((a, b) => a.index - b.index);
+  for (const gap of gaps) builder.lyricGap(song, gap.index, gap.word);
+
+  const gapped = new Set(gaps.map((g) => g.word.id));
+  const keyWords = [...new Set(song.lines.map((line) => line.keyWordId))]
+    .map((id) => words.get(id))
+    .filter((w): w is VocabularyItem => w !== undefined);
+  const others = keyWords.filter((w) => !gapped.has(w.id));
+  const asked = rng.sample(others.length >= SONG_TUNING.questions ? others : keyWords, SONG_TUNING.questions);
+  asked.forEach((word, i) => (i % 2 === 0 ? builder.listen(word) : builder.picture(word)));
+  if (keyWords.length > 0) {
+    builder.trueFalse(rng.pick(keyWords));
+    builder.speakWord(rng.pick(keyWords));
+  }
+}
+
+export interface GeneratePracticeInput {
+  readonly worlds: readonly World[];
+  readonly mastery: Readonly<Record<WordId, WordMastery>>;
+  readonly today: DayKey;
+  readonly seed: number;
+}
+
+/** Words the Word Gym would train now (already met; due and weak first). */
+export function practiceFocusWords(
+  worlds: readonly World[],
+  mastery: Readonly<Record<WordId, WordMastery>>,
+  today: DayKey,
+  limit: number = PRACTICE_TUNING.focusWords,
+): WordId[] {
+  const allIds = worlds.flatMap((w) => w.words.map((x) => x.id));
+  return pickReviewWords(mastery, allIds, today, limit);
+}
+
+/** True once enough words have been met for a meaningful practice session. */
+export function canPractice(mastery: Readonly<Record<WordId, WordMastery>>): boolean {
+  return Object.keys(mastery).length >= PRACTICE_TUNING.minWords;
+}
+
+/**
+ * Builds a Word Gym session over words met in any world. The plan's world is
+ * the "host" (theme color and guide): the world of the most urgent word.
+ * Returns null until the learner has met enough words.
+ */
+export function generatePracticeLesson(input: GeneratePracticeInput): GeneratedLesson | null {
+  const { worlds, mastery, today } = input;
+  if (!canPractice(mastery)) return null;
+  const words = indexWords(worlds);
+  const focus = practiceFocusWords(worlds, mastery, today)
+    .map((id) => words.get(id))
+    .filter((w): w is VocabularyItem => w !== undefined);
+  const first = focus[0];
+  if (focus.length < PRACTICE_TUNING.minWords || !first) return null;
+  const host = worlds.find((w) => w.id === first.worldId) ?? worlds[0];
+  if (!host) return null;
+
+  const plan: LessonPlan = {
+    id: PRACTICE_LESSON_ID,
+    worldId: host.id,
+    kind: 'practice',
+    index: 1,
+    newWordIds: [],
+  };
+  const rng = createRng(input.seed);
+  const globalPool = worlds.flatMap((w) => w.words);
+  const builder = new LessonBuilder(plan.id, rng, focus, globalPool, LESSON_TUNING.easyOptionCount);
+  const playedWorlds = new Set(focus.map((w) => w.worldId));
+  const sentences = rng.shuffle(worlds.filter((w) => playedWorlds.has(w.id)).flatMap((w) => w.sentences));
+  buildFocusRecipe(builder, PRACTICE_RECIPE, focus, sentences);
+  return { id: plan.id, plan, exercises: builder.build() };
+}
+
 function buildFromRecipe(
   builder: LessonBuilder,
   recipe: readonly Slot[],
@@ -329,7 +463,16 @@ function buildFromRecipe(
   const focusOrder = [...seenFirst, ...unseen]
     .map((id) => world.words.find((w) => w.id === id))
     .filter((w): w is VocabularyItem => w !== undefined);
-  const sentences = rng.shuffle(world.sentences);
+  buildFocusRecipe(builder, recipe, focusOrder, rng.shuffle(world.sentences));
+}
+
+/** Fills a recipe's slots by cycling through focus words (most important first). */
+function buildFocusRecipe(
+  builder: LessonBuilder,
+  recipe: readonly Slot[],
+  focusOrder: readonly VocabularyItem[],
+  sentences: readonly Sentence[],
+): void {
   let wordCursor = 0;
   let sentenceCursor = 0;
   const nextWord = (): VocabularyItem => {

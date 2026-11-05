@@ -7,6 +7,7 @@ export type LessonId = string;
 export type CharacterId = string;
 export type SpeciesId = string;
 export type StoryId = string;
+export type SongId = string;
 
 /** Cambridge Young Learners English levels (CEFR Pre-A1 → A2). */
 export type YleLevel = 'starters' | 'movers' | 'flyers';
@@ -49,6 +50,14 @@ export interface Story {
   readonly lines: readonly StoryLine[];
 }
 
+/** A short original chant sung by the guide (karaoke), reusing the world's words. */
+export interface Song {
+  readonly id: SongId;
+  readonly worldId: WorldId;
+  readonly title: LocalizedText;
+  readonly lines: readonly StoryLine[];
+}
+
 /** A themed unit of the curriculum (for example "Farm Animals"). */
 export interface World {
   readonly id: WorldId;
@@ -66,13 +75,15 @@ export interface World {
   readonly words: readonly VocabularyItem[];
   readonly sentences: readonly Sentence[];
   readonly story?: Story;
+  readonly song?: Song;
 }
 
 /**
  * Lesson kinds, in map order inside a world:
- * learn (new words) → story (listening) → speak (pronunciation) → review → boss.
+ * learn (new words) → story (listening) → song (sing-along) → speak
+ * (pronunciation) → review → boss. 'practice' is the cross-world Word Gym.
  */
-export type LessonKind = 'learn' | 'story' | 'speak' | 'review' | 'boss';
+export type LessonKind = 'learn' | 'story' | 'song' | 'speak' | 'review' | 'boss' | 'practice';
 
 /** Static description of one lesson slot inside a world. */
 export interface LessonPlan {

@@ -1,15 +1,17 @@
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import type { GameEvent } from '@/application/events';
+import { QUEST_DEFINITIONS } from '@/domain/quests/quests';
 import { consumeEventAtom, playSfxAtom, speakAtom } from '@/state/actions';
 import { contentAtom, pendingEventsAtom } from '@/state/core';
 import { petCollectionAtom } from '@/state/selectors';
 
 import { EggPortrait, PetPortrait } from '../art/PetPortrait';
+import { QUEST_LABEL } from '../i18n/labels';
 import { useT } from '../i18n/use-t';
 import { colors, radii, spacing } from '../theme/tokens';
 import { AppText, BigButton } from './ui';
@@ -22,6 +24,7 @@ const CELEBRATED: ReadonlySet<GameEvent['type']> = new Set([
   'world-unlocked',
   'berries-earned',
   'not-enough-berries',
+  'quest-completed',
 ]);
 
 /**
@@ -101,9 +104,15 @@ function CelebrationCard({ event, onDone }: { event: GameEvent; onDone: () => vo
       break;
     }
     case 'berries-earned':
-      emoji = '🍓';
-      title = t('giftClaimed', { n: event.amount });
-      english = 'Yummy berries!';
+      emoji = event.reason === 'quest-chest' ? '🎁' : '🍓';
+      title = event.reason === 'quest-chest' ? t('chestOpened', { n: event.amount }) : t('giftClaimed', { n: event.amount });
+      english = event.reason === 'quest-chest' ? 'You found a treasure!' : 'Yummy berries!';
+      break;
+    case 'quest-completed':
+      emoji = QUEST_DEFINITIONS[event.kind].emoji;
+      title = t('questCompleted');
+      subtitle = t(QUEST_LABEL[event.kind]);
+      english = 'Quest complete!';
       break;
     case 'not-enough-berries':
       emoji = '🍓';
@@ -117,10 +126,12 @@ function CelebrationCard({ event, onDone }: { event: GameEvent; onDone: () => vo
   useEffect(() => {
     sfx(event.type === 'not-enough-berries' ? 'pop' : event.type === 'pet-leveled-up' ? 'level-up' : 'coin');
     if (english) speak({ text: english, language: 'target' });
-  }, [event.type, english, sfx, speak]);
+    // Screen readers hear the celebration too.
+    AccessibilityInfo.announceForAccessibility(subtitle ? `${title}. ${subtitle}` : title);
+  }, [event.type, english, sfx, speak, title, subtitle]);
 
   return (
-    <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop}>
+    <Animated.View entering={FadeIn.duration(180)} style={styles.backdrop} accessibilityViewIsModal>
       <Animated.View entering={ZoomIn.springify().damping(12)} style={styles.card}>
         {art ?? <Text style={styles.emoji}>{emoji}</Text>}
         <AppText variant="title" center>

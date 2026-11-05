@@ -20,8 +20,10 @@ import {
 import { CharacterAvatar } from '../art/CharacterAvatar';
 import { PetPortrait } from '../art/PetPortrait';
 import { SpeechBubble } from '../components/game';
+import { ActivityTiles, QuestCard } from '../components/HomeActivities';
 import { AppText, BerryPill, BigButton, Card, IconButton, ProgressBar, Screen } from '../components/ui';
 import { useSpeak } from '../hooks/use-speak';
+import { lessonTitle, LESSON_KIND_ICON } from '../i18n/labels';
 import { useT } from '../i18n/use-t';
 import { colors, radii, shade, shadow, spacing } from '../theme/tokens';
 
@@ -100,13 +102,7 @@ export function HomeScreen() {
                     {current.world.emoji} {l(current.world.title)}
                   </AppText>
                   <AppText variant="heading">
-                    {nextPlan
-                      ? nextPlan.kind === 'learn'
-                        ? t('lessonLearn', { n: nextPlan.index })
-                        : nextPlan.kind === 'review'
-                          ? t('lessonReview')
-                          : t('lessonBoss')
-                      : t('worldDone')}
+                    {nextPlan ? `${LESSON_KIND_ICON[nextPlan.kind]} ${lessonTitle(nextPlan, t)}`.trim() : t('worldDone')}
                   </AppText>
                 </SpeechBubble>
               </View>
@@ -114,6 +110,9 @@ export function HomeScreen() {
             </Card>
           </Animated.View>
         ) : null}
+
+        <QuestCard onPlay={play} />
+        <ActivityTiles />
 
         <View style={styles.quickRow}>
           <IconButton icon="🐾" label={t('myPets')} onPress={() => router.push('/pets')} badge={eggs.length || null} size={56} testID="nav-pets" />

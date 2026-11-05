@@ -30,3 +30,10 @@ function toUtcMidnight(day: DayKey): number {
 export function daysBetween(from: DayKey, to: DayKey): number {
   return Math.round((toUtcMidnight(to) - toUtcMidnight(from)) / MS_PER_DAY);
 }
+
+/** The day `days` after `day` (calendar arithmetic in UTC, so no time zone drift). */
+export function addDays(day: DayKey, days: number): DayKey {
+  const [y, m, d] = day.split('-').map(Number) as [number, number, number];
+  const date = new Date(Date.UTC(y, m - 1, d + days));
+  return date.toISOString().slice(0, 10);
+}

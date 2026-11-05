@@ -43,6 +43,24 @@ function noise(duration, volume = 0.3) {
   return out;
 }
 
+/** Simple band-pass (one-pole high-pass then low-pass) to soften white noise into a clap. */
+function bandpass(samples, lowHz, highHz) {
+  const out = new Float32Array(samples.length);
+  const dt = 1 / SAMPLE_RATE;
+  const aHigh = 1 / (1 + 1 / (2 * Math.PI * lowHz * dt));
+  const aLow = (2 * Math.PI * highHz * dt) / (1 + 2 * Math.PI * highHz * dt);
+  let hp = 0;
+  let prevIn = 0;
+  let lp = 0;
+  for (let i = 0; i < samples.length; i += 1) {
+    hp = aHigh * (hp + samples[i] - prevIn);
+    prevIn = samples[i];
+    lp += aLow * (hp - lp);
+    out[i] = lp * 6;
+  }
+  return out;
+}
+
 function concat(...parts) {
   const total = parts.reduce((s, p) => s + p.length, 0);
   const out = new Float32Array(total);
@@ -104,6 +122,12 @@ const effects = {
     tone({ f0: NOTE.E5, duration: 0.09, volume: 0.4, wave: 'triangle', decay: 2 }),
     tone({ f0: NOTE.G5, duration: 0.09, volume: 0.4, wave: 'triangle', decay: 2 }),
     tone({ f0: NOTE.C6, duration: 0.3, volume: 0.45, wave: 'triangle', decay: 4 }),
+  ),
+  // A hand clap: three quick bursts and a short tail (the beat in sing-alongs).
+  clap: bandpass(
+    concat(noise(0.008, 0.5), silence(0.005), noise(0.008, 0.55), silence(0.005), noise(0.11, 0.6)),
+    900,
+    2600,
   ),
   hatch: concat(
     noise(0.12, 0.35),

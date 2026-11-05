@@ -1,6 +1,18 @@
 import { atom } from 'jotai';
 
-import { canClaimDailyGift, computeMetrics } from '@/application/commands';
+import { availableQuestKinds, canClaimDailyGift, computeMetrics } from '@/application/commands';
+import { canPractice, practiceFocusWords, PRACTICE_TUNING } from '@/domain/curriculum/lesson-generator';
+import { isDue, pickReviewWords } from '@/domain/learning/mastery';
+import { albumPage, albumTotals } from '@/domain/learning/album';
+import { berriesLeftToday, canPlayGames, PLAY_TUNING } from '@/domain/play/mini-games';
+import {
+  canClaimChest,
+  isQuestDone,
+  QUEST_DEFINITIONS,
+  questProgress,
+  rollQuestDay,
+  type QuestKind,
+} from '@/domain/quests/quests';
 import {
   isLessonUnlocked,
   isWorldCompleted,
@@ -8,7 +20,7 @@ import {
   nextLessonInWorld,
   worldStars,
 } from '@/domain/curriculum/unlock-policy';
-import type { LessonPlan, World } from '@/domain/curriculum/types';
+import type { LessonPlan, VocabularyItem, World } from '@/domain/curriculum/types';
 import { countLearnedWords, countMasteredWords, countCompletedLessons } from '@/domain/learning/progress';
 import { levelProgress, stageForLevel, type GrowthStage } from '@/domain/pets/leveling';
 import type { OwnedPet } from '@/domain/pets/pet';
@@ -171,4 +183,83 @@ export const voiceDiaryAtom = atom((get) => get(gameStateAtom).voiceDiary);
 export const canRecordPostcardAtom = atom((get) => {
   const state = get(gameStateAtom);
   return state.settings.voiceDiary && canRecordPostcard(state.voiceDiary, get(todayAtom));
+});
+
+/* ------------------------------------------------- v1.2: practice and play */
+
+/** Word Gym status: open once a few words were met; how many are due today. */
+export const wordGymAtom = atom((get) => {
+  const { mastery } = get(gameStateAtom).progress;
+  const today = get(todayAtom);
+  const open = canPractice(mastery);
+  const due = Object.values(mastery).filter((m) => isDue(m, today)).length;
+  const focus = open ? practiceFocusWords(get(contentAtom).orderedWorlds, mastery, today).length : 0;
+  return {
+    open,
+    due,
+    focus,
+    minWords: PRACTICE_TUNING.minWords,
+    sessions: get(gameStateAtom).progress.practiceSessions,
+  };
+});
+
+/** Sticker album pages (one per unlocked world) and totals. */
+export const albumAtom = atom((get) => {
+  const { mastery } = get(gameStateAtom).progress;
+  const pages = get(worldViewsAtom)
+    .filter((v) => v.unlocked)
+    .map((v) => albumPage(v.world, mastery));
+  const all = get(contentAtom).orderedWorlds.map((w) => albumPage(w, mastery));
+  return { pages, totals: albumTotals(all) };
+});
+
+/** Play Park status: open after a few words; berries games can still pay today. */
+export const playParkAtom = atom((get) => {
+  const state = get(gameStateAtom);
+  return {
+    open: canPlayGames(state.progress.mastery),
+    minWords: PLAY_TUNING.minWords,
+    berriesLeft: berriesLeftToday(state.play, get(todayAtom)),
+    cap: PLAY_TUNING.dailyBerryCap,
+  };
+});
+
+export interface QuestView {
+  readonly kind: QuestKind;
+  readonly emoji: string;
+  readonly progress: number;
+  readonly target: number;
+  readonly done: boolean;
+}
+
+/** Today's quests (rolled over if the stored board is from another day). */
+export const questsAtom = atom((get) => {
+  const state = get(gameStateAtom);
+  const today = get(todayAtom);
+  const ctx = { today, content: get(contentAtom) };
+  const board = rollQuestDay(state.quests, today, availableQuestKinds(state, ctx));
+  const quests: QuestView[] = board.kinds.map((kind) => ({
+    kind,
+    emoji: QUEST_DEFINITIONS[kind].emoji,
+    progress: questProgress(board, kind),
+    target: QUEST_DEFINITIONS[kind].target,
+    done: isQuestDone(board, kind),
+  }));
+  return { quests, canClaim: canClaimChest(board), claimed: board.chestClaimed };
+});
+
+/** Words for Play Park games: met words, most due and weakest first. */
+export const playWordsAtom = atom<readonly VocabularyItem[]>((get) => {
+  const content = get(contentAtom);
+  const { mastery } = get(gameStateAtom).progress;
+  const ids = content.orderedWorlds.flatMap((w) => w.words.map((x) => x.id));
+  return pickReviewWords(mastery, ids, get(todayAtom), PLAY_TUNING.poolSize)
+    .map((id) => content.word(id))
+    .filter((w): w is VocabularyItem => w !== undefined);
+});
+
+/** Games played today (part of the seed, so each game is a new board). */
+export const gamesTodayAtom = atom((get) => {
+  const { play } = get(gameStateAtom);
+  return play.day === get(todayAtom) ? play.gamesToday : 0;
 });
