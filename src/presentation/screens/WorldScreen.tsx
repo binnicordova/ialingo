@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { levelInfo } from '@/domain/curriculum/levels';
-import type { LessonPlan } from '@/domain/curriculum/types';
 import { tapFeedbackAtom } from '@/state/actions';
 import { contentAtom } from '@/state/core';
 import { berriesAtom, lessonViewsFor, petCollectionAtom, type LessonView } from '@/state/selectors';
@@ -15,6 +14,7 @@ import { EggPortrait } from '../art/PetPortrait';
 import { SectionTitle, SpeechBubble } from '../components/game';
 import { AppText, BerryPill, Pill, Screen, StarRow, TopBar } from '../components/ui';
 import { useSpeak } from '../hooks/use-speak';
+import { lessonTitle, LESSON_KIND_ICON } from '../i18n/labels';
 import { useT } from '../i18n/use-t';
 import { colors, radii, shade, shadow, spacing, tint } from '../theme/tokens';
 
@@ -116,29 +116,6 @@ export function WorldScreen({ worldId }: { worldId: string }) {
   );
 }
 
-function lessonTitle(plan: LessonPlan, t: ReturnType<typeof useT>['t']): string {
-  switch (plan.kind) {
-    case 'learn':
-      return t('lessonLearn', { n: plan.index });
-    case 'story':
-      return t('lessonStory');
-    case 'speak':
-      return t('lessonSpeak');
-    case 'review':
-      return t('lessonReview');
-    case 'boss':
-      return t('lessonBoss');
-  }
-}
-
-const KIND_ICON: Readonly<Record<LessonPlan['kind'], string>> = {
-  learn: '',
-  story: '📖',
-  speak: '🎤',
-  review: '🔁',
-  boss: '👑',
-};
-
 function LessonNode({
   lesson,
   color,
@@ -155,7 +132,7 @@ function LessonNode({
   const { t } = useT();
   const feedback = useSetAtom(tapFeedbackAtom);
   const { plan, unlocked, stars } = lesson;
-  const icon = plan.kind === 'learn' ? String(plan.index) : KIND_ICON[plan.kind];
+  const icon = plan.kind === 'learn' ? String(plan.index) : LESSON_KIND_ICON[plan.kind];
   const tone = unlocked ? (plan.kind === 'boss' ? colors.orange : color) : colors.locked;
   return (
     <Pressable

@@ -48,7 +48,13 @@ export function buildLessonPlans(world: World, tuning = CURRICULUM_TUNING): Less
   // After the learn lessons: listening story (if the world has one), speaking
   // practice, review, and the boss challenge. Ids are stable (`farm.boss`), so
   // saves from earlier versions keep their stars.
-  const followUps: LessonKind[] = [...(world.story ? (['story'] as const) : []), 'speak', 'review', 'boss'];
+  const followUps: LessonKind[] = [
+    ...(world.story ? (['story'] as const) : []),
+    ...(world.song ? (['song'] as const) : []),
+    'speak',
+    'review',
+    'boss',
+  ];
   for (const kind of followUps) {
     plans.push({
       id: lessonIdFor(world.id, kind),

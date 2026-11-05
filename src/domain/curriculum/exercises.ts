@@ -1,5 +1,5 @@
 import { isPassingVerdict, type SpeakVerdict } from '../learning/pronunciation';
-import type { SentenceId, StoryId, WordId } from './types';
+import type { SentenceId, SongId, StoryId, WordId } from './types';
 
 /**
  * Exercise types. Every type can be played without reading: English audio
@@ -55,6 +55,17 @@ export type Exercise =
       readonly id: string;
       readonly storyId: StoryId;
       readonly lineIndex: number;
+    }
+  /** A whole chant, sung line by line (karaoke). Not scored. */
+  | { readonly kind: 'song'; readonly id: string; readonly songId: SongId }
+  /** Hear a song line and pick the word that is missing from it. */
+  | {
+      readonly kind: 'lyric-gap';
+      readonly id: string;
+      readonly songId: SongId;
+      readonly lineIndex: number;
+      readonly answerId: WordId;
+      readonly optionIds: readonly WordId[];
     };
 
 export type ExerciseKind = Exercise['kind'];
@@ -72,7 +83,7 @@ export type ExerciseAnswer =
 
 /** True when the exercise counts toward the score and spaced repetition. */
 export function isScored(exercise: Exercise): boolean {
-  return exercise.kind !== 'learn-card' && exercise.kind !== 'story-page';
+  return exercise.kind !== 'learn-card' && exercise.kind !== 'story-page' && exercise.kind !== 'song';
 }
 
 /** Words whose mastery is updated by an exercise's result. */
@@ -82,6 +93,7 @@ export function targetWordIds(exercise: Exercise): readonly WordId[] {
       return [exercise.wordId];
     case 'listen-pick-picture':
     case 'picture-pick-word':
+    case 'lyric-gap':
       return [exercise.answerId];
     case 'true-false':
       return [exercise.spokenWordId];
@@ -94,6 +106,7 @@ export function targetWordIds(exercise: Exercise): readonly WordId[] {
     case 'build-sentence':
     case 'speak-sentence':
     case 'story-page':
+    case 'song':
       return [];
   }
 }
@@ -122,12 +135,14 @@ export function evaluateAnswer(
   switch (exercise.kind) {
     case 'learn-card':
     case 'story-page':
+    case 'song':
       return true;
     case 'speak-word':
     case 'speak-sentence':
       return answer.kind === 'speech' && isPassingVerdict(answer.verdict);
     case 'listen-pick-picture':
     case 'picture-pick-word':
+    case 'lyric-gap':
       return answer.kind === 'pick' && answer.optionId === exercise.answerId;
     case 'true-false':
       return (
@@ -148,4 +163,49 @@ export function evaluateAnswer(
           tokenizeSentence(lookup.sentenceText(exercise.sentenceId)).join(' ')
       );
   }
+}
+
+/** A line split around every occurrence of one word, for gap-fill exercises. */
+export interface GappedLine {
+  /** Text around the gaps (one more segment than there are gaps). */
+  readonly segments: readonly string[];
+  /** The word as it is written in the line. */
+  readonly missing: string;
+}
+
+const WORD_CHAR = /[a-z0-9'\u00C0-\u024F]/i;
+
+function isWordChar(ch: string | undefined): boolean {
+  return ch !== undefined && WORD_CHAR.test(ch);
+}
+
+/**
+ * Finds `word` as a whole word in `line` (case-insensitive) and splits the
+ * line around every occurrence, so a repeated word ("Happy, happy!") never
+ * gives the answer away. Returns null when the word does not appear on its own.
+ */
+export function gapLine(line: string, word: string): GappedLine | null {
+  const lowerLine = line.toLowerCase();
+  const target = word.toLowerCase();
+  if (target.length === 0 || lowerLine.length !== line.length) return null;
+  const segments: string[] = [];
+  let missing: string | null = null;
+  let cursor = 0;
+  let from = 0;
+  while (from <= lowerLine.length - target.length) {
+    const at = lowerLine.indexOf(target, from);
+    if (at < 0) break;
+    const end = at + target.length;
+    if (!isWordChar(line[at - 1]) && !isWordChar(line[end])) {
+      segments.push(line.slice(cursor, at));
+      missing ??= line.slice(at, end);
+      cursor = end;
+      from = end;
+    } else {
+      from = at + 1;
+    }
+  }
+  if (missing === null) return null;
+  segments.push(line.slice(cursor));
+  return { segments, missing };
 }

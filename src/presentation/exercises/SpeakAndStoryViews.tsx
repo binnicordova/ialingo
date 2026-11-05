@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -25,7 +25,9 @@ import { contentAtom, recognitionAtom } from '@/state/core';
 import { localeAtom, speakModeAtom } from '@/state/selectors';
 
 import { SpeakerButton } from '../components/game';
+import { ParentGateModal } from '../components/ParentGateModal';
 import { AppText, BigButton, Card } from '../components/ui';
+import { useExerciseIntro } from '../hooks/use-exercise-intro';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
 import { colors, radii, shade, spacing } from '../theme/tokens';
@@ -36,23 +38,6 @@ interface Props {
   readonly onAnswer: (answer: ExerciseAnswer) => void;
   readonly introduce: boolean;
   readonly guide?: Character;
-}
-
-/** Speaks an instruction (first time only) and then the prompt, once per exercise. */
-function useOpening(id: string, introduce: boolean, instruction: string, guide: Character | undefined, prompt: () => void) {
-  const { native } = useSpeak();
-  const latest = useRef({ introduce, instruction, guide, prompt });
-  useEffect(() => {
-    latest.current = { introduce, instruction, guide, prompt };
-  });
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const l = latest.current;
-      if (l.introduce) native(l.instruction, l.guide, l.prompt);
-      else l.prompt();
-    }, 280);
-    return () => clearTimeout(timer);
-  }, [id, native]);
 }
 
 /* ---------------------------------------------------------------- Speak */
@@ -73,6 +58,8 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
   const [attempts, setAttempts] = useState(0);
   const [score, setScore] = useState<SpeakScore | null>(null);
   const [silent, setSilent] = useState(false);
+  /** Kids Category rule: a grown-up passes the parental gate before the OS permission prompt. */
+  const [gate, setGate] = useState(false);
 
   const target =
     exercise.kind === 'speak-word'
@@ -83,7 +70,7 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
   const text = target?.en ?? '';
   const isSentence = exercise.kind === 'speak-sentence';
 
-  useOpening(exercise.id, introduce, isSentence ? t('instrSpeakSentence') : t('instrSpeak'), guide, () => {
+  useExerciseIntro(exercise.id, introduce, isSentence ? t('instrSpeakSentence') : t('instrSpeak'), guide, () => {
     if (text) english(text);
   });
 
@@ -124,6 +111,7 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
   };
 
   const allowMicrophone = async () => {
+    setGate(false);
     const granted = await requestMic();
     setPhase('idle');
     if (granted) void startListening();
@@ -156,7 +144,7 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
             <AppText variant="small" center color={colors.inkSoft}>
               {t('micPermissionBody')}
             </AppText>
-            <BigButton label={t('allowMic')} tone="success" onPress={() => void allowMicrophone()} testID="mic-allow" />
+            <BigButton label={t('allowMic')} tone="success" onPress={() => setGate(true)} testID="mic-allow" />
             <BigButton label={t('notNow')} tone="neutral" compact onPress={() => setPhase('idle')} />
           </Card>
         </Animated.View>
@@ -206,6 +194,7 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
           />
         </View>
       )}
+      <ParentGateModal visible={gate} onPass={() => void allowMicrophone()} onCancel={() => setGate(false)} />
     </View>
   );
 }
@@ -260,7 +249,7 @@ export function StoryPageView({ exercise, onAnswer, introduce, guide, locked }: 
   const index = exercise.kind === 'story-page' ? exercise.lineIndex : 0;
   const line = story?.lines[index];
 
-  useOpening(exercise.id, introduce, t('instrStory'), guide, () => {
+  useExerciseIntro(exercise.id, introduce, t('instrStory'), guide, () => {
     if (line) characterEnglish(line.en, guide);
   });
 

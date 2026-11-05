@@ -22,17 +22,39 @@ import {
   recordLessonCompletion,
   starsForAccuracy,
 } from '@/domain/learning/progress';
+import { addDays } from '@/domain/shared/day';
 import { TODAY, TOMORROW } from '../../helpers/fixtures';
 
 describe('Leitner mastery', () => {
-  it('moves up on correct answers and down on misses, within bounds', () => {
+  it('promotes only on due reviews, demotes on misses, within bounds', () => {
     let m = recordAnswer(undefined, true, TODAY);
     expect(m.box).toBe(1);
-    for (let i = 0; i < 10; i += 1) m = recordAnswer(m, true, TODAY);
+    // The same word again in the same session is practice, not promotion.
+    m = recordAnswer(m, true, TODAY);
+    expect(m).toMatchObject({ box: 1, lastReviewDay: TODAY, seen: 2, correct: 2 });
+    // Reviews on schedule climb one box each, up to the top.
+    let day = TODAY;
+    for (let i = 0; i < 10; i += 1) {
+      day = addDays(day, LEITNER_INTERVAL_DAYS[m.box] ?? 1);
+      m = recordAnswer(m, true, day);
+    }
     expect(m.box).toBe(MAX_BOX);
-    m = recordAnswer(m, false, TODAY);
+    m = recordAnswer(m, false, day);
     expect(m.box).toBe(MAX_BOX - 1);
     expect(recordAnswer(undefined, false, TODAY).box).toBe(0);
+  });
+
+  it('needs several days to master a word', () => {
+    let m = recordAnswer(undefined, true, TODAY);
+    for (let i = 0; i < 20; i += 1) m = recordAnswer(m, true, TODAY);
+    expect(isLearned(m)).toBe(false);
+    m = recordAnswer(m, true, TOMORROW);
+    expect(isLearned(m)).toBe(true);
+  });
+
+  it('adds calendar days across months', () => {
+    expect(addDays('2026-01-31', 1)).toBe('2026-02-01');
+    expect(addDays('2026-12-31', 14)).toBe('2027-01-14');
   });
 
   it('becomes due after the box interval', () => {
@@ -114,10 +136,15 @@ describe('progress', () => {
     expect(first.perfect).toBe(true);
     expect(first.firstCompletion).toBe(true);
     progress = first.progress;
+    // Two correct answers on one day do not make a word "learned" yet.
+    expect(countLearnedWords(progress)).toBe(0);
     const second = recordLessonCompletion(progress, {
       lessonId: 'l1',
       accuracy: 0.5,
-      wordResults: [{ wordId: 'b', correct: false }],
+      wordResults: [
+        { wordId: 'a', correct: true },
+        { wordId: 'b', correct: false },
+      ],
       today: TOMORROW,
     });
     expect(second.firstCompletion).toBe(false);

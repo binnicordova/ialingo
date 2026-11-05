@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, SlideInDown, ZoomIn } from 'react-native-reanimated';
 
 import type { Exercise, ExerciseAnswer } from '@/domain/curriculum/exercises';
@@ -78,6 +78,14 @@ function correctAnswerText(exercise: Exercise, content: CatalogIndex): { emoji: 
       const line = content.story(exercise.storyId)?.lines[exercise.lineIndex];
       return { emoji: line?.emoji ?? '', text: line?.en ?? '' };
     }
+    case 'song': {
+      const song = content.song(exercise.songId);
+      return { emoji: '🎵', text: song?.lines[0]?.en ?? '' };
+    }
+    case 'lyric-gap': {
+      const w = content.word(exercise.answerId);
+      return { emoji: w?.emoji ?? '', text: w?.en ?? '' };
+    }
   }
 }
 
@@ -103,11 +111,14 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
 
   const onAnswer = (answer: ExerciseAnswer) => {
     const correct = submit(answer);
-    if (exercise.kind === 'learn-card' || exercise.kind === 'story-page') {
+    if (exercise.kind === 'learn-card' || exercise.kind === 'story-page' || exercise.kind === 'song') {
       proceed();
       return;
     }
     if (correct === null) return;
+    AccessibilityInfo.announceForAccessibility(
+      correct ? t('correct') : `${t('almost')} ${t('answerIs')} ${correctAnswerText(exercise, content).text}`,
+    );
     if (correct) {
       const cheers = guide?.cheers ?? ['Great job!'];
       // Deterministic variety: the same exercise always gets the same line.
@@ -157,6 +168,7 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
       {feedback ? (
         <Animated.View
           entering={SlideInDown.springify().damping(16)}
+          accessibilityLiveRegion="polite"
           style={[styles.feedback, { backgroundColor: feedback.correct ? colors.successSoft : '#FFF1E0' }]}
         >
           <View style={styles.feedbackRow}>

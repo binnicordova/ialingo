@@ -14,7 +14,9 @@ import { levelForXp, stageForLevel } from '@/domain/pets/leveling';
 import { MAX_PROFILES } from '@/domain/profiles/profiles';
 import {
   deletePostcardAtom,
+  downloadOfflineModelAtom,
   grantExtraTimeAtom,
+  refreshRecognitionAtom,
   resetGameAtom,
   tapFeedbackAtom,
   updateSettingsAtom,
@@ -367,7 +369,15 @@ function SpeakingSection() {
   const settings = useAtomValue(settingsAtom);
   const recognition = useAtomValue(recognitionAtom);
   const update = useSetAtom(updateSettingsAtom);
+  const downloadModel = useSetAtom(downloadOfflineModelAtom);
+  const refresh = useSetAtom(refreshRecognitionAtom);
+  const [offlineNote, setOfflineNote] = useState<string | null>(null);
   const usable = recognition.installed && recognition.available;
+
+  // A model downloaded in the background shows up the next time this opens.
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
   const status = !usable
     ? t('recognitionUnavailable')
     : recognition.onDevice
@@ -392,6 +402,40 @@ function SpeakingSection() {
           testID="speaking-self-check"
         />
       </View>
+      {recognition.offlineModel === 'missing' ? (
+        <View style={styles.offline}>
+          <AppText variant="heading">⬇️ {t('offlineModelTitle')}</AppText>
+          <AppText variant="small" color={colors.inkSoft}>
+            {t('offlineModelMissing')}
+          </AppText>
+          <BigButton
+            label={t('offlineModelDownload')}
+            tone="sky"
+            compact
+            onPress={() => {
+              void downloadModel().then((result) =>
+                setOfflineNote(
+                  result === 'downloaded'
+                    ? t('offlineModelReady')
+                    : result === 'started'
+                      ? t('offlineModelStarted')
+                      : t('offlineModelFailed'),
+                ),
+              );
+            }}
+            testID="offline-download"
+          />
+          {offlineNote ? (
+            <AppText variant="small" color={colors.inkSoft}>
+              {offlineNote}
+            </AppText>
+          ) : null}
+        </View>
+      ) : recognition.offlineModel === 'installed' ? (
+        <AppText variant="small" color={colors.successDark}>
+          ✅ {t('offlineModelReady')}
+        </AppText>
+      ) : null}
       {usable && !recognition.onDevice ? (
         <>
           <AppText variant="heading">{t('allowOnline')}</AppText>
@@ -465,6 +509,7 @@ function VoiceDiarySection() {
 }
 
 const styles = StyleSheet.create({
+  offline: { gap: spacing.sm },
   playerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
   gate: { flex: 1, padding: spacing.xl, gap: spacing.lg, justifyContent: 'center' },

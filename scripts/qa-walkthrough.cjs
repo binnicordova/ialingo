@@ -7,25 +7,28 @@
  * (self-check mode, which is what Expo Go and web use), results and
  * celebrations, world/pets/pet room, guides, badges, certificates, the parent
  * gate and dashboard (players, speaking, voice diary), adding a second player,
- * "Who's playing?", and bedtime.
+ * "Who's playing?", and bedtime. v1.2: a sing-along lesson, daily quests and
+ * the chest, the Word Gym, the sticker album, and both Play Park games.
  *
  * Usage: start `npx expo start --web --port 8081`, then
  *   node scripts/qa-walkthrough.cjs [outDir] [scale]
+ * Set QA_VIEWPORT=WIDTHxHEIGHT for store screenshot sizes (see store/README.md).
  */
 const { chromium } = require('playwright');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const BASE = process.env.QA_BASE_URL || 'http://localhost:8081';
-const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', 'v1.1-walkthrough');
+const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', 'v1.2-walkthrough');
 const SCALE = Number(process.argv[3] || 1);
+const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(Number);
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({
     args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'],
   });
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: SCALE });
+  const context = await browser.newContext({ viewport: { width: VIEW_W, height: VIEW_H }, deviceScaleFactor: SCALE });
   const page = await context.newPage();
   const problems = [];
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message.slice(0, 400)}`));
@@ -64,6 +67,12 @@ const SCALE = Number(process.argv[3] || 1);
       if (await visible('[data-testid="learn-next"]')) {
         await first('learn-card');
         await byId('learn-next').click();
+        continue;
+      }
+      if (await visible('[data-testid="song-next"]')) {
+        await wait(2500);
+        await first('song');
+        await byId('song-next').click();
         continue;
       }
       if (await visible('[data-testid="story-next"]')) {
@@ -170,6 +179,93 @@ const SCALE = Number(process.argv[3] || 1);
   await wait(1000);
   await shot('speak-results');
   await dismissCelebrations();
+
+  // 3b. v1.2: sing-along, quests, Word Gym, album, Play Park
+  await page.goto(`${BASE}/lesson/feelings.song`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await playLesson('song');
+  await wait(1000);
+  await shot('song-results');
+  await dismissCelebrations('song');
+
+  await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await page.mouse.wheel(0, 380);
+  await wait(500);
+  await shot('home-quests-activities');
+
+  await page.goto(`${BASE}/pet/bubbo`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  for (let i = 0; i < 2; i += 1) {
+    await byId('pet-feed').click();
+    await wait(900);
+    await dismissCelebrations(i === 1 ? 'feed-quest' : undefined);
+  }
+
+  await page.goto(`${BASE}/gym`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await shot('word-gym');
+  await byId('gym-start').click();
+  await wait(1500);
+  await playLesson('gym');
+  await wait(1000);
+  await shot('gym-results');
+  await dismissCelebrations('gym');
+
+  await page.goto(`${BASE}/album`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await shot('sticker-album');
+
+  await page.goto(`${BASE}/park`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await shot('play-park');
+  await page.goto(`${BASE}/game/bubble-pop`, { waitUntil: 'networkidle' });
+  await wait(1800);
+  await shot('bubble-pop');
+  for (let i = 0; i < 80; i += 1) {
+    if (await visible('[data-testid="game-replay"]')) break;
+    const open = page.locator('[data-testid^="bubble-"]:not([aria-disabled="true"])');
+    if ((await open.count()) > 0) await open.first().click({ timeout: 800 }).catch(() => undefined);
+    await wait(850);
+  }
+  await wait(800);
+  await shot('bubble-pop-results');
+  await dismissCelebrations('bubble');
+
+  await page.goto(`${BASE}/game/memory-match`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  const cardIds = await page
+    .locator('[data-testid^="card-"]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-testid').replace('card-', '')));
+  const wordIds = [...new Set(cardIds.map((id) => id.split('#')[0]))];
+  if (wordIds.length >= 2) {
+    await byId(`card-${wordIds[0]}#picture`).click();
+    await wait(300);
+    await byId(`card-${wordIds[1]}#word`).click();
+    await wait(400);
+    await shot('memory-mismatch');
+    await wait(1200);
+  }
+  for (const id of wordIds) {
+    await byId(`card-${id}#picture`).click();
+    await wait(250);
+    await byId(`card-${id}#word`).click();
+    await wait(450);
+  }
+  await wait(1500);
+  await shot('memory-results');
+  await dismissCelebrations('memory');
+
+  await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await page.mouse.wheel(0, 380);
+  await wait(500);
+  await shot('home-quests-after');
+  if (await visible('[data-testid="quest-chest"]:not([aria-disabled="true"])')) {
+    await byId('quest-chest').click();
+    await wait(900);
+    await dismissCelebrations('chest');
+  }
 
   // 4. Map, world, pets, guides, badges, certificates
   await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });

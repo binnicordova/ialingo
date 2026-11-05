@@ -21,7 +21,9 @@ The microphone is used in exactly two places, only when the child taps a microph
 
 In **Expo Go** there is no recognizer, so speaking exercises use self-check and the microphone is never opened.
 
-Before the OS permission prompt, the app shows an "Ask a grown-up" card. Permission texts (iOS `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`) are written for parents.
+Before the OS permission prompt, the app shows an "Ask a grown-up" card, and (v1.2) the grown-up must pass the **parental gate** before the prompt appears, both for speaking practice and for the first voice postcard (App Store Kids Category rule). Permission texts (iOS `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`) are written for parents.
+
+**Android offline English (v1.2).** On Android the app checks, on the device, whether Google's on-device recognizer has English installed (`getSupportedLocales`). If it doesn't, on-device recognition is treated as unavailable (so audio is never sent online without consent), and the parent area offers "Download English (offline)", which asks Android to download the model (`androidTriggerOfflineModelDownload`). The download is done by the operating system; the app sends nothing.
 
 ## What is stored, and where
 
@@ -35,6 +37,7 @@ Per child profile, one JSON document in AsyncStorage (`ialingo.save.v1`, `ialing
 | Wallet, badges, daily gift day | Berries, badge ids | Game state |
 | Screen time | Today's date and seconds played | Daily limit |
 | Voice diary index | Day, file name and the English prompt for up to 12 postcards | So parents can find the recordings |
+| Practice and play (v1.2) | Number of Word Gym sessions; today's quests and their progress, chests opened; Play Park counters (today's game berries and games, lifetime games) | Daily quests, the game-berry cap and badges |
 
 Only calendar days are stored, never timestamps or locations. Voice diary retention: the first 2 postcards (the "before") and the 10 most recent are kept, and older ones in between are deleted automatically. **Delete all progress** or deleting a profile wipes that child's data and recordings.
 
@@ -45,6 +48,7 @@ Text-to-speech uses the operating system's voice engine. On some Android devices
 - **Requested:** microphone (speaking practice, voice diary) and, on iOS, speech recognition.
 - **Blocked** in `app.json`: fine and coarse location, external storage read/write.
 - Sharing (certificates, postcards) uses the system share sheet and only runs after the parental gate or in the parent area.
+- Store answers built from this page: `store/privacy-policy.md` (parent-facing, en/es/pt), Apple App Privacy "Data Not Collected", and `store/google-play/data-safety.md`.
 
 ## Mapping to regulations (orientation, not legal advice)
 

@@ -23,6 +23,7 @@ function correctAnswer(exercise: Exercise, wordText: (id: string) => string, sen
       return { kind: 'seen' };
     case 'listen-pick-picture':
     case 'picture-pick-word':
+    case 'lyric-gap':
       return { kind: 'pick', optionId: exercise.answerId };
     case 'true-false':
       return { kind: 'bool', value: exercise.spokenWordId === exercise.shownWordId };
@@ -39,6 +40,7 @@ function correctAnswer(exercise: Exercise, wordText: (id: string) => string, sen
     case 'speak-sentence':
       return { kind: 'speech', verdict: 'great' };
     case 'story-page':
+    case 'song':
       return { kind: 'seen' };
   }
 }

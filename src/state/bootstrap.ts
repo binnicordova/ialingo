@@ -4,7 +4,7 @@ import type { AppServices } from '@/application/ports';
 import { createInitialGameState } from '@/domain/game/game-state';
 import { restoreGameState } from '@/domain/game/snapshot';
 import { createProfileIndex, restoreProfileIndex } from '@/domain/profiles/profiles';
-import type { Locale } from '@/domain/shared/locale';
+import { TARGET_LANGUAGE_TAG, type Locale } from '@/domain/shared/locale';
 
 import { startDayAtom } from './actions';
 import {
@@ -64,7 +64,7 @@ export async function bootstrapStore(
   await services.repository.saveProfiles(index);
 
   services.recognition
-    .capability()
+    .capability(TARGET_LANGUAGE_TAG)
     .then((capability) => store.set(recognitionAtom, { ...capability, permission: 'unknown' }))
     .catch(() => undefined);
 

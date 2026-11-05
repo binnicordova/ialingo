@@ -1,0 +1,134 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 iaLingo",
+    "categories": [
+      "EDUCATION",
+      [
+        "GAMES",
+        "GAMES_WORD",
+        "GAMES_FAMILY"
+      ]
+    ],
+    "release": {
+      "automaticRelease": false
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gamblingSimulated": "NONE",
+      "gunsOrOtherWeapons": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "gambling": false,
+      "lootBox": false,
+      "advertising": false,
+      "messagingAndChat": false,
+      "userGeneratedContent": false,
+      "parentalControls": true,
+      "ageAssurance": false,
+      "healthOrWellnessTopics": false,
+      "unrestrictedWebAccess": false,
+      "seventeenPlus": false,
+      "kidsAgeBand": "SIX_TO_EIGHT",
+      "ageRatingOverride": "NONE",
+      "koreaAgeRatingOverride": "NONE"
+    },
+    "info": {
+      "en-US": {
+        "title": "iaLingo: English for Kids",
+        "subtitle": "Speak English with 3D pets",
+        "description": "iaLingo turns learning English into an adventure with a pet that grows as your child learns.\n\nMade for children aged 6 to 10 who are learning English as a new language. Kids play on their own: every instruction is spoken in their language (Spanish, Portuguese or English), and every English word and sentence is read aloud.\n\nWHAT YOUR CHILD DOES\n• Explores 34 themed worlds, from Feelings and the Farm to Gadgets and Science\n• Learns 503 words and 138 useful sentences with pictures and audio\n• Listens to 34 picture stories and sings 34 original chants\n• Speaks out loud and gets gentle, child-friendly feedback\n• Trains in the Word Gym, where words come back right before they are forgotten\n• Collects a sticker for every word, and turns it gold once it is truly remembered\n• Plays Bubble Pop and Memory Match in the Play Park with the words they learned\n• Completes three small daily quests and opens a treasure chest\n\nPETS AT THE HEART\nHatch and raise 51 original 3D pets. Feed them, dress them up and watch them grow as your child learns. New eggs come from finishing worlds and earning badges, never from payments.\n\nCLEAR PROGRESS\nWorlds follow three levels, from CEFR Pre-A1 to A2. Parents see words learned, accuracy and days played, can print level certificates and, if they want, keep a weekly voice postcard to hear their child's progress.\n\nHEALTHY BY DESIGN\n• No ads, no in-app purchases, no loot boxes, no streaks to lose\n• A daily time limit that you choose, with a calm bedtime screen\n• Up to 4 children on one device, each with their own pets and progress\n• Settings protected by a parental gate\n\nPRIVACY FIRST\nNo accounts, no email, no names. iaLingo does not collect personal data and makes no network requests of its own. Speaking exercises use the device's speech recognition, on the device whenever it is supported; online recognition stays off unless a parent turns it on. Progress stays on the device and a parent can delete it at any time.",
+        "keywords": [
+          "learn",
+          "esl",
+          "abc",
+          "vocabulary",
+          "speak",
+          "phonics",
+          "songs",
+          "stories",
+          "pets",
+          "games",
+          "cefr",
+          "spelling",
+          "school"
+        ],
+        "releaseNotes": "• Sing-along songs in all 34 worlds\n• Word Gym: unlimited smart practice\n• A sticker album for every word\n• Play Park: Bubble Pop and Memory Match\n• Daily quests with a treasure chest\n• 5 new pets and 7 new badges\n• Android: download offline English for private speech practice",
+        "promoText": "New: songs in every world, a Word Gym, a sticker album, Play Park games and daily quests. No ads, no accounts, no data collected.",
+        "supportUrl": "https://github.com/binnicordova/ialingo/issues",
+        "privacyPolicyUrl": "https://github.com/binnicordova/ialingo/blob/main/store/privacy-policy.md"
+      },
+      "es-MX": {
+        "title": "iaLingo: Inglés para niños",
+        "subtitle": "Habla inglés con mascotas 3D",
+        "description": "iaLingo convierte aprender inglés en una aventura con una mascota que crece mientras tu hijo aprende.\n\nHecho para niños de 6 a 10 años que aprenden inglés como nuevo idioma. Juegan solos: cada instrucción se dice en su idioma (español, portugués o inglés) y cada palabra y frase en inglés se escucha en voz alta.\n\nQUÉ HACE TU HIJO\n• Explora 34 mundos temáticos, de las emociones y la granja a los aparatos y la ciencia\n• Aprende 503 palabras y 138 frases útiles con imágenes y audio\n• Escucha 34 cuentos ilustrados y canta 34 canciones originales\n• Habla en voz alta y recibe una respuesta amable, pensada para niños\n• Entrena en el gimnasio de palabras, donde las palabras vuelven justo antes de olvidarse\n• Colecciona un sticker por cada palabra, que se vuelve dorado cuando ya la recuerda de verdad\n• Juega a Burbujas y Memoria en el parque con las palabras que aprendió\n• Cumple tres pequeñas misiones diarias y abre un cofre del tesoro\n\nLAS MASCOTAS EN EL CENTRO\nIncuba y cuida 51 mascotas 3D originales. Aliméntalas, vístelas y míralas crecer mientras tu hijo aprende. Los huevos nuevos se ganan terminando mundos y medallas, nunca pagando.\n\nPROGRESO CLARO\nLos mundos siguen tres niveles, del MCER Pre-A1 al A2. Las familias ven las palabras aprendidas, la precisión y los días de juego, pueden imprimir certificados de nivel y, si quieren, guardar una postal de voz semanal para escuchar el progreso de su hijo.\n\nSALUDABLE POR DISEÑO\n• Sin anuncios, sin compras dentro de la app, sin cajas de botín, sin rachas que perder\n• Un límite de tiempo diario que tú eliges, con una pantalla de descanso tranquila\n• Hasta 4 niños en un mismo dispositivo, cada uno con sus mascotas y su progreso\n• Ajustes protegidos con un control parental\n\nPRIVACIDAD PRIMERO\nSin cuentas, sin correo, sin nombres. iaLingo no recopila datos personales y no hace conexiones a internet propias. Los ejercicios de habla usan el reconocimiento de voz del dispositivo, en el propio dispositivo siempre que sea posible; el reconocimiento en línea queda apagado salvo que un adulto lo active. El progreso se queda en el dispositivo y un adulto puede borrarlo cuando quiera.",
+        "keywords": [
+          "aprender",
+          "vocabulario",
+          "hablar",
+          "canciones",
+          "cuentos",
+          "mascotas",
+          "juegos",
+          "abc",
+          "escuela",
+          "esl"
+        ],
+        "releaseNotes": "• Canciones para cantar en los 34 mundos\n• Gimnasio de palabras: práctica inteligente sin límite\n• Un álbum de stickers para cada palabra\n• Parque de juegos: Burbujas y Memoria\n• Misiones diarias con un cofre del tesoro\n• 5 mascotas nuevas y 7 medallas nuevas\n• Android: descarga el inglés sin internet para practicar el habla en privado",
+        "promoText": "Nuevo: canciones en cada mundo, gimnasio de palabras, álbum de stickers, juegos y misiones diarias. Sin anuncios, sin cuentas, sin datos.",
+        "supportUrl": "https://github.com/binnicordova/ialingo/issues",
+        "privacyPolicyUrl": "https://github.com/binnicordova/ialingo/blob/main/store/privacy-policy.md"
+      },
+      "es-ES": {
+        "title": "iaLingo: Inglés para niños",
+        "subtitle": "Habla inglés con mascotas 3D",
+        "description": "iaLingo convierte aprender inglés en una aventura con una mascota que crece mientras tu hijo aprende.\n\nHecho para niños de 6 a 10 años que aprenden inglés como nuevo idioma. Juegan solos: cada instrucción se dice en su idioma (español, portugués o inglés) y cada palabra y frase en inglés se escucha en voz alta.\n\nQUÉ HACE TU HIJO\n• Explora 34 mundos temáticos, de las emociones y la granja a los aparatos y la ciencia\n• Aprende 503 palabras y 138 frases útiles con imágenes y audio\n• Escucha 34 cuentos ilustrados y canta 34 canciones originales\n• Habla en voz alta y recibe una respuesta amable, pensada para niños\n• Entrena en el gimnasio de palabras, donde las palabras vuelven justo antes de olvidarse\n• Colecciona un sticker por cada palabra, que se vuelve dorado cuando ya la recuerda de verdad\n• Juega a Burbujas y Memoria en el parque con las palabras que aprendió\n• Cumple tres pequeñas misiones diarias y abre un cofre del tesoro\n\nLAS MASCOTAS EN EL CENTRO\nIncuba y cuida 51 mascotas 3D originales. Aliméntalas, vístelas y míralas crecer mientras tu hijo aprende. Los huevos nuevos se ganan terminando mundos y medallas, nunca pagando.\n\nPROGRESO CLARO\nLos mundos siguen tres niveles, del MCER Pre-A1 al A2. Las familias ven las palabras aprendidas, la precisión y los días de juego, pueden imprimir certificados de nivel y, si quieren, guardar una postal de voz semanal para escuchar el progreso de su hijo.\n\nSALUDABLE POR DISEÑO\n• Sin anuncios, sin compras dentro de la app, sin cajas de botín, sin rachas que perder\n• Un límite de tiempo diario que tú eliges, con una pantalla de descanso tranquila\n• Hasta 4 niños en un mismo dispositivo, cada uno con sus mascotas y su progreso\n• Ajustes protegidos con un control parental\n\nPRIVACIDAD PRIMERO\nSin cuentas, sin correo, sin nombres. iaLingo no recopila datos personales y no hace conexiones a internet propias. Los ejercicios de habla usan el reconocimiento de voz del dispositivo, en el propio dispositivo siempre que sea posible; el reconocimiento en línea queda apagado salvo que un adulto lo active. El progreso se queda en el dispositivo y un adulto puede borrarlo cuando quiera.",
+        "keywords": [
+          "aprender",
+          "vocabulario",
+          "hablar",
+          "canciones",
+          "cuentos",
+          "mascotas",
+          "juegos",
+          "abc",
+          "colegio",
+          "esl"
+        ],
+        "releaseNotes": "• Canciones para cantar en los 34 mundos\n• Gimnasio de palabras: práctica inteligente sin límite\n• Un álbum de stickers para cada palabra\n• Parque de juegos: Burbujas y Memoria\n• Misiones diarias con un cofre del tesoro\n• 5 mascotas nuevas y 7 medallas nuevas\n• Android: descarga el inglés sin internet para practicar el habla en privado",
+        "promoText": "Nuevo: canciones en cada mundo, gimnasio de palabras, álbum de stickers, juegos y misiones diarias. Sin anuncios, sin cuentas, sin datos.",
+        "supportUrl": "https://github.com/binnicordova/ialingo/issues",
+        "privacyPolicyUrl": "https://github.com/binnicordova/ialingo/blob/main/store/privacy-policy.md"
+      },
+      "pt-BR": {
+        "title": "iaLingo: Inglês para crianças",
+        "subtitle": "Fale inglês com bichinhos 3D",
+        "description": "O iaLingo transforma aprender inglês numa aventura com um bichinho que cresce enquanto seu filho aprende.\n\nFeito para crianças de 6 a 10 anos que estão aprendendo inglês como novo idioma. Elas jogam sozinhas: cada instrução é falada no idioma delas (português, espanhol ou inglês) e cada palavra e frase em inglês é lida em voz alta.\n\nO QUE SEU FILHO FAZ\n• Explora 34 mundos temáticos, das emoções e da fazenda aos aparelhos e à ciência\n• Aprende 503 palavras e 138 frases úteis com figuras e áudio\n• Ouve 34 histórias ilustradas e canta 34 músicas originais\n• Fala em voz alta e recebe um retorno gentil, pensado para crianças\n• Treina na academia de palavras, onde as palavras voltam bem antes de serem esquecidas\n• Coleciona uma figurinha para cada palavra, que fica dourada quando ele realmente lembra\n• Joga Bolhas e Jogo da memória no parque com as palavras que aprendeu\n• Completa três pequenas missões diárias e abre um baú do tesouro\n\nOS BICHINHOS NO CENTRO\nChoque e cuide de 51 bichinhos 3D originais. Alimente, vista e veja eles crescerem enquanto seu filho aprende. Ovos novos vêm de terminar mundos e ganhar medalhas, nunca de pagamentos.\n\nPROGRESSO CLARO\nOs mundos seguem três níveis, do QECR Pré-A1 ao A2. As famílias veem as palavras aprendidas, a precisão e os dias de jogo, podem imprimir certificados de nível e, se quiserem, guardar um cartão-postal de voz semanal para ouvir o progresso do filho.\n\nSAUDÁVEL POR DESIGN\n• Sem anúncios, sem compras no app, sem caixas de recompensa, sem sequências para perder\n• Um limite de tempo diário escolhido por você, com uma tela de descanso tranquila\n• Até 4 crianças no mesmo aparelho, cada uma com seus bichinhos e seu progresso\n• Ajustes protegidos por um controle dos pais\n\nPRIVACIDADE EM PRIMEIRO LUGAR\nSem contas, sem e-mail, sem nomes. O iaLingo não coleta dados pessoais e não faz conexões próprias com a internet. Os exercícios de fala usam o reconhecimento de voz do aparelho, no próprio aparelho sempre que possível; o reconhecimento on-line fica desligado a menos que um adulto o ative. O progresso fica no aparelho e um adulto pode apagá-lo quando quiser.",
+        "keywords": [
+          "aprender",
+          "vocabulário",
+          "falar",
+          "músicas",
+          "histórias",
+          "bichinhos",
+          "jogos",
+          "abc",
+          "escola",
+          "pets"
+        ],
+        "releaseNotes": "• Músicas para cantar nos 34 mundos\n• Academia de palavras: prática inteligente sem limite\n• Um álbum de figurinhas para cada palavra\n• Parque de jogos: Bolhas e Jogo da memória\n• Missões diárias com um baú do tesouro\n• 5 bichinhos novos e 7 medalhas novas\n• Android: baixe o inglês offline para praticar a fala com privacidade",
+        "promoText": "Novo: músicas em cada mundo, academia de palavras, álbum de figurinhas, jogos e missões diárias. Sem anúncios, sem contas, sem dados.",
+        "supportUrl": "https://github.com/binnicordova/ialingo/issues",
+        "privacyPolicyUrl": "https://github.com/binnicordova/ialingo/blob/main/store/privacy-policy.md"
+      }
+    }
+  }
+}

@@ -29,7 +29,15 @@ export interface SpeechService {
   stop(): void;
 }
 
-export type SoundEffect = 'tap' | 'correct' | 'wrong' | 'coin' | 'level-up' | 'hatch' | 'pop';
+export type SoundEffect =
+  | 'tap'
+  | 'correct'
+  | 'wrong'
+  | 'coin'
+  | 'level-up'
+  | 'hatch'
+  | 'pop'
+  | 'clap';
 
 export interface SoundEffectsService {
   play(effect: SoundEffect): void;
@@ -41,14 +49,28 @@ export interface HapticsService {
   trigger(kind: HapticKind): void;
 }
 
-/** What the device's speech recognizer can do (probed once at startup). */
+/**
+ * Android only: whether the on-device model for the target language is
+ * installed. 'unsupported' means it cannot be checked (iOS, Android 12 and
+ * below, or no Google on-device service), so nothing should be offered.
+ */
+export type OfflineModelStatus = 'installed' | 'missing' | 'unsupported';
+
+/** Outcome of asking the OS to download the offline model (Android 13+). */
+export type OfflineModelDownload = 'downloaded' | 'started' | 'failed' | 'unsupported';
+
+/** What the device's speech recognizer can do (probed at startup and in the parent area). */
 export interface RecognitionCapability {
   /** The native module exists (development or store build, not Expo Go or web). */
   readonly installed: boolean;
   /** A recognizer service is available on this device. */
   readonly available: boolean;
-  /** Recognition can run fully on the device (no audio leaves it). */
+  /**
+   * Recognition can run fully on the device (no audio leaves it) for the
+   * target language. False on Android while the English model is missing.
+   */
   readonly onDevice: boolean;
+  readonly offlineModel: OfflineModelStatus;
 }
 
 export type RecognitionOutcome =
@@ -68,7 +90,10 @@ export interface ListenOptions {
 
 /** Speech recognition for speaking practice. Nothing is recorded or stored. */
 export interface SpeechRecognitionService {
-  capability(): Promise<RecognitionCapability>;
+  /** `language` is the BCP-47 tag that will be recognized (for example 'en-US'). */
+  capability(language: string): Promise<RecognitionCapability>;
+  /** Asks the OS to download the on-device model (the OS does the download, not the app). */
+  downloadOfflineModel(language: string): Promise<OfflineModelDownload>;
   requestPermission(): Promise<boolean>;
   listen(options: ListenOptions): Promise<RecognitionOutcome>;
   stop(): void;

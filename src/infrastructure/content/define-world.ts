@@ -86,3 +86,22 @@ export function attachStory(world: World, source: StorySource | undefined): Worl
     },
   };
 }
+
+/** Adds an original sing-along chant to a world (same row format as stories). */
+export function attachSong(world: World, source: StorySource | undefined): World {
+  if (!source) return world;
+  return {
+    ...world,
+    song: {
+      id: `${world.id}.song`,
+      worldId: world.id,
+      title: source.title,
+      lines: source.lines.map(([en, emoji, es, pt, keyword]) => ({
+        en,
+        emoji,
+        meaning: { en, es, pt },
+        keyWordId: `${world.id}.${slug(keyword)}`,
+      })),
+    },
+  };
+}

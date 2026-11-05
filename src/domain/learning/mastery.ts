@@ -4,10 +4,12 @@ import { daysBetween, type DayKey } from '../shared/day';
 /**
  * Spaced repetition with Leitner boxes.
  *
- * Box 0 = just met, box 5 = long-term. A correct answer moves the word up one
- * box. A wrong answer moves it down one box (a gentle variant for children;
- * classic Leitner sends it back to box 1).
- * A word is due again after LEITNER_INTERVAL_DAYS[box] days.
+ * Box 0 = just met, box 5 = long-term. A correct answer on a word that is
+ * due moves it up one box; a correct answer before it is due (the same word
+ * again in the same session) counts for practice but does not promote it, so
+ * "mastered" really means remembered across days. A wrong answer moves it
+ * down one box (a gentle variant for children; classic Leitner sends it back
+ * to box 1). A word is due again after LEITNER_INTERVAL_DAYS[box] days.
  */
 export const LEITNER_INTERVAL_DAYS = [0, 1, 2, 4, 7, 14] as const;
 export const MAX_BOX = LEITNER_INTERVAL_DAYS.length - 1;
@@ -30,12 +32,17 @@ export function recordAnswer(
   today: DayKey,
 ): WordMastery {
   const box = previous?.box ?? 0;
-  const nextBox = correct ? Math.min(MAX_BOX, box + 1) : Math.max(0, box - 1);
+  const seen = (previous?.seen ?? 0) + 1;
+  const correctCount = (previous?.correct ?? 0) + (correct ? 1 : 0);
+  if (correct && previous && !isDue(previous, today)) {
+    // Early review: keep the box and the schedule.
+    return { ...previous, seen, correct: correctCount };
+  }
   return {
-    box: nextBox,
+    box: correct ? Math.min(MAX_BOX, box + 1) : Math.max(0, box - 1),
     lastReviewDay: today,
-    seen: (previous?.seen ?? 0) + 1,
-    correct: (previous?.correct ?? 0) + (correct ? 1 : 0),
+    seen,
+    correct: correctCount,
   };
 }
 

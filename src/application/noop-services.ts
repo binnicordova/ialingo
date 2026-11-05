@@ -30,7 +30,9 @@ export function createNoopServices(
         installed: options.recognizer !== undefined,
         available: options.recognizer !== undefined,
         onDevice: options.recognizer !== undefined,
+        offlineModel: 'unsupported',
       }),
+      downloadOfflineModel: async () => 'unsupported',
       requestPermission: async () => options.recognizer !== undefined,
       listen: async () =>
         options.recognizer

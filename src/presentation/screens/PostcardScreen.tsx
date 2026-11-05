@@ -1,6 +1,7 @@
 import {
   createAudioPlayer,
   RecordingPresets,
+  getRecordingPermissionsAsync,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
@@ -18,6 +19,7 @@ import { contentAtom, servicesAtom } from '@/state/core';
 import { activePetAtom, settingsAtom, voiceDiaryAtom, worldViewsAtom } from '@/state/selectors';
 
 import { PetPortrait } from '../art/PetPortrait';
+import { ParentGateModal } from '../components/ParentGateModal';
 import { AppText, BigButton, Card, Screen, TopBar } from '../components/ui';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
@@ -43,6 +45,7 @@ export function PostcardScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [phase, setPhase] = useState<Phase>('ready');
   const [take, setTake] = useState<{ uri: string; durationMs: number } | null>(null);
+  const [gate, setGate] = useState(false);
   const startedAt = useRef(0);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const player = useRef<AudioPlayer | null>(null);
@@ -83,7 +86,19 @@ export function PostcardScreen() {
     }
   };
 
+  /** Asks a grown-up (parental gate) before the OS prompt, the first time only. */
+  const startRecording = async () => {
+    try {
+      const current = await getRecordingPermissionsAsync();
+      if (current.granted) void record();
+      else setGate(true);
+    } catch {
+      setGate(true);
+    }
+  };
+
   const record = async () => {
+    setGate(false);
     try {
       const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
@@ -138,7 +153,7 @@ export function PostcardScreen() {
                 {t('micPermissionBody')}
               </AppText>
             ) : null}
-            <BigButton label={t('record')} icon="🎙️" tone="danger" onPress={() => void record()} testID="postcard-record" />
+            <BigButton label={t('record')} icon="🎙️" tone="danger" onPress={() => void startRecording()} testID="postcard-record" />
           </>
         ) : null}
         {phase === 'recording' ? (
@@ -165,6 +180,7 @@ export function PostcardScreen() {
           </Animated.View>
         ) : null}
       </View>
+      <ParentGateModal visible={gate} onPass={() => void record()} onCancel={() => setGate(false)} />
     </Screen>
   );
 }

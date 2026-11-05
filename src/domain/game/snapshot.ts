@@ -1,6 +1,7 @@
 import type { LessonRecord } from '../learning/progress';
 import type { WordMastery } from '../learning/mastery';
 import type { OwnedPet } from '../pets/pet';
+import { isQuestKind, QUEST_DEFINITIONS, type QuestKind } from '../quests/quests';
 import { isDayKey, type DayKey } from '../shared/day';
 import { isLocale, type Locale } from '../shared/locale';
 import {
@@ -122,6 +123,14 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
       : (Object.keys(owned)[0] ?? null);
 
   const screenRaw = record(data.screenTime);
+  const playRaw = record(data.play);
+  const questsRaw = record(data.quests);
+  const questKinds = [...new Set(stringArray(questsRaw.kinds).filter(isQuestKind))];
+  const questProgress: Partial<Record<QuestKind, number>> = {};
+  for (const [kind, value] of Object.entries(record(questsRaw.progress))) {
+    if (isQuestKind(kind)) questProgress[kind] = Math.min(QUEST_DEFINITIONS[kind].target, num(value, 0));
+  }
+  const chestsOpened = num(questsRaw.chestsOpened, 0);
 
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -135,6 +144,7 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
       perfectLessons: num(progressRaw.perfectLessons, 0),
       totalAnswers: num(progressRaw.totalAnswers, 0),
       totalCorrect: num(progressRaw.totalCorrect, 0),
+      practiceSessions: num(progressRaw.practiceSessions, 0),
     },
     wallet: { berries: Math.floor(num(record(data.wallet).berries, 0)) },
     pets: {
@@ -160,5 +170,21 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
         prompt: typeof e.prompt === 'string' ? e.prompt : '',
         durationMs: num(e.durationMs, 0),
       })),
+    play: {
+      day: day(playRaw.day, today),
+      berriesToday: num(playRaw.berriesToday, 0),
+      gamesToday: num(playRaw.gamesToday, 0),
+      totalGames: num(playRaw.totalGames, 0),
+    },
+    quests:
+      questKinds.length > 0
+        ? {
+            day: day(questsRaw.day, today),
+            kinds: questKinds,
+            progress: questProgress,
+            chestClaimed: bool(questsRaw.chestClaimed, false),
+            chestsOpened,
+          }
+        : { ...base.quests, chestsOpened },
   };
 }

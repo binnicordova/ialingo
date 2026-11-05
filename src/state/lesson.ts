@@ -1,7 +1,12 @@
 import { atom } from 'jotai';
 
 import { evaluateAnswer, isScored, type ExerciseAnswer, type ExerciseLookup } from '@/domain/curriculum/exercises';
-import { generateLesson, type GeneratedLesson } from '@/domain/curriculum/lesson-generator';
+import {
+  generateLesson,
+  generatePracticeLesson,
+  PRACTICE_LESSON_ID,
+  type GeneratedLesson,
+} from '@/domain/curriculum/lesson-generator';
 import type { LessonId } from '@/domain/curriculum/types';
 import type { CatalogIndex } from '@/domain/game/catalog';
 import {
@@ -54,18 +59,31 @@ export function lookupFromContent(content: CatalogIndex): ExerciseLookup {
 /** Builds a fresh lesson. Replays get a different seed, so exercises vary. */
 export const startLessonAtom = atom(null, (get, set, lessonId: LessonId) => {
   const content = get(contentAtom);
-  const plan = content.lessonPlan(lessonId);
-  if (!plan) return false;
   const state = get(gameStateAtom);
   const today = get(todayAtom);
-  const plays = state.progress.lessons[lessonId]?.plays ?? 0;
-  const lesson = generateLesson({
-    plan,
-    worlds: content.orderedWorlds,
-    mastery: state.progress.mastery,
-    today,
-    seed: hashSeed(`${lessonId}|${today}|${plays}`),
-  });
+  let lesson: GeneratedLesson | null;
+  if (lessonId === PRACTICE_LESSON_ID) {
+    // Word Gym: built from the words the child has met, most due first.
+    lesson = generatePracticeLesson({
+      worlds: content.orderedWorlds,
+      mastery: state.progress.mastery,
+      today,
+      seed: hashSeed(`${lessonId}|${today}|${state.progress.practiceSessions}`),
+    });
+  } else {
+    const plan = content.lessonPlan(lessonId);
+    const plays = state.progress.lessons[lessonId]?.plays ?? 0;
+    lesson = plan
+      ? generateLesson({
+          plan,
+          worlds: content.orderedWorlds,
+          mastery: state.progress.mastery,
+          today,
+          seed: hashSeed(`${lessonId}|${today}|${plays}`),
+        })
+      : null;
+  }
+  if (!lesson) return false;
   set(activeLessonAtom, {
     lesson,
     session: startSession(lesson.exercises),

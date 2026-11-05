@@ -1,9 +1,18 @@
-import { evaluateAnswer, isScored, tokenizeSentence, type Exercise } from '@/domain/curriculum/exercises';
-import { generateLesson, isSpellable, LESSON_TUNING } from '@/domain/curriculum/lesson-generator';
+import { evaluateAnswer, gapLine, isScored, tokenizeSentence, type Exercise } from '@/domain/curriculum/exercises';
+import {
+  canPractice,
+  generateLesson,
+  generatePracticeLesson,
+  isSpellable,
+  LESSON_TUNING,
+  PRACTICE_LESSON_ID,
+  PRACTICE_TUNING,
+  SONG_TUNING,
+} from '@/domain/curriculum/lesson-generator';
 import { buildLessonPlans } from '@/domain/curriculum/lesson-plans';
 import type { World } from '@/domain/curriculum/types';
 import { recordAnswer } from '@/domain/learning/mastery';
-import { attachStory } from '@/infrastructure/content/define-world';
+import { attachSong, attachStory } from '@/infrastructure/content/define-world';
 import { makeWorld, TODAY } from '../../helpers/fixtures';
 
 function lookupFor(worlds: readonly World[]) {
@@ -153,6 +162,120 @@ describe('story and speaking lessons', () => {
       const lesson = generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 2 });
       expect(lesson.exercises.filter((e) => e.kind === 'speak-word')).toHaveLength(1);
     }
+  });
+});
+
+describe('song lessons', () => {
+  const base = makeWorld();
+  const world = attachSong(base, {
+    title: { en: 'Farm song', es: 'Canción', pt: 'Música' },
+    lines: [
+      ['The dog says woof, woof!', '🐶', 'El perro dice guau.', 'O cachorro faz au.', 'dog'],
+      ['Cat, cat, meow, cat!', '🐱', 'Gato, gato, miau.', 'Gato, gato, miau.', 'cat'],
+      ['The cow says moo!', '🐮', 'La vaca dice mu.', 'A vaca faz mu.', 'cow'],
+      ['Hug my teddy bear!', '🧸', 'Abrazo mi osito.', 'Abraço meu ursinho.', 'teddy bear'],
+    ],
+  });
+  const worlds = [world];
+  const plans = buildLessonPlans(world);
+
+  it('slots the song between the story and the speaking lesson', () => {
+    const withStory = attachStory(world, {
+      title: { en: 'A day', es: 'Un día', pt: 'Um dia' },
+      lines: [['The dog runs.', '🐶', 'El perro corre.', 'O cachorro corre.', 'dog']],
+    });
+    const kinds = buildLessonPlans(withStory).filter((p) => p.kind !== 'learn').map((p) => p.kind);
+    expect(kinds).toEqual(['story', 'song', 'speak', 'review', 'boss']);
+    expect(plans.find((p) => p.kind === 'song')?.id).toBe('animals.song');
+  });
+
+  it('sings first, then blanks key words, then checks and speaks them', () => {
+    const plan = plans.find((p) => p.kind === 'song')!;
+    const lesson = generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 3 });
+    expect(lesson.exercises[0]?.kind).toBe('song');
+    const gaps = lesson.exercises.filter((e) => e.kind === 'lyric-gap');
+    expect(gaps).toHaveLength(SONG_TUNING.gaps);
+    for (const gap of gaps) {
+      if (gap.kind !== 'lyric-gap') continue;
+      const line = world.song!.lines[gap.lineIndex]!;
+      expect(gap.answerId).toBe(line.keyWordId);
+      expect(gap.optionIds).toContain(gap.answerId);
+      expect(new Set(gap.optionIds).size).toBe(gap.optionIds.length);
+    }
+    expect(lesson.exercises.filter((e) => e.kind === 'speak-word')).toHaveLength(1);
+    expect(lesson.exercises.length).toBe(8);
+    expect(isScored(lesson.exercises[0]!)).toBe(false);
+  });
+
+  it('blanks every occurrence of the missing word', () => {
+    expect(gapLine('Cat, cat, meow, cat!', 'cat')).toEqual({ segments: ['', ', ', ', meow, ', '!'], missing: 'Cat' });
+    expect(gapLine('Hug my teddy bear!', 'teddy bear')?.segments).toEqual(['Hug my ', '!']);
+    expect(gapLine('A snowman in the snow', 'snow')?.segments).toEqual(['A snowman in the ', '']);
+    expect(gapLine('Scattered toys', 'cat')).toBeNull();
+    expect(gapLine('Hit the piñata!', 'piñata')?.missing).toBe('piñata');
+  });
+
+  it('scores a lyric gap like a pick', () => {
+    const exercise: Exercise = {
+      kind: 'lyric-gap',
+      id: 'x',
+      songId: 'animals.song',
+      lineIndex: 0,
+      answerId: 'animals.dog',
+      optionIds: ['animals.dog', 'animals.cat'],
+    };
+    const lookup = lookupFor(worlds);
+    expect(evaluateAnswer(exercise, { kind: 'pick', optionId: 'animals.dog' }, lookup)).toBe(true);
+    expect(evaluateAnswer(exercise, { kind: 'pick', optionId: 'animals.cat' }, lookup)).toBe(false);
+  });
+});
+
+describe('Word Gym practice', () => {
+  const farm = makeWorld('farm', 1);
+  const zoo = makeWorld('zoo', 2);
+  const worlds = [farm, zoo];
+  const seen = (ids: string[], box = 1, day = '2026-03-01') =>
+    Object.fromEntries(ids.map((id) => [id, { box, lastReviewDay: day }])) as Record<string, ReturnType<typeof recordAnswer>>;
+
+  it('opens once a few words have been met', () => {
+    expect(canPractice({})).toBe(false);
+    expect(canPractice(seen(['farm.dog', 'farm.cat', 'farm.cow']))).toBe(false);
+    expect(canPractice(seen(['farm.dog', 'farm.cat', 'farm.cow', 'farm.pig']))).toBe(true);
+    expect(generatePracticeLesson({ worlds, mastery: {}, today: TODAY, seed: 1 })).toBeNull();
+  });
+
+  it('only trains words already met, across worlds, never teaching new ones', () => {
+    const mastery = { ...seen(['farm.dog', 'farm.cat', 'farm.cow']), ...seen(['zoo.pig', 'zoo.duck'], 3) };
+    const lesson = generatePracticeLesson({ worlds, mastery, today: TODAY, seed: 7 })!;
+    expect(lesson.id).toBe(PRACTICE_LESSON_ID);
+    expect(lesson.plan.kind).toBe('practice');
+    expect(lesson.exercises.some((e) => e.kind === 'learn-card')).toBe(false);
+    expect(lesson.exercises.length).toBe(10);
+    const allowed = new Set(Object.keys(mastery));
+    const targets = lesson.exercises.flatMap((e) =>
+      'answerId' in e ? [e.answerId] : 'spokenWordId' in e ? [e.spokenWordId] : 'wordId' in e ? [e.wordId] : 'wordIds' in e ? e.wordIds : [],
+    );
+    for (const id of targets) expect(allowed.has(id)).toBe(true);
+  });
+
+  it('puts the weakest words first and hosts the session in their world', () => {
+    const mastery = { ...seen(['farm.dog', 'farm.cat'], 4, '2026-03-09'), ...seen(['zoo.pig', 'zoo.duck', 'zoo.cow'], 0) };
+    const lesson = generatePracticeLesson({ worlds, mastery, today: TODAY, seed: 2 })!;
+    expect(lesson.plan.worldId).toBe('zoo');
+    const first = lesson.exercises[0]!;
+    expect('answerId' in first && first.answerId.startsWith('zoo.')).toBe(true);
+  });
+
+  it('caps the focus list', () => {
+    const many = seen([...farm.words, ...zoo.words].map((w) => w.id));
+    const lesson = generatePracticeLesson({ worlds, mastery: many, today: TODAY, seed: 4 })!;
+    const answers = new Set(lesson.exercises.flatMap((e) => ('answerId' in e ? [e.answerId] : [])));
+    expect(answers.size).toBeLessThanOrEqual(PRACTICE_TUNING.focusWords);
+  });
+
+  it('refuses to build a practice plan through the world generator', () => {
+    const plan = { id: PRACTICE_LESSON_ID, worldId: 'farm', kind: 'practice' as const, index: 1, newWordIds: [] };
+    expect(() => generateLesson({ plan, worlds, mastery: {}, today: TODAY, seed: 1 })).toThrow();
   });
 });
 
