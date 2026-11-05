@@ -1,0 +1,42 @@
+{
+  "brand": "iaLingo",
+  "tagline": "Learn English with magical pets",
+  "brief": "A voice-first English app for kids aged 6 to 10, Spanish and Portuguese speakers first. Pets hatch and grow as a child learns. No login, no ads, no data leaves the phone. The logo has to be cute enough for a child to love, trustworthy enough for a parent to install, and instantly different from the green owl in the category.",
+  "adjectives": ["cute", "playful", "chunky", "safe", "magical"],
+  "criteria": "Success: reads as a pet and as the letter L, survives on a 16 px tab, works in one colour, sits naturally beside the app's violet and Fredoka type.",
+  "mockups": ["app-icon", "website", "favicon-tab", "sticker", "tshirt", "social"],
+  "nav": ["Worlds", "Pets", "For parents"],
+  "brand_color": "#6C4BF4",
+  "tile_color": "#6C4BF4",
+  "greyscale": false,
+  "final": true,
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Lingosaur",
+      "symbol": "../master/lingosaur-color.svg",
+      "lockup": "../master/logotype-color-on-light.svg",
+      "stacked": "../master/lockup-stacked-color-on-light.svg",
+      "avatar": "../export/web/lingosaur-app-icon.svg",
+      "symbol_on_tile": "../master/lingosaur-color.svg",
+      "stacked_on_tile": "../master/lockup-stacked-color-on-violet.svg",
+      "lockup_on_tile": "../master/logotype-color-on-violet.svg",
+      "symbol_on_dark": "../master/lingosaur-color.svg",
+      "lockup_on_dark": "../master/logotype-color-on-violet.svg",
+      "stacked_on_dark": "../master/lockup-stacked-color-on-violet.svg",
+      "idea": "A baby dino whose whole body is the capital L of Lingo.",
+      "rationale": [
+        "The mark is a letter and a pet at once, so the name and the game's promise arrive together",
+        "Yellow on violet stands apart from the category's green and blue, and comes straight from the app's own tokens",
+        "In the logotype the pet takes the place of the L, which no typed name can copy",
+        "Simplified 16 to 24 px cut keeps L plus two eyes on browser tabs"
+      ]
+    }
+  ],
+  "recommendation": "Use the logotype wherever the name appears, the pet alone on the app icon and splash, and the plain wordmark below 120 px wide or in one colour at small sizes.",
+  "next_steps": [
+    "Professional trademark search before launch",
+    "Store feature graphic and screenshots with the new mark",
+    "Optional: animate the pet on the splash (neck grows, tail wags)"
+  ]
+}

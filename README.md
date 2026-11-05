@@ -60,7 +60,7 @@ Builds are configured in `eas.json` (`development`, `development-simulator`, `pr
 | `npm run prebuild` | Regenerate `ios/` and `android/` from `app.json` and config plugins |
 | `npm run build:*` | EAS builds (development, preview, production) |
 | `node scripts/qa-walkthrough.cjs` | Drives the web build end to end with Playwright and saves screenshots to `production/qa/evidence/` (`QA_LANG=fr` for another UI language; `QA_VIEWPORT=430x932` and scale `3` for store screenshots) |
-| `node scripts/generate-sfx.mjs` · `generate-icons.cjs` | Re-create the synthesized sounds and the app icons |
+| `node scripts/generate-sfx.mjs` · `generate-icons.cjs` | Re-create the synthesized sounds and the app icons (drawn from the logo masters, see [`design/logo/`](design/logo/README.md)) |
 
 ## How it plays
 
