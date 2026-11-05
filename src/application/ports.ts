@@ -6,11 +6,13 @@ import type { DayKey } from '@/domain/shared/day';
  * preview can provide fakes. Nothing here talks to a network.
  */
 
-/** Persists the single saved-game snapshot on the device. */
+/** Persists one saved-game snapshot per child profile, plus the profile index, on the device. */
 export interface GameRepository {
-  load(): Promise<unknown>;
-  save(snapshot: unknown): Promise<void>;
-  clear(): Promise<void>;
+  load(profileId: string): Promise<unknown>;
+  save(profileId: string, snapshot: unknown): Promise<void>;
+  clear(profileId: string): Promise<void>;
+  loadProfiles(): Promise<unknown>;
+  saveProfiles(index: unknown): Promise<void>;
 }
 
 export interface SpeakOptions {
@@ -39,6 +41,48 @@ export interface HapticsService {
   trigger(kind: HapticKind): void;
 }
 
+/** What the device's speech recognizer can do (probed once at startup). */
+export interface RecognitionCapability {
+  /** The native module exists (development or store build, not Expo Go or web). */
+  readonly installed: boolean;
+  /** A recognizer service is available on this device. */
+  readonly available: boolean;
+  /** Recognition can run fully on the device (no audio leaves it). */
+  readonly onDevice: boolean;
+}
+
+export type RecognitionOutcome =
+  | { readonly status: 'heard'; readonly alternatives: readonly string[] }
+  | { readonly status: 'no-speech' }
+  | { readonly status: 'denied' }
+  | { readonly status: 'error'; readonly code: string };
+
+export interface ListenOptions {
+  /** BCP-47 tag of the language spoken, for example 'en-US'. */
+  readonly language: string;
+  readonly onDevice: boolean;
+  readonly maxSeconds: number;
+  /** Live transcript while the child speaks. */
+  readonly onPartial?: (text: string) => void;
+}
+
+/** Speech recognition for speaking practice. Nothing is recorded or stored. */
+export interface SpeechRecognitionService {
+  capability(): Promise<RecognitionCapability>;
+  requestPermission(): Promise<boolean>;
+  listen(options: ListenOptions): Promise<RecognitionOutcome>;
+  stop(): void;
+}
+
+/** Stores voice postcards in the app's private documents folder. */
+export interface VoiceStore {
+  /** Moves a finished recording into the diary; returns the stored file name. */
+  keep(profileId: string, recordingUri: string, fileName: string): Promise<string | null>;
+  uriFor(profileId: string, fileName: string): string | null;
+  remove(profileId: string, fileNames: readonly string[]): Promise<void>;
+  removeAll(profileId: string): Promise<void>;
+}
+
 export interface Clock {
   today(): DayKey;
   /** Monotonic-ish milliseconds, for durations only. */
@@ -49,6 +93,8 @@ export interface Clock {
 export interface AppServices {
   readonly repository: GameRepository;
   readonly speech: SpeechService;
+  readonly recognition: SpeechRecognitionService;
+  readonly voiceStore: VoiceStore;
   readonly sfx: SoundEffectsService;
   readonly haptics: HapticsService;
   readonly clock: Clock;

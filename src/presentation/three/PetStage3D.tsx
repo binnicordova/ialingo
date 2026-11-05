@@ -1,4 +1,6 @@
+import { useAtomValue } from 'jotai';
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
 import {
   StyleSheet,
   View,
@@ -9,6 +11,7 @@ import {
 
 import type { GrowthStage } from '@/domain/pets/leveling';
 import type { PetBlueprint } from '@/domain/pets/species';
+import { settingsAtom } from '@/state/selectors';
 
 import {
   createPetScene,
@@ -59,6 +62,8 @@ export function PetStage3D({
   ref,
 }: PetStage3DProps) {
   const controllerRef = useRef<PetSceneController | null>(null);
+  const systemReduced = useReducedMotion();
+  const calm = useAtomValue(settingsAtom).reducedMotion || systemReduced;
   const queued = useRef<PetAction[]>([]);
   const callbacks = useRef({ onHatched });
 
@@ -92,7 +97,7 @@ export function PetStage3D({
   const setup = (ctx: StageContext) => {
     const controller = createPetScene(
       ctx,
-      { blueprint, stage, accessory, sleeping, mode, ground, closeUp },
+      { blueprint, stage, accessory, sleeping, mode, ground, closeUp, calm },
       { onHatched: () => callbacks.current.onHatched?.() },
     );
     controllerRef.current = controller;

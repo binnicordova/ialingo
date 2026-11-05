@@ -2,9 +2,10 @@ import { atom } from 'jotai';
 
 import type { GameEvent } from '@/application/events';
 import { createNoopServices } from '@/application/noop-services';
-import type { AppServices } from '@/application/ports';
+import type { AppServices, RecognitionCapability } from '@/application/ports';
 import type { CatalogIndex } from '@/domain/game/catalog';
 import { createInitialGameState, type GameState } from '@/domain/game/game-state';
+import { createProfileIndex, type ProfileId, type ProfileIndex } from '@/domain/profiles/profiles';
 import { getContentIndex } from '@/infrastructure/content/catalog';
 
 /**
@@ -39,3 +40,38 @@ export const todayAtom = atom((get) => {
 
 /** Events waiting to be celebrated by the UI (level-ups, eggs, badges). */
 export const pendingEventsAtom = atom<readonly GameEvent[]>([]);
+
+/* ------------------------------------------------------------ Profiles */
+
+export const profileIndexAtom = atom<ProfileIndex>(createProfileIndex());
+export const activeProfileIdAtom = atom((get) => get(profileIndexAtom).activeId);
+
+/** What the "Who's playing?" picker shows for each child (pet, not a name). */
+export interface ProfileSummary {
+  readonly id: ProfileId;
+  readonly onboarded: boolean;
+  readonly petSpeciesId: string | null;
+  readonly petNickname: string | null;
+  readonly petXp: number;
+  readonly lessonsCompleted: number;
+}
+
+/** Summaries of the non-active profiles (the active one is derived live). */
+export const storedProfileSummariesAtom = atom<Readonly<Record<ProfileId, ProfileSummary>>>({});
+
+/** True once the child picked who is playing in this session (or there is one profile). */
+export const profileChosenAtom = atom(false);
+
+/** Flushes the pending autosave; set at boot (used before switching profiles). */
+export const flushSaveAtom = atom<{ flush: () => Promise<void> }>({ flush: async () => undefined });
+
+/* -------------------------------------------------------------- Speaking */
+
+export type MicPermission = 'unknown' | 'granted' | 'denied';
+
+export const recognitionAtom = atom<RecognitionCapability & { readonly permission: MicPermission }>({
+  installed: false,
+  available: false,
+  onDevice: false,
+  permission: 'unknown',
+});

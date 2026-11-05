@@ -20,9 +20,14 @@
 5. Parent area behind a gate: progress, daily time limit (the pet goes to sleep), settings, delete all data.
 6. Everything is stored on the device (AsyncStorage). There is no network code at all.
 
+## v1.1 additions (shipped)
+- Development build with on-device speech recognition (self-check fallback in Expo Go).
+- 34 worlds in YLE levels, 34 picture stories, speaking lessons, 46 pets, 10 guides.
+- Family profiles (up to 4), voice diary (parent opt-in, local), level certificates.
+
 ## Out of scope — not building this
 - Accounts, cloud sync, analytics SDKs, ads, in-app purchases and loot boxes.
-- Speech recognition and voice recording. Expo Go can't run a speech-recognition module, and recording children's voices is a privacy decision for phase 2.
+- Online speech recognition by default, or saving voice without a parent turning the diary on.
 - Free text entry of names, chat or any user-generated content.
 - Streak punishment and "your pet is sad" guilt mechanics.
 

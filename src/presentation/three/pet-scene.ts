@@ -26,6 +26,8 @@ export interface PetSceneOptions {
   readonly ground: string;
   /** Smaller framing for compact cards. */
   readonly closeUp?: boolean;
+  /** Reduced motion: softer idle animation, no drifting clouds. */
+  readonly calm?: boolean;
 }
 
 export interface PetSceneController extends StageController {
@@ -170,6 +172,8 @@ export function createPetScene(
   });
 
   let sleeping = options.sleeping;
+  /** Idle animation strength (reduced-motion setting). */
+  const motion = options.calm ? 0.35 : 1;
   let action: { name: PetAction; t: number } | null = null;
   let yaw = 0;
   let yawTarget = 0;
@@ -267,7 +271,7 @@ export function createPetScene(
   const updatePet = (dt: number, time: number) => {
     // Idle life: breathing, ears, tail, wings, blinking.
     const breatheSpeed = sleeping ? 1.3 : 2.4;
-    const breathe = Math.sin(time * breatheSpeed);
+    const breathe = Math.sin(time * breatheSpeed) * motion;
     let squash = 1 + breathe * (sleeping ? 0.035 : 0.022);
     let offsetY = 0;
     let spin = 0;
@@ -275,9 +279,9 @@ export function createPetScene(
     let scaleIn = 1;
 
     rig.ears.forEach((ear, i) => {
-      ear.rotation.z = (ear.userData.baseRotZ as number) + Math.sin(time * 3 + i * 1.7) * 0.07;
+      ear.rotation.z = (ear.userData.baseRotZ as number) + Math.sin(time * 3 + i * 1.7) * 0.07 * motion;
     });
-    if (rig.tail) rig.tail.rotation.y = Math.sin(time * (sleeping ? 1.5 : 6)) * (sleeping ? 0.1 : 0.35);
+    if (rig.tail) rig.tail.rotation.y = Math.sin(time * (sleeping ? 1.5 : 6)) * (sleeping ? 0.1 : 0.35) * motion;
     const flap = action?.name === 'jump' || action?.name === 'spin' ? 14 : 5;
     rig.wings.forEach((wing) => {
       wing.rotation.z = (wing.userData.side as number) * Math.sin(time * flap) * 0.3;
@@ -386,7 +390,7 @@ export function createPetScene(
     },
     update(dt, time) {
       frameCamera();
-      for (let i = 0; i < clouds.length; i += 1) {
+      for (let i = 0; i < clouds.length && !options.calm; i += 1) {
         const cloud = clouds[i] as THREE.Object3D;
         cloud.position.x = ((cloud.userData.x0 as number) + time * 0.12 * (i + 1) + 6) % 12 - 6;
       }

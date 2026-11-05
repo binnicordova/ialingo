@@ -9,7 +9,9 @@ export type AchievementCondition =
   | { readonly type: 'perfect-lessons'; readonly count: number }
   | { readonly type: 'days-played'; readonly count: number }
   | { readonly type: 'pets-fed'; readonly count: number }
-  | { readonly type: 'worlds-completed'; readonly count: number };
+  | { readonly type: 'worlds-completed'; readonly count: number }
+  | { readonly type: 'stories-completed'; readonly count: number }
+  | { readonly type: 'speak-lessons-completed'; readonly count: number };
 
 export interface AchievementReward {
   readonly berries?: number;
@@ -33,6 +35,8 @@ export interface AchievementMetrics {
   readonly daysPlayed: number;
   readonly petsFed: number;
   readonly worldsCompleted: number;
+  readonly storiesCompleted: number;
+  readonly speakLessonsCompleted: number;
 }
 
 export function metricFor(condition: AchievementCondition, metrics: AchievementMetrics): number {
@@ -49,6 +53,10 @@ export function metricFor(condition: AchievementCondition, metrics: AchievementM
       return metrics.petsFed;
     case 'worlds-completed':
       return metrics.worldsCompleted;
+    case 'stories-completed':
+      return metrics.storiesCompleted;
+    case 'speak-lessons-completed':
+      return metrics.speakLessonsCompleted;
   }
 }
 

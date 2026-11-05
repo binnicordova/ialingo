@@ -1,9 +1,12 @@
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { levelInfo } from '@/domain/curriculum/levels';
 import { claimDailyGiftAtom, tapFeedbackAtom } from '@/state/actions';
+import { profilesAtom } from '@/state/profiles';
 import { contentAtom } from '@/state/core';
 import {
   activePetAtom,
@@ -32,6 +35,7 @@ export function HomeScreen() {
   const eggs = useAtomValue(eggsAtom);
   const content = useAtomValue(contentAtom);
   const claimGift = useSetAtom(claimDailyGiftAtom);
+  const profiles = useAtomValue(profilesAtom);
   const { english } = useSpeak();
 
   const current =
@@ -79,6 +83,9 @@ export function HomeScreen() {
             ) : null}
           </View>
         </Pressable>
+        {profiles.length > 1 ? (
+          <IconButton icon="👥" label={t('switchPlayer')} onPress={() => router.push('/profiles')} size={48} testID="home-switch-player" />
+        ) : null}
         <BerryPill amount={berries} />
       </View>
 
@@ -109,19 +116,20 @@ export function HomeScreen() {
         ) : null}
 
         <View style={styles.quickRow}>
-          <IconButton icon="🐾" label={t('myPets')} onPress={() => router.push('/pets')} badge={eggs.length || null} size={64} testID="nav-pets" />
-          <IconButton icon="👫" label={t('guides')} onPress={() => router.push('/guides')} size={64} testID="nav-guides" />
-          <IconButton icon="🏅" label={t('badges')} onPress={() => router.push('/badges')} size={64} testID="nav-badges" />
+          <IconButton icon="🐾" label={t('myPets')} onPress={() => router.push('/pets')} badge={eggs.length || null} size={56} testID="nav-pets" />
+          <IconButton icon="👫" label={t('guides')} onPress={() => router.push('/guides')} size={56} testID="nav-guides" />
+          <IconButton icon="🏅" label={t('badges')} onPress={() => router.push('/badges')} size={56} testID="nav-badges" />
+          <IconButton icon="🎓" label={t('certificates')} onPress={() => router.push('/certificates')} size={56} testID="nav-certificates" />
           <IconButton
             icon="🎁"
             label={t('dailyGift')}
             onPress={() => claimGift()}
             badge={canClaim ? '!' : null}
             background={canClaim ? colors.yellow : colors.surface}
-            size={64}
+            size={56}
             testID="nav-gift"
           />
-          <IconButton icon="🔒" label={t('parents')} onPress={() => router.push('/parents')} size={64} testID="nav-parents" />
+          <IconButton icon="🔒" label={t('parents')} onPress={() => router.push('/parents')} size={56} testID="nav-parents" />
         </View>
 
         <AppText variant="title" style={styles.mapTitle}>
@@ -129,7 +137,16 @@ export function HomeScreen() {
         </AppText>
         <View style={styles.map}>
           {worlds.map((view, index) => (
-            <WorldNode key={view.world.id} view={view} index={index} />
+            <Fragment key={view.world.id}>
+              {index === 0 || worlds[index - 1]?.world.level !== view.world.level ? (
+                <LevelHeader level={view.world.level} />
+              ) : null}
+              <WorldNode
+                view={view}
+                index={index}
+                connect={index > 0 && worlds[index - 1]?.world.level === view.world.level}
+              />
+            </Fragment>
           ))}
         </View>
       </ScrollView>
@@ -137,7 +154,22 @@ export function HomeScreen() {
   );
 }
 
-function WorldNode({ view, index }: { view: WorldView; index: number }) {
+function LevelHeader({ level }: { level: WorldView['world']['level'] }) {
+  const { l } = useT();
+  const info = levelInfo(level);
+  return (
+    <View style={[styles.levelHeader, { backgroundColor: info.color }]}>
+      <AppText variant="heading" color="#FFFFFF">
+        {info.emoji} {l(info.title)}
+      </AppText>
+      <AppText variant="small" color="#FFFFFF">
+        {info.cefr}
+      </AppText>
+    </View>
+  );
+}
+
+function WorldNode({ view, index, connect }: { view: WorldView; index: number; connect: boolean }) {
   const { t, l } = useT();
   const feedback = useSetAtom(tapFeedbackAtom);
   const { world, unlocked, completed, stars } = view;
@@ -145,7 +177,7 @@ function WorldNode({ view, index }: { view: WorldView; index: number }) {
   const color = unlocked ? world.color : colors.locked;
   return (
     <View style={[styles.nodeRow, { alignItems: align }]}>
-      {index > 0 ? <View style={[styles.connector, index % 2 === 0 ? styles.connectorLeft : styles.connectorRight]} /> : null}
+      {connect ? <View style={[styles.connector, index % 2 === 0 ? styles.connectorLeft : styles.connectorRight]} /> : null}
       <Pressable
         testID={`world-${world.id}`}
         accessibilityRole="button"
@@ -228,4 +260,13 @@ const styles = StyleSheet.create({
   lockedEmoji: { fontSize: 32, opacity: 0.8 },
   crown: { position: 'absolute', top: -14, right: -8, fontSize: 28 },
   nodeLabel: { flex: 1 },
+  levelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginVertical: spacing.sm,
+  },
 });

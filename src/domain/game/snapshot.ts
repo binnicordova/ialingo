@@ -73,6 +73,10 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
     haptics: bool(settingsRaw.haptics, base.settings.haptics),
     dailyLimitMinutes:
       limit === null ? null : num(limit, base.settings.dailyLimitMinutes ?? 30, 1),
+    speaking: settingsRaw.speaking === 'self-check' ? 'self-check' : 'recognition',
+    allowOnlineRecognition: bool(settingsRaw.allowOnlineRecognition, false),
+    voiceDiary: bool(settingsRaw.voiceDiary, false),
+    reducedMotion: bool(settingsRaw.reducedMotion, false),
   };
 
   const progressRaw = record(data.progress);
@@ -146,5 +150,15 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
       secondsUsed: num(screenRaw.secondsUsed, 0),
       bonusMinutes: num(screenRaw.bonusMinutes, 0),
     },
+    voiceDiary: (Array.isArray(data.voiceDiary) ? data.voiceDiary : [])
+      .map(record)
+      .filter((e) => typeof e.id === 'string' && typeof e.fileName === 'string')
+      .map((e) => ({
+        id: String(e.id),
+        day: day(e.day, today),
+        fileName: String(e.fileName),
+        prompt: typeof e.prompt === 'string' ? e.prompt : '',
+        durationMs: num(e.durationMs, 0),
+      })),
   };
 }

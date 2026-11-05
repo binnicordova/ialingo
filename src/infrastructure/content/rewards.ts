@@ -80,6 +80,22 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     reward: { speciesId: 'sparkle' },
   },
   {
+    id: 'chatterbox',
+    emoji: '🗣️',
+    title: { en: 'Chatterbox', es: 'Gran conversador', pt: 'Tagarela' },
+    description: { en: 'Finish 3 speaking lessons', es: 'Termina 3 lecciones de hablar', pt: 'Termine 3 lições de falar' },
+    condition: { type: 'speak-lessons-completed', count: 3 },
+    reward: { speciesId: 'echo' },
+  },
+  {
+    id: 'storyteller',
+    emoji: '📖',
+    title: { en: 'Story Lover', es: 'Amante de los cuentos', pt: 'Amante de histórias' },
+    description: { en: 'Listen to 5 stories', es: 'Escucha 5 cuentos', pt: 'Ouça 5 histórias' },
+    condition: { type: 'stories-completed', count: 5 },
+    reward: { speciesId: 'page' },
+  },
+  {
     id: 'super-learner',
     emoji: '🚀',
     title: { en: 'Super Learner', es: 'Súper estudiante', pt: 'Super estudante' },
@@ -92,7 +108,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     emoji: '🏆',
     title: { en: 'Legend of iaLingo', es: 'Leyenda de iaLingo', pt: 'Lenda do iaLingo' },
     description: { en: 'Beat every world boss', es: 'Vence a todos los jefes', pt: 'Vença todos os chefes' },
-    condition: { type: 'worlds-completed', count: 26 },
+    condition: { type: 'worlds-completed', count: 34 },
     reward: { berries: 500 },
   },
 ];

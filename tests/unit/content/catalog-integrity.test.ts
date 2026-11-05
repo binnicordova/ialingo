@@ -14,13 +14,35 @@ const { worlds, species, characters, accessories, achievements } = CONTENT_CATAL
 
 describe('content catalog integrity', () => {
   it('has the promised scale', () => {
-    expect(worlds.length).toBeGreaterThanOrEqual(26);
-    expect(species.length).toBeGreaterThanOrEqual(36);
-    expect(characters.length).toBeGreaterThanOrEqual(8);
+    expect(worlds.length).toBeGreaterThanOrEqual(34);
+    expect(species.length).toBeGreaterThanOrEqual(46);
+    expect(characters.length).toBeGreaterThanOrEqual(10);
     const words = worlds.flatMap((w) => w.words).length;
     const lessons = worlds.flatMap((w) => buildLessonPlans(w)).length;
-    expect(words).toBeGreaterThanOrEqual(350);
-    expect(lessons).toBeGreaterThanOrEqual(140);
+    expect(words).toBeGreaterThanOrEqual(500);
+    expect(lessons).toBeGreaterThanOrEqual(260);
+  });
+
+  it('gives every world a story whose key words exist in that world', () => {
+    for (const world of worlds) {
+      expect(world.story).toBeDefined();
+      const ids = new Set(world.words.map((w) => w.id));
+      for (const line of world.story?.lines ?? []) {
+        expect(ids.has(line.keyWordId)).toBe(true);
+        for (const locale of SUPPORTED_LOCALES) expect(line.meaning[locale].trim()).not.toBe('');
+      }
+      expect(world.story?.lines.length).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('spreads worlds over the three YLE levels in map order', () => {
+    const levels = [...worlds].sort((a, b) => a.order - b.order).map((w) => w.level);
+    expect(levels[0]).toBe('starters');
+    expect(levels).toContain('movers');
+    expect(levels.at(-1)).toBe('flyers');
+    const firstMovers = levels.indexOf('movers');
+    const firstFlyers = levels.indexOf('flyers');
+    expect(firstMovers).toBeLessThan(firstFlyers);
   });
 
   it('uses unique ids everywhere', () => {
@@ -69,6 +91,8 @@ describe('content catalog integrity', () => {
       }
     }
     expect(species.filter((s) => s.unlock.type === 'starter')).toHaveLength(3);
+    // Every world boss has its own pet and no pet is claimed by two worlds.
+    expect(new Set(worlds.map((w) => w.rewardSpeciesId)).size).toBe(worlds.length);
   });
 
   it('only rewards pets that exist', () => {

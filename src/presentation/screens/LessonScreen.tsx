@@ -17,7 +17,7 @@ import {
   submitAnswerAtom,
   type ActiveLesson,
 } from '@/state/lesson';
-import { activePetAtom } from '@/state/selectors';
+import { activePetAtom, canRecordPostcardAtom } from '@/state/selectors';
 
 import { CharacterAvatar } from '../art/CharacterAvatar';
 import { PetPortrait } from '../art/PetPortrait';
@@ -65,9 +65,18 @@ function correctAnswerText(exercise: Exercise, content: CatalogIndex): { emoji: 
       const w = content.word(exercise.wordId);
       return { emoji: w?.emoji ?? '', text: w?.en ?? '' };
     }
-    case 'build-sentence': {
+    case 'build-sentence':
+    case 'speak-sentence': {
       const s = content.sentence(exercise.sentenceId);
       return { emoji: s?.emoji ?? '', text: s?.en ?? '' };
+    }
+    case 'speak-word': {
+      const w = content.word(exercise.wordId);
+      return { emoji: w?.emoji ?? '', text: w?.en ?? '' };
+    }
+    case 'story-page': {
+      const line = content.story(exercise.storyId)?.lines[exercise.lineIndex];
+      return { emoji: line?.emoji ?? '', text: line?.en ?? '' };
     }
   }
 }
@@ -94,7 +103,7 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
 
   const onAnswer = (answer: ExerciseAnswer) => {
     const correct = submit(answer);
-    if (exercise.kind === 'learn-card') {
+    if (exercise.kind === 'learn-card' || exercise.kind === 'story-page') {
       proceed();
       return;
     }
@@ -109,6 +118,7 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
       const encouragements = guide?.encouragements ?? ['Almost!'];
       setLine(encouragements[hashSeed(exercise.id) % encouragements.length] ?? 'Almost!');
       const answerText = correctAnswerText(exercise, content).text;
+      if (exercise.kind === 'speak-word' || exercise.kind === 'speak-sentence') setLine(t('moveOn'));
       if (exercise.kind !== 'match-pairs') english(answerText);
     }
   };
@@ -222,6 +232,7 @@ function LessonResults({ active, onReplay }: { active: ActiveLesson; onReplay: (
   const content = useAtomValue(contentAtom);
   const { characterEnglish } = useSpeak();
   const stageRef = useRef<PetStageHandle>(null);
+  const offerPostcard = useAtomValue(canRecordPostcardAtom);
   const summary = active.summary;
   const world = content.world(active.lesson.plan.worldId);
   const guide = world ? content.character(world.guideId) : undefined;
@@ -285,6 +296,16 @@ function LessonResults({ active, onReplay }: { active: ActiveLesson; onReplay: (
           </View>
         ) : null}
         <View style={styles.resultButtons}>
+          {offerPostcard ? (
+            <BigButton
+              label={t('postcardOffer')}
+              icon="💌"
+              tone="orange"
+              compact
+              onPress={() => router.replace('/postcard')}
+              testID="results-postcard"
+            />
+          ) : null}
           <BigButton label={t('continue')} tone="success" onPress={() => router.back()} testID="results-continue" />
           <BigButton label={t('playAgain')} tone="neutral" compact icon="🔁" onPress={onReplay} />
         </View>

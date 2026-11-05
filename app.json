@@ -2,14 +2,16 @@
   "expo": {
     "name": "iaLingo",
     "slug": "ialingo",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ialingo",
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.binnicordova.ialingo",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,10 +22,13 @@
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
-      ]
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.binnicordova.ialingo",
+      "versionCode": 2
     },
     "web": {
       "output": "single",
@@ -43,14 +48,26 @@
       [
         "expo-audio",
         {
-          "microphonePermission": false,
-          "recordAudioAndroid": false,
+          "microphonePermission": "iaLingo uses the microphone only while your child practices speaking. Speech is recognized on this device; nothing is uploaded, and voice diary recordings are saved only if a grown-up turns them on.",
+          "recordAudioAndroid": true,
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
         }
       ],
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "iaLingo uses the microphone only while your child practices speaking. Speech is recognized on this device; nothing is uploaded, and voice diary recordings are saved only if a grown-up turns them on.",
+          "speechRecognitionPermission": "iaLingo recognizes your child's spoken English on this device so it can give friendly pronunciation feedback. Audio is not stored or shared.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

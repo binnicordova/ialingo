@@ -1,4 +1,4 @@
-import type { LessonId, LessonPlan, World, WorldId } from './types';
+import type { LessonId, LessonKind, LessonPlan, World, WorldId } from './types';
 
 /**
  * Tuning knobs for curriculum structure.
@@ -31,7 +31,7 @@ export function lessonIdFor(worldId: WorldId, slot: string): LessonId {
   return `${worldId}.${slot}`;
 }
 
-/** Splits a world's words into learn lessons and appends a review and a boss lesson. */
+/** Splits a world's words into learn lessons and appends story, speak, review and boss lessons. */
 export function buildLessonPlans(world: World, tuning = CURRICULUM_TUNING): LessonPlan[] {
   const chunks = balancedChunks(
     world.words.map((w) => w.id),
@@ -45,20 +45,19 @@ export function buildLessonPlans(world: World, tuning = CURRICULUM_TUNING): Less
     index: i + 1,
     newWordIds,
   }));
-  plans.push({
-    id: lessonIdFor(world.id, 'review'),
-    worldId: world.id,
-    kind: 'review',
-    index: plans.length + 1,
-    newWordIds: [],
-  });
-  plans.push({
-    id: lessonIdFor(world.id, 'boss'),
-    worldId: world.id,
-    kind: 'boss',
-    index: plans.length + 1,
-    newWordIds: [],
-  });
+  // After the learn lessons: listening story (if the world has one), speaking
+  // practice, review, and the boss challenge. Ids are stable (`farm.boss`), so
+  // saves from earlier versions keep their stars.
+  const followUps: LessonKind[] = [...(world.story ? (['story'] as const) : []), 'speak', 'review', 'boss'];
+  for (const kind of followUps) {
+    plans.push({
+      id: lessonIdFor(world.id, kind),
+      worldId: world.id,
+      kind,
+      index: plans.length + 1,
+      newWordIds: [],
+    });
+  }
   return plans;
 }
 

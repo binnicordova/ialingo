@@ -1,6 +1,6 @@
 import type { Character } from '@/domain/characters/character';
 
-/** The eight original guide characters. Each hosts 2–5 worlds. */
+/** The ten original guide characters. Each hosts 2–5 worlds. */
 export const CHARACTERS: readonly Character[] = [
   {
     id: 'luna',
@@ -113,5 +113,33 @@ export const CHARACTERS: readonly Character[] = [
     },
     cheers: ['Champion!', 'Great job!', 'Yes! Goal!'],
     encouragements: ['Try again!', 'Almost!', 'Keep trying!'],
+  },
+  {
+    id: 'kiki',
+    name: 'Kiki',
+    role: { en: 'The world-traveler parrot', es: 'El loro viajero', pt: 'O papagaio viajante' },
+    look: { kind: 'parrot', primary: '#43A047', secondary: '#FFF59D', accent: '#E53935' },
+    voice: { pitch: 1.4, rate: 1.05 },
+    greeting: {
+      en: "Hello, hello! I'm Kiki. Let's fly around the world!",
+      es: '¡Hola, hola! Soy Kiki. ¡Volemos por el mundo!',
+      pt: 'Olá, olá! Eu sou o Kiki. Vamos voar pelo mundo!',
+    },
+    cheers: ['Fantastic!', 'Bravo!', 'Wonderful!'],
+    encouragements: ['Try again!', 'Almost!', 'You can do it!'],
+  },
+  {
+    id: 'bruno',
+    name: 'Bruno',
+    role: { en: 'The builder beaver', es: 'El castor constructor', pt: 'O castor construtor' },
+    look: { kind: 'beaver', primary: '#8D6E63', secondary: '#FFE0B2', accent: '#FFFFFF' },
+    voice: { pitch: 0.9, rate: 0.95 },
+    greeting: {
+      en: "Hi! I'm Bruno. Let's build and invent things!",
+      es: '¡Hola! Soy Bruno. ¡Construyamos e inventemos cosas!',
+      pt: 'Oi! Eu sou o Bruno. Vamos construir e inventar coisas!',
+    },
+    cheers: ['Well built!', 'Awesome!', 'Great job!'],
+    encouragements: ['Try again!', 'Almost!', 'Keep building!'],
   },
 ];

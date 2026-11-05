@@ -1,7 +1,7 @@
 import type { PetSpecies } from '@/domain/pets/species';
 
 /**
- * The 36 original pets: 3 starters, 26 world pets (one per boss) and 7 badge
+ * The 46 original pets: 3 starters, 34 world pets (one per boss) and 9 badge
  * pets. Each is defined by a data blueprint only, rendered procedurally in 3D
  * and 2D. To add a pet, append a row.
  */
@@ -243,6 +243,71 @@ export const PET_SPECIES: readonly PetSpecies[] = [
     blueprint: { body: 'round', primary: '#66BB6A', secondary: '#FFF59D', accent: '#C62828', ears: 'horns', tail: 'long', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
     unlock: { type: 'world-boss', worldId: 'fantasy' },
   },
+  // Flyers-tier world pets (worlds 27–34).
+  {
+    id: 'atlas',
+    name: 'Atlas',
+    title: { en: 'the world-traveler pup', es: 'el cachorrito viajero', pt: 'o filhote viajante' },
+    catchphrase: "Let's see the world!",
+    blueprint: { body: 'round', primary: '#26A69A', secondary: '#E0F2F1', accent: '#FFCA28', ears: 'floppy', tail: 'curly', extra: 'none', pattern: 'spots', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'countries' },
+  },
+  {
+    id: 'plume',
+    name: 'Plume',
+    title: { en: 'the peacock chick', es: 'el pollito pavo real', pt: 'o pintinho pavão' },
+    catchphrase: 'Tweet, tweet! Look at my feathers!',
+    blueprint: { body: 'round', primary: '#29B6F6', secondary: '#E1F5FE', accent: '#66BB6A', ears: 'none', tail: 'fluffy', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
+    unlock: { type: 'world-boss', worldId: 'birds' },
+  },
+  {
+    id: 'sprinkles',
+    name: 'Sprinkles',
+    title: { en: 'the donut bear', es: 'el osito dona', pt: 'o ursinho rosquinha' },
+    catchphrase: 'Sweet treats for everyone!',
+    blueprint: { body: 'round', primary: '#F48FB1', secondary: '#FFF3E0', accent: '#8D6E63', ears: 'round', tail: 'stub', extra: 'none', pattern: 'spots', eyes: 'sparkle' },
+    unlock: { type: 'world-boss', worldId: 'sweets' },
+  },
+  {
+    id: 'nugget',
+    name: 'Nugget',
+    title: { en: 'the little chef hamster', es: 'el hámster cocinero', pt: 'o hamster cozinheiro' },
+    catchphrase: "What's cooking?",
+    blueprint: { body: 'wide', primary: '#FFCC80', secondary: '#FFFFFF', accent: '#FF7043', ears: 'round', tail: 'stub', extra: 'none', pattern: 'belly', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'kitchen' },
+  },
+  {
+    id: 'fizz',
+    name: 'Fizz',
+    title: { en: 'the bubbly otter', es: 'la nutria burbujeante', pt: 'a lontra borbulhante' },
+    catchphrase: 'Squeaky clean!',
+    blueprint: { body: 'tall', primary: '#80DEEA', secondary: '#FFFFFF', accent: '#00ACC1', ears: 'round', tail: 'long', extra: 'none', pattern: 'belly', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'health' },
+  },
+  {
+    id: 'gizmo',
+    name: 'Gizmo',
+    title: { en: 'the handy beaver', es: 'el castor habilidoso', pt: 'o castor habilidoso' },
+    catchphrase: 'I can fix it!',
+    blueprint: { body: 'wide', primary: '#A1887F', secondary: '#FFE0B2', accent: '#5D4037', ears: 'round', tail: 'fish', extra: 'none', pattern: 'belly', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'tools' },
+  },
+  {
+    id: 'confetti',
+    name: 'Confetti',
+    title: { en: 'the party kitty', es: 'la gatita fiestera', pt: 'a gatinha festeira' },
+    catchphrase: "Let's celebrate!",
+    blueprint: { body: 'round', primary: '#CE93D8', secondary: '#FFF59D', accent: '#FF4081', ears: 'cat', tail: 'fluffy', extra: 'horn', pattern: 'spots', eyes: 'sparkle' },
+    unlock: { type: 'world-boss', worldId: 'celebrations' },
+  },
+  {
+    id: 'byte',
+    name: 'Byte',
+    title: { en: 'the robot bunny', es: 'el conejito robot', pt: 'o coelhinho robô' },
+    catchphrase: 'Beep! Hello, inventor!',
+    blueprint: { body: 'tall', primary: '#90A4AE', secondary: '#E0F7FA', accent: '#00E5FF', ears: 'antenna', tail: 'stub', extra: 'none', pattern: 'plain', eyes: 'round' },
+    unlock: { type: 'world-boss', worldId: 'tech' },
+  },
   // Badge pets: hatch from eggs earned with achievements.
   {
     id: 'mochi',
@@ -299,6 +364,22 @@ export const PET_SPECIES: readonly PetSpecies[] = [
     catchphrase: 'Hot, hot, hot!',
     blueprint: { body: 'tall', primary: '#FF7043', secondary: '#FFCCBC', accent: '#4E342E', ears: 'horns', tail: 'long', extra: 'spikes', pattern: 'belly', eyes: 'round' },
     unlock: { type: 'achievement', achievementId: 'world-hero' },
+  },
+  {
+    id: 'echo',
+    name: 'Echo',
+    title: { en: 'the chatty bat', es: 'el murcielaguito parlanchín', pt: 'o morceguinho tagarela' },
+    catchphrase: 'I love to hear you talk!',
+    blueprint: { body: 'round', primary: '#7E57C2', secondary: '#EDE7F6', accent: '#FFCA28', ears: 'cat', tail: 'none', extra: 'wings', pattern: 'belly', eyes: 'sparkle' },
+    unlock: { type: 'achievement', achievementId: 'chatterbox' },
+  },
+  {
+    id: 'page',
+    name: 'Page',
+    title: { en: 'the storybook owl', es: 'el búho cuentacuentos', pt: 'a coruja contadora de histórias' },
+    catchphrase: 'Once upon a time...',
+    blueprint: { body: 'tall', primary: '#FFB74D', secondary: '#FFF8E1', accent: '#6D4C41', ears: 'cat', tail: 'stub', extra: 'wings', pattern: 'belly', eyes: 'round' },
+    unlock: { type: 'achievement', achievementId: 'storyteller' },
   },
 ];
 

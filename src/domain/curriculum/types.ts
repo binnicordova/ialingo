@@ -6,6 +6,10 @@ export type SentenceId = string;
 export type LessonId = string;
 export type CharacterId = string;
 export type SpeciesId = string;
+export type StoryId = string;
+
+/** Cambridge Young Learners English levels (CEFR Pre-A1 → A2). */
+export type YleLevel = 'starters' | 'movers' | 'flyers';
 
 /** One English word with a picture (emoji) and its meaning in every UI locale. */
 export interface VocabularyItem {
@@ -28,11 +32,29 @@ export interface Sentence {
   readonly emoji: string;
 }
 
+/** One page of a picture story, read aloud by the world's guide. */
+export interface StoryLine {
+  readonly en: string;
+  readonly emoji: string;
+  readonly meaning: LocalizedText;
+  /** World word this page is about; used for the comprehension questions. */
+  readonly keyWordId: WordId;
+}
+
+/** A short listening story that reuses the world's vocabulary in context. */
+export interface Story {
+  readonly id: StoryId;
+  readonly worldId: WorldId;
+  readonly title: LocalizedText;
+  readonly lines: readonly StoryLine[];
+}
+
 /** A themed unit of the curriculum (for example "Farm Animals"). */
 export interface World {
   readonly id: WorldId;
   /** 1-based order on the Adventure Map. */
   readonly order: number;
+  readonly level: YleLevel;
   readonly title: LocalizedText;
   readonly emoji: string;
   /** Theme color (hex). */
@@ -43,9 +65,14 @@ export interface World {
   readonly rewardSpeciesId: SpeciesId;
   readonly words: readonly VocabularyItem[];
   readonly sentences: readonly Sentence[];
+  readonly story?: Story;
 }
 
-export type LessonKind = 'learn' | 'review' | 'boss';
+/**
+ * Lesson kinds, in map order inside a world:
+ * learn (new words) → story (listening) → speak (pronunciation) → review → boss.
+ */
+export type LessonKind = 'learn' | 'story' | 'speak' | 'review' | 'boss';
 
 /** Static description of one lesson slot inside a world. */
 export interface LessonPlan {
@@ -54,6 +81,6 @@ export interface LessonPlan {
   readonly kind: LessonKind;
   /** 1-based position among the world's lessons. */
   readonly index: number;
-  /** Words introduced by this lesson (empty for review / boss). */
+  /** Words introduced by this lesson (empty for the other kinds). */
   readonly newWordIds: readonly WordId[];
 }

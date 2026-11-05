@@ -1,6 +1,8 @@
+import { useAtomValue } from 'jotai';
 import { memo, useEffect, useState } from 'react';
 import Animated, {
   Easing,
+  useReducedMotion,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -10,6 +12,7 @@ import Animated, {
 import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from 'react-native-svg';
 
 import type { CharacterLook } from '@/domain/characters/character';
+import { settingsAtom } from '@/state/selectors';
 
 import { shade } from '../theme/tokens';
 
@@ -32,6 +35,9 @@ export const CharacterAvatar = memo(function CharacterAvatar({
 }: CharacterAvatarProps) {
   const [mouthOpen, setMouthOpen] = useState(false);
   const y = useSharedValue(0);
+  const systemReduced = useReducedMotion();
+  const calm = useAtomValue(settingsAtom).reducedMotion || systemReduced;
+  const shouldBob = bob && !calm;
 
   useEffect(() => {
     if (!talking) return;
@@ -40,7 +46,7 @@ export const CharacterAvatar = memo(function CharacterAvatar({
   }, [talking]);
 
   useEffect(() => {
-    if (!bob) return;
+    if (!shouldBob) return;
     y.value = withRepeat(
       withSequence(
         withTiming(-5, { duration: 900, easing: Easing.inOut(Easing.quad) }),
@@ -48,7 +54,7 @@ export const CharacterAvatar = memo(function CharacterAvatar({
       ),
       -1,
     );
-  }, [bob, y]);
+  }, [shouldBob, y]);
 
   const animated = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const line = shade(look.primary, 0.3);
@@ -158,6 +164,29 @@ function Body({ look, line }: { look: CharacterLook; line: string }) {
           ))}
         </G>
       );
+    case 'parrot':
+      return (
+        <G>
+          <Path d="M66 40 Q 80 6 96 34 Q 106 4 118 36 Q 136 14 134 50 Z" fill={accent} stroke={line} strokeWidth={3} strokeLinejoin="round" />
+          <Ellipse cx={150} cy={130} rx={24} ry={44} fill={shade(primary, 0.18)} transform="rotate(20 150 130)" />
+          <Path d="M88 168 L 76 196 L 100 184 L 112 196 L 112 168 Z" fill={accent} />
+          <Ellipse cx={100} cy={112} rx={62} ry={70} fill={primary} stroke={line} strokeWidth={4} />
+          <Ellipse cx={100} cy={142} rx={36} ry={34} fill={secondary} />
+        </G>
+      );
+    case 'beaver':
+      return (
+        <G>
+          <Ellipse cx={160} cy={160} rx={34} ry={20} fill={shade(primary, 0.25)} transform="rotate(-25 160 160)" />
+          <Path d="M140 150 L 180 170 M 146 162 L 176 150" stroke={shade(primary, 0.45)} strokeWidth={3} />
+          <Circle cx={52} cy={62} r={18} fill={primary} stroke={line} strokeWidth={4} />
+          <Circle cx={148} cy={62} r={18} fill={primary} stroke={line} strokeWidth={4} />
+          <Ellipse cx={100} cy={116} rx={64} ry={66} fill={primary} stroke={line} strokeWidth={4} />
+          <Ellipse cx={100} cy={144} rx={40} ry={30} fill={secondary} />
+          <Path d="M54 56 Q 100 14 146 56 L 146 64 L 54 64 Z" fill="#FFC93C" stroke="#E0A800" strokeWidth={3} />
+          <Rect x={46} y={60} width={108} height={9} rx={4} fill="#E0A800" />
+        </G>
+      );
     case 'lion':
       return (
         <G>
@@ -209,9 +238,21 @@ function FaceFeatures({ look, mouthOpen, mood }: { look: CharacterLook; mouthOpe
         </G>
       )}
       {look.kind === 'lion' && <Path d="M92 124 L 108 124 L 100 132 Z" fill="#6D4C41" />}
+      {look.kind === 'parrot' && (
+        <Path d="M84 120 Q 100 108 116 120 Q 112 146 100 152 Q 92 140 84 120 Z" fill="#FFB300" stroke="#E68A00" strokeWidth={3} />
+      )}
+      {look.kind === 'beaver' && (
+        <G>
+          <Ellipse cx={100} cy={122} rx={10} ry={7} fill="#4E342E" />
+          <Rect x={90} y={140} width={9} height={14} rx={2} fill={look.accent} stroke="#BDBDBD" strokeWidth={1.5} />
+          <Rect x={101} y={140} width={9} height={14} rx={2} fill={look.accent} stroke="#BDBDBD" strokeWidth={1.5} />
+        </G>
+      )}
       <Ellipse cx={62} cy={mouthY - 8} rx={10} ry={6} fill="#FF8FB1" opacity={0.6} />
       <Ellipse cx={138} cy={mouthY - 8} rx={10} ry={6} fill="#FF8FB1" opacity={0.6} />
-      {mouthOpen ? (
+      {look.kind === 'parrot' ? (
+        mouthOpen ? <Ellipse cx={100} cy={150} rx={7} ry={4} fill="#2D2A4A" /> : null
+      ) : mouthOpen ? (
         <Ellipse cx={100} cy={mouthY + (isOwl ? 14 : 4)} rx={12} ry={10} fill="#2D2A4A" />
       ) : (
         <Path
