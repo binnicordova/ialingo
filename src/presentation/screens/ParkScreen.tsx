@@ -16,6 +16,8 @@ import { colors, radii, shade, shadow, spacing } from '../theme/tokens';
 const GAMES: readonly { kind: MiniGameKind; emoji: string; title: StringKey; info: StringKey; color: string }[] = [
   { kind: 'bubble-pop', emoji: '🫧', title: 'bubblePop', info: 'bubblePopInfo', color: colors.sky },
   { kind: 'memory-match', emoji: '🃏', title: 'memoryMatch', info: 'memoryMatchInfo', color: colors.primary },
+  { kind: 'i-spy', emoji: '🔍', title: 'iSpy', info: 'iSpyInfo', color: colors.success },
+  { kind: 'odd-one-out', emoji: '🤔', title: 'oddOneOut', info: 'oddOneOutInfo', color: colors.orange },
 ];
 
 /** Play Park: arcade games over learned words, with a daily berry cap. */
@@ -36,39 +38,40 @@ export function ParkScreen() {
             {park.open ? t('playParkInfo') : t('gameLocked', { n: park.minWords })}
           </AppText>
         </View>
-        {GAMES.map((game, i) => (
-          <Animated.View key={game.kind} entering={FadeInDown.delay(i * 120).springify()}>
-            <Pressable
-              testID={`park-${game.kind}`}
-              accessibilityRole="button"
-              accessibilityLabel={`${t(game.title)}. ${t(game.info)}`}
-              disabled={!park.open}
-              onPress={() => {
-                feedback();
-                router.push({ pathname: '/game/[kind]', params: { kind: game.kind } });
-              }}
-              style={({ pressed }) => [
-                styles.game,
-                shadow,
-                {
-                  backgroundColor: park.open ? game.color : colors.locked,
-                  borderBottomColor: shade(park.open ? game.color : colors.locked, 0.25),
-                  transform: [{ translateY: pressed ? 3 : 0 }],
-                },
-              ]}
-            >
-              <Text style={styles.gameEmoji}>{park.open ? game.emoji : '🔒'}</Text>
-              <View style={styles.gameText}>
-                <AppText variant="title" color="#FFFFFF">
-                  {t(game.title)}
-                </AppText>
-                <AppText variant="small" color="#FFFFFF">
-                  {t(game.info)}
-                </AppText>
-              </View>
-            </Pressable>
-          </Animated.View>
-        ))}
+        {GAMES.map((game, i) => {
+          const open = game.kind === 'odd-one-out' ? park.oddOneOutOpen : park.open;
+          const info = open ? t(game.info) : game.kind === 'odd-one-out' ? t('oddOneOutLocked') : t('gameLocked', { n: park.minWords });
+          const tone = open ? game.color : colors.locked;
+          return (
+            <Animated.View key={game.kind} entering={FadeInDown.delay(i * 100).springify()}>
+              <Pressable
+                testID={`park-${game.kind}`}
+                accessibilityRole="button"
+                accessibilityLabel={`${t(game.title)}. ${info}`}
+                disabled={!open}
+                onPress={() => {
+                  feedback();
+                  router.push({ pathname: '/game/[kind]', params: { kind: game.kind } });
+                }}
+                style={({ pressed }) => [
+                  styles.game,
+                  shadow,
+                  { backgroundColor: tone, borderBottomColor: shade(tone, 0.25), transform: [{ translateY: pressed ? 3 : 0 }] },
+                ]}
+              >
+                <Text style={styles.gameEmoji}>{open ? game.emoji : '🔒'}</Text>
+                <View style={styles.gameText}>
+                  <AppText variant="title" color="#FFFFFF">
+                    {t(game.title)}
+                  </AppText>
+                  <AppText variant="small" color="#FFFFFF">
+                    {info}
+                  </AppText>
+                </View>
+              </Pressable>
+            </Animated.View>
+          );
+        })}
         <Card style={styles.cap}>
           <AppText variant="small" color={colors.inkSoft}>
             {park.berriesLeft > 0 ? t('gameBerriesLeft', { n: park.berriesLeft }) : t('gameBerriesCapped')}

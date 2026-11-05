@@ -48,7 +48,7 @@ export function Tile({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label ?? emoji}
-      accessibilityState={{ disabled, selected: state === 'selected' }}
+      aria-selected={state === 'selected'}
       disabled={disabled}
       onPress={() => {
         feedback();

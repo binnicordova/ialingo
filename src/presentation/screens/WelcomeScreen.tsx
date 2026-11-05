@@ -17,7 +17,7 @@ import { useT } from '../i18n/use-t';
 import { colors, radii, shadow, spacing } from '../theme/tokens';
 import { HatchFlow } from './HatchFlow';
 
-const HELLO: Readonly<Record<Locale, string>> = { es: '¡Hola!', pt: 'Olá!', en: 'Hello!' };
+const HELLO: Readonly<Record<Locale, string>> = { es: '¡Hola!', pt: 'Olá!', fr: 'Bonjour\u00a0!', en: 'Hello!' };
 
 type Step = 'language' | 'egg' | 'hatch';
 
@@ -103,7 +103,7 @@ export function WelcomeScreen() {
                     testID={`egg-${species.id}`}
                     accessibilityRole="button"
                     accessibilityLabel={species.name}
-                    accessibilityState={{ selected: speciesId === species.id }}
+                    aria-selected={speciesId === species.id}
                     onPress={() => {
                       feedback();
                       setSpeciesId(species.id);

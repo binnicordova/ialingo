@@ -153,3 +153,12 @@ Games give the active pet XP equal to the berries earned, and never change maste
 ## Album (`domain/learning/album.ts`)
 
 Sticker states: locked (never met) → met → learned (box ≥ 2, blue frame) → gold (box ≥ 4, gold frame and star). Badge: *Golden Stickers* (50 mastered words → Goldie).
+
+## I Spy and Odd One Out (`domain/play/mini-games.ts`)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `spyItems` / `spyRounds` | 9 / 6 | Pictures in the scene (one per cell of a jittered 3×3 grid, scale 0.85–1.15, tilt ±12°) / words asked for |
+| `oddRounds` | 6 | Rounds of three words from one coherent world plus one from a world of a different theme |
+
+Both pay through `settleMiniGame` (1 berry per first-try answer, same daily cap of 20). Odd One Out opens once the child has met at least 3 words in one coherent world and 1 word in a coherent world of another theme (about world 4). Mixed worlds (`coherent: false` in `content/categories.ts`) never supply words, so a round like "cow, dog, pig + owl" cannot happen.

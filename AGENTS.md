@@ -49,5 +49,7 @@ Docs: https://docs.expo.dev/eas/index.md
 - **Builds:** the app runs in a development build (full features) and in Expo Go (speaking falls back to self-check). Native modules outside Expo Go must be probed with `requireOptionalNativeModule` and degrade gracefully (see `docs/adr/0003-on-device-speech-recognition.md`). 3D uses three.js on `expo-gl` (ADR 0001).
 - **Kids Category:** anything that links out, asks for an OS permission or shares must sit behind the parental gate (`ParentGateModal` or the parent area).
 - **Healthy loops:** no streak penalties, no random rewards, no pressure timers. Game rewards go through the capped `settleMiniGame`; quests expire silently (ADR 0005).
+- **Languages:** the UI and all content exist in es, pt, fr and en. Every content row carries every language (`[en, emoji, es, pt, fr]`), and `LocalizedText` requires every locale, so a missing translation does not compile (ADR 0007).
+- **Accessibility props:** on `Pressable` use `disabled` for disabled state and `aria-*` props for selected/checked; `accessibilityState` is ignored on web.
 - **Store copy:** `store/` holds the listings; `tests/unit/content/store-metadata.test.ts` fails if a store limit is exceeded or a promised number (worlds, words, songs, pets…) no longer matches the content. Update both together.
 - **Done means:** `npm run verify` passes (typecheck + lint + tests), and player-visible changes are observed in the running app (`node scripts/qa-walkthrough.cjs` saves screenshots to `production/qa/evidence/`).

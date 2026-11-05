@@ -4,7 +4,13 @@ import { availableQuestKinds, canClaimDailyGift, computeMetrics } from '@/applic
 import { canPractice, practiceFocusWords, PRACTICE_TUNING } from '@/domain/curriculum/lesson-generator';
 import { isDue, pickReviewWords } from '@/domain/learning/mastery';
 import { albumPage, albumTotals } from '@/domain/learning/album';
-import { berriesLeftToday, canPlayGames, PLAY_TUNING } from '@/domain/play/mini-games';
+import {
+  berriesLeftToday,
+  canPlayGames,
+  canPlayOddOneOut,
+  PLAY_TUNING,
+  type WorldCategories,
+} from '@/domain/play/mini-games';
 import {
   canClaimChest,
   isQuestDone,
@@ -213,11 +219,25 @@ export const albumAtom = atom((get) => {
   return { pages, totals: albumTotals(all) };
 });
 
+/** Every word the child has met (any world). */
+export const metWordsAtom = atom<readonly VocabularyItem[]>((get) => {
+  const { mastery } = get(gameStateAtom).progress;
+  return get(contentAtom)
+    .orderedWorlds.flatMap((w) => w.words)
+    .filter((w) => mastery[w.id] !== undefined);
+});
+
+/** Semantic category of each world (for Odd One Out). */
+export const worldCategoriesAtom = atom<WorldCategories>((get) =>
+  Object.fromEntries(get(contentAtom).orderedWorlds.map((w) => [w.id, w.category])),
+);
+
 /** Play Park status: open after a few words; berries games can still pay today. */
 export const playParkAtom = atom((get) => {
   const state = get(gameStateAtom);
   return {
     open: canPlayGames(state.progress.mastery),
+    oddOneOutOpen: canPlayOddOneOut(get(metWordsAtom), get(worldCategoriesAtom)),
     minWords: PLAY_TUNING.minWords,
     berriesLeft: berriesLeftToday(state.play, get(todayAtom)),
     cap: PLAY_TUNING.dailyBerryCap,

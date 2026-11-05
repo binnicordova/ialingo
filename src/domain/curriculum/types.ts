@@ -58,6 +58,32 @@ export interface Song {
   readonly lines: readonly StoryLine[];
 }
 
+/** Broad semantic families of worlds (two worlds in one family can overlap). */
+export type WorldTheme =
+  | 'animals'
+  | 'food'
+  | 'body'
+  | 'people'
+  | 'things'
+  | 'nature'
+  | 'places'
+  | 'ideas'
+  | 'actions'
+  | 'feelings'
+  | 'words'
+  | 'fantasy'
+  | 'events';
+
+/**
+ * Where a world sits semantically. `coherent` means every word belongs to
+ * one everyday category (all animals, all fruits...), so its words can form
+ * a clean group in sorting games.
+ */
+export interface WorldCategory {
+  readonly theme: WorldTheme;
+  readonly coherent: boolean;
+}
+
 /** A themed unit of the curriculum (for example "Farm Animals"). */
 export interface World {
   readonly id: WorldId;
@@ -76,6 +102,7 @@ export interface World {
   readonly sentences: readonly Sentence[];
   readonly story?: Story;
   readonly song?: Song;
+  readonly category?: WorldCategory;
 }
 
 /**

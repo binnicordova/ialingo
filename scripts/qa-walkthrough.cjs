@@ -8,18 +8,22 @@
  * celebrations, world/pets/pet room, guides, badges, certificates, the parent
  * gate and dashboard (players, speaking, voice diary), adding a second player,
  * "Who's playing?", and bedtime. v1.2: a sing-along lesson, daily quests and
- * the chest, the Word Gym, the sticker album, and both Play Park games.
+ * the chest, the Word Gym, the sticker album, and the Play Park games.
+ * v1.3: I Spy, Odd One Out, a new world, and any UI language (QA_LANG).
  *
  * Usage: start `npx expo start --web --port 8081`, then
  *   node scripts/qa-walkthrough.cjs [outDir] [scale]
- * Set QA_VIEWPORT=WIDTHxHEIGHT for store screenshot sizes (see store/README.md).
+ * Set QA_VIEWPORT=WIDTHxHEIGHT for store screenshot sizes (see store/README.md)
+ * and QA_LANG=es|pt|fr|en for the child's language (default es).
  */
 const { chromium } = require('playwright');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const BASE = process.env.QA_BASE_URL || 'http://localhost:8081';
-const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', 'v1.2-walkthrough');
+const LANG = process.env.QA_LANG || 'es';
+const ENTER_LABEL = { es: 'Entrar', pt: 'Entrar', fr: 'Entrer', en: 'Enter' }[LANG];
+const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', `v1.3-walkthrough-${LANG}`);
 const SCALE = Number(process.argv[3] || 1);
 const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(Number);
 
@@ -134,7 +138,7 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
 
   const onboard = async (eggId, prefix) => {
     if (prefix) await shot(`${prefix}-welcome`);
-    await byId('lang-es').click();
+    await byId(`lang-${LANG}`).click();
     await byId('welcome-next').click();
     await wait(600);
     await byId(`egg-${eggId}`).click();
@@ -256,6 +260,63 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
   await shot('memory-results');
   await dismissCelebrations('memory');
 
+  // v1.3 games: I Spy (find the spoken word) and Odd One Out.
+  await page.goto(`${BASE}/game/i-spy`, { waitUntil: 'networkidle' });
+  await wait(1800);
+  await shot('i-spy');
+  for (let i = 0; i < 80; i += 1) {
+    if (await visible('[data-testid="game-replay"]')) break;
+    const open = page.locator('[data-testid^="spy-"]:not([aria-disabled="true"])');
+    if ((await open.count()) > 0) await open.first().click({ timeout: 800 }).catch(() => undefined);
+    await wait(850);
+  }
+  await wait(800);
+  await shot('i-spy-results');
+  await dismissCelebrations('spy');
+
+  // Odd One Out needs words from two clean categories: one lesson of colors and one of farm animals.
+  for (const lessonId of ['colors.learn-1', 'farm.learn-1']) {
+    await page.goto(`${BASE}/lesson/${lessonId}`, { waitUntil: 'networkidle' });
+    await wait(1500);
+    await playLesson(lessonId.replace('.', '-'));
+    await wait(800);
+    await dismissCelebrations();
+  }
+  await page.goto(`${BASE}/game/odd-one-out`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await shot('odd-one-out');
+  let explained = false;
+  for (let i = 0; i < 80; i += 1) {
+    if (await visible('[data-testid="game-replay"]')) break;
+    const open = page.locator('[data-testid^="odd-"]:not([data-testid="odd-why"]):not([aria-disabled="true"])');
+    if ((await open.count()) > 0) await open.first().click({ timeout: 800 }).catch(() => undefined);
+    await wait(600);
+    if (!explained && (await visible('[data-testid="odd-why"]'))) {
+      explained = true;
+      await shot('odd-one-out-answer');
+    }
+    if (await visible('[data-testid="odd-why"]')) await wait(1500);
+  }
+  await wait(800);
+  await shot('odd-one-out-results');
+  await dismissCelebrations('odd');
+
+  await page.goto(`${BASE}/park`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await page.mouse.wheel(0, 400);
+  await wait(400);
+  await shot('play-park-four-games');
+
+  // A v1.3 world and its sing-along.
+  await page.goto(`${BASE}/world/manners`, { waitUntil: 'networkidle' });
+  await wait(1500);
+  await shot('world-manners');
+  await page.goto(`${BASE}/lesson/manners.song`, { waitUntil: 'networkidle' });
+  await wait(2000);
+  await shot('manners-song');
+  await page.goto(`${BASE}/album`, { waitUntil: 'networkidle' });
+  await wait(1200);
+
   await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
   await wait(1500);
   await page.mouse.wheel(0, 380);
@@ -301,7 +362,7 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
     const question = await page.locator('text=/\\d+ × \\d+/').first().innerText();
     const [, a, b] = question.match(/(\d+) × (\d+)/);
     for (const digit of String(Number(a) * Number(b))) await page.locator(`[aria-label="${digit}"]`).first().click();
-    await page.locator('[aria-label="Entrar"]').first().click();
+    await page.locator(`[aria-label="${ENTER_LABEL}"]`).first().click();
     await wait(1000);
   };
   await page.goto(`${BASE}/parents`, { waitUntil: 'networkidle' });

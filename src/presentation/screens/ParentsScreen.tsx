@@ -99,7 +99,7 @@ function Choice({ label, selected, onPress, testID }: { label: string; selected:
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      aria-selected={selected}
       onPress={() => {
         feedback();
         onPress();
