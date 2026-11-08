@@ -76,6 +76,14 @@
             "com.google.android.as"
           ]
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "# expo-gl ships no R8 rules. Expo creates GLView by reflection (it is a TextureView, not an\n# ExpoView, so expo-modules-core's rule misses it) and the native side calls GLContext.flush()\n# by name over JNI. Without this, every 3D screen crashes in release builds (Play rejection, 2026-11-08).\n-keep class expo.modules.gl.** { *; }"
+          }
+        }
       ]
     ],
     "experiments": {
