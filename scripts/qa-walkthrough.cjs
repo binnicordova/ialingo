@@ -23,7 +23,7 @@ const path = require('node:path');
 const BASE = process.env.QA_BASE_URL || 'http://localhost:8081';
 const LANG = process.env.QA_LANG || 'es';
 const ENTER_LABEL = { es: 'Entrar', pt: 'Entrar', fr: 'Entrer', en: 'Enter' }[LANG];
-const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', `v1.3-walkthrough-${LANG}`);
+const OUT = process.argv[2] || path.join(__dirname, '..', 'production', 'qa', 'evidence', `v1.4-walkthrough-${LANG}`);
 const SCALE = Number(process.argv[3] || 1);
 const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(Number);
 
@@ -63,6 +63,18 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
     for (let step = 0; step < 90; step += 1) {
       await wait(450);
       if (await visible('[data-testid="results-continue"]')) return;
+      // v1.4 pet moments: the second-try intro waits for a tap; the in-a-row cheer moves on by itself.
+      if (await visible('[data-testid="moment-continue"]')) {
+        await first('moment-second-try');
+        await byId('moment-continue').click();
+        continue;
+      }
+      if (await visible('[data-testid="moment-skip"]')) {
+        await wait(900);
+        await first('moment-in-a-row');
+        await wait(2200);
+        continue;
+      }
       if (await visible('[data-testid="lesson-continue"]')) {
         await first('feedback');
         await byId('lesson-continue').click();
@@ -161,12 +173,17 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
   await onboard('bubbo', 'onboarding');
   await shot('home');
 
-  // 2. A learn lesson (now with a speaking exercise)
-  await byId('home-play').click();
+  // 2. A learn lesson (now with a speaking exercise), started from the map's current node (v1.4)
+  await page.locator('[data-testid^="lesson-"][aria-selected="true"]').first().click();
+  await wait(700);
+  await shot('home-lesson-card');
+  await byId('lesson-start').click();
   await wait(1500);
   await playLesson('learn');
   await wait(1200);
   await shot('learn-results');
+  // Celebrations wait until the results intro (stars and counting numbers) has played.
+  await wait(2600);
   await dismissCelebrations('learn');
   await byId('results-continue').click();
   await wait(1000);
@@ -192,11 +209,12 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
   await shot('song-results');
   await dismissCelebrations('song');
 
-  await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/quests`, { waitUntil: 'networkidle' });
   await wait(1500);
-  await page.mouse.wheel(0, 380);
-  await wait(500);
-  await shot('home-quests-activities');
+  await shot('tab-quests');
+  await byId('tab-play').click();
+  await wait(800);
+  await shot('tab-play');
 
   await page.goto(`${BASE}/pet/bubbo`, { waitUntil: 'networkidle' });
   await wait(1500);
@@ -317,10 +335,8 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
   await page.goto(`${BASE}/album`, { waitUntil: 'networkidle' });
   await wait(1200);
 
-  await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}/quests`, { waitUntil: 'networkidle' });
   await wait(1500);
-  await page.mouse.wheel(0, 380);
-  await wait(500);
   await shot('home-quests-after');
   if (await visible('[data-testid="quest-chest"]:not([aria-disabled="true"])')) {
     await byId('quest-chest').click();
@@ -328,12 +344,23 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
     await dismissCelebrations('chest');
   }
 
-  // 4. Map, world, pets, guides, badges, certificates
+  // 4. Map (one path for every world, v1.4), a jump challenge offer, world, pets, guides, badges, certificates
   await page.goto(`${BASE}/home`, { waitUntil: 'networkidle' });
   await wait(1500);
+  await shot('map-current');
   await page.mouse.wheel(0, 1400);
   await wait(600);
   await shot('map-levels');
+  if ((await count('[data-testid="path-jump"]')) > 0) {
+    await page.locator('[data-testid="path-jump"]').first().click();
+    await wait(1000);
+    await shot('map-jump-offer');
+    await byId('jump-not-now').click();
+    await wait(500);
+  }
+  await byId('tab-me').click();
+  await wait(800);
+  await shot('tab-me');
   await page.goto(`${BASE}/world/feelings`, { waitUntil: 'networkidle' });
   await wait(1500);
   await page.mouse.wheel(0, 500);
@@ -385,7 +412,9 @@ const [VIEW_W, VIEW_H] = (process.env.QA_VIEWPORT || '390x844').split('x').map(N
   await wait(1500);
   await onboard('sprout', 'second-player');
   await shot('second-player-home');
-  await byId('home-switch-player').click();
+  await byId('tab-me').click();
+  await wait(600);
+  await byId('nav-profiles').click();
   await wait(1200);
   await shot('whos-playing');
   await byId('profile-p1').click();

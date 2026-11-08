@@ -1,4 +1,4 @@
-import type { LessonId, WordId } from '../curriculum/types';
+import type { LessonId, WordId, WorldId } from '../curriculum/types';
 import type { DayKey } from '../shared/day';
 import type { WordResult } from './lesson-session';
 import { isLearned, isMastered, recordAnswer, type WordMastery } from './mastery';
@@ -33,6 +33,11 @@ export interface LearnerProgress {
   readonly totalCorrect: number;
   /** Finished Word Gym sessions (practice is not stored per lesson). */
   readonly practiceSessions: number;
+  /**
+   * Worlds opened by passing a jump challenge (oldest first). A world, and
+   * every world before it, is open once it is in this list (ADR 0009).
+   */
+  readonly jumpedTo: readonly WorldId[];
 }
 
 /** Number of distinct play days kept (bounded so storage never grows forever). */
@@ -47,6 +52,7 @@ export function createProgress(): LearnerProgress {
     totalAnswers: 0,
     totalCorrect: 0,
     practiceSessions: 0,
+    jumpedTo: [],
   };
 }
 
@@ -133,6 +139,29 @@ export function recordPracticeCompletion(
     perfect: applied.perfect,
     firstCompletion: progress.practiceSessions === 0,
     progress: { ...applied.progress, practiceSessions: progress.practiceSessions + 1 },
+  };
+}
+
+/**
+ * Applies a finished jump challenge: mastery and totals change like a lesson
+ * (it is real evidence of what the child knows) and, when it was passed, the
+ * target world is opened. No lesson record is kept: skipped lessons stay
+ * unplayed, so their stars and eggs are still earned by playing them.
+ */
+export function recordJumpChallenge(
+  progress: LearnerProgress,
+  completion: Omit<LessonCompletion, 'lessonId'> & { readonly targetWorldId: WorldId; readonly passed: boolean },
+): CompletionResult {
+  const applied = applyAnswers(progress, completion);
+  const opens = completion.passed && !progress.jumpedTo.includes(completion.targetWorldId);
+  return {
+    stars: applied.stars,
+    perfect: applied.perfect,
+    firstCompletion: opens,
+    progress: {
+      ...applied.progress,
+      jumpedTo: opens ? [...progress.jumpedTo, completion.targetWorldId] : progress.jumpedTo,
+    },
   };
 }
 

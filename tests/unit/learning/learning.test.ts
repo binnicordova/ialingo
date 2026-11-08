@@ -2,9 +2,14 @@ import type { Exercise } from '@/domain/curriculum/exercises';
 import {
   answerCurrent,
   currentExercise,
+  firstQuizIds,
   isFinished,
+  isSecondTry,
+  LESSON_FEEL,
+  momentsBetween,
   sessionAccuracy,
   sessionProgress,
+  sessionTally,
   sessionWordResults,
   startSession,
 } from '@/domain/learning/lesson-session';
@@ -108,6 +113,69 @@ describe('lesson session', () => {
       { wordId: 'w.dog', correct: true },
       { wordId: 'w.cat', correct: true },
     ]);
+  });
+
+  it('counts right answers in a row, ignores unscored cards and resets quietly on a miss', () => {
+    let s = startSession(exercises);
+    s = answerCurrent(s, true); // learn card: not scored
+    expect(s.inARow).toBe(0);
+    s = answerCurrent(s, true);
+    expect(s.inARow).toBe(1);
+    s = answerCurrent(s, false);
+    expect(s.inARow).toBe(0);
+    expect(s.bestInARow).toBe(1);
+    expect(sessionTally(s)).toEqual({ correct: 1, total: 2 });
+  });
+
+  it('finds the first quiz of each new word (never a learn card, never a review word)', () => {
+    const lesson: Exercise[] = [
+      { kind: 'learn-card', id: 'c1', wordId: 'w.dog' },
+      { kind: 'listen-pick-picture', id: 'q1', answerId: 'w.dog', optionIds: ['w.dog', 'w.cat'] },
+      { kind: 'learn-card', id: 'c2', wordId: 'w.cat' },
+      { kind: 'picture-pick-word', id: 'q2', answerId: 'w.cat', optionIds: ['w.dog', 'w.cat'] },
+      { kind: 'match-pairs', id: 'q3', wordIds: ['w.dog', 'w.cat'] },
+      { kind: 'listen-pick-picture', id: 'q4', answerId: 'w.old', optionIds: ['w.old', 'w.cat'] },
+    ];
+    expect([...firstQuizIds(lesson, ['w.dog', 'w.cat'])]).toEqual(['q1', 'q2']);
+  });
+
+  it('announces the second try once, before the first re-queued exercise', () => {
+    let s = startSession(exercises);
+    s = answerCurrent(s, true);
+    const before = s;
+    s = answerCurrent(s, false); // e2 goes to the end, e3 is next
+    expect(momentsBetween(before, s)).toEqual([]);
+    const beforeRetry = s;
+    s = answerCurrent(s, true); // e3 done, e2 comes back
+    expect(isSecondTry(s)).toBe(true);
+    expect(momentsBetween(beforeRetry, s)).toEqual([{ kind: 'second-try' }]);
+  });
+
+  it('cheers every LESSON_FEEL.inARowMoment answers in a row, but not after the last exercise', () => {
+    const many: Exercise[] = Array.from({ length: LESSON_FEEL.inARowMoment * 2 + 1 }, (_, i) => ({
+      kind: 'listen-pick-picture',
+      id: `x${i}`,
+      answerId: 'w.dog',
+      optionIds: ['w.dog', 'w.cat'],
+    }));
+    let s = startSession(many);
+    const cheers: number[] = [];
+    while (!isFinished(s)) {
+      const next = answerCurrent(s, true);
+      for (const m of momentsBetween(s, next)) if (m.kind === 'in-a-row') cheers.push(m.count);
+      s = next;
+    }
+    expect(cheers).toEqual([LESSON_FEEL.inARowMoment, LESSON_FEEL.inARowMoment * 2]);
+
+    const exact = startSession(many.slice(0, LESSON_FEEL.inARowMoment));
+    let e = exact;
+    let last: ReturnType<typeof momentsBetween> = [];
+    while (!isFinished(e)) {
+      const next = answerCurrent(e, true);
+      last = momentsBetween(e, next);
+      e = next;
+    }
+    expect(last).toEqual([]);
   });
 });
 

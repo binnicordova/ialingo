@@ -6,6 +6,7 @@
     "@expo-google-fonts/fredoka": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.23",
+    "expo-asset": "~58.0.20",
     "expo-audio": "~58.0.11",
     "expo-constants": "~58.0.15",
     "expo-dev-client": "~58.0.18",
@@ -37,6 +38,9 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@iconify-json/circle-flags": "1.2.14",
+    "@iconify-json/fluent-emoji-flat": "1.2.6",
+    "@iconify-json/noto": "1.2.10",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
     "@types/three": "^0.187.0",
@@ -55,6 +59,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "verify": "npm run typecheck && npm run lint && npm test",
+    "emoji-art": "node scripts/build-emoji-art.mjs",
     "start:go": "expo start --go",
     "start:dev-client": "expo start --dev-client",
     "prebuild": "expo prebuild --clean",

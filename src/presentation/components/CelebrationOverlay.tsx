@@ -7,7 +7,7 @@ import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import type { GameEvent } from '@/application/events';
 import { QUEST_DEFINITIONS } from '@/domain/quests/quests';
 import { consumeEventAtom, playSfxAtom, speakAtom } from '@/state/actions';
-import { contentAtom, pendingEventsAtom } from '@/state/core';
+import { celebrationsHeldAtom, contentAtom, pendingEventsAtom } from '@/state/core';
 import { petCollectionAtom } from '@/state/selectors';
 
 import { EggPortrait, PetPortrait } from '../art/PetPortrait';
@@ -33,6 +33,7 @@ const CELEBRATED: ReadonlySet<GameEvent['type']> = new Set([
  */
 export function CelebrationOverlay() {
   const events = useAtomValue(pendingEventsAtom);
+  const held = useAtomValue(celebrationsHeldAtom);
   const consume = useSetAtom(consumeEventAtom);
   const event = events[0];
 
@@ -41,7 +42,7 @@ export function CelebrationOverlay() {
     if (event?.type === 'berries-earned' && event.reason === 'welcome') consume();
   }, [event, consume]);
 
-  if (!event || !CELEBRATED.has(event.type)) return null;
+  if (held || !event || !CELEBRATED.has(event.type)) return null;
   if (event.type === 'berries-earned' && event.reason === 'welcome') return null;
   return <CelebrationCard key={`${events.length}-${event.type}`} event={event} onDone={consume} />;
 }

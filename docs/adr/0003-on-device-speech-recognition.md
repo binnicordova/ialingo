@@ -20,7 +20,7 @@ The impact analysis found that real **speaking practice** is the main gap in kid
   - **good:** clearly close (≥ 0.6 text or sound similarity), with a gentle tip and the word modeled again;
   - **try-again:** anything else; up to 3 tries, then the lesson moves on (no frustration loop).
 - **Capability probing:** the adapter calls `requireOptionalNativeModule('ExpoSpeechRecognition')` before requiring the package, because importing it in Expo Go throws. With no module, `speakModeAtom` resolves to **self-check**: the child says it aloud and taps "I said it!". The microphone is never opened in that mode.
-- **Permission UX:** the first speaking exercise shows an "Ask a grown-up" card before the OS prompt. Denial falls back to self-check.
+- **Permission UX:** the first speaking exercise shows a short explainer card before the OS prompt. Denial falls back to self-check. *(Amended 2026-11-07, see below: no parental gate before the prompt.)*
 - Parents can switch to self-check permanently ("No microphone").
 
 ## Consequences
@@ -28,3 +28,11 @@ The impact analysis found that real **speaking practice** is the main gap in kid
 - The same lessons work in Expo Go (self-check) and in dev or store builds (recognition). The domain and state logic are fully unit-tested, and the adapter is tested against a fake native module.
 - Scoring is deliberately generous for motivation. Accuracy statistics treat self-check as a pass.
 - **To do:** tune the thresholds with real child recordings (MyST- or AusKidTalk-style corpora) and on-device QA; consider a custom on-device child-speech model later.
+
+## Amendment (2026-11-07): no grown-up gate before the speaking prompt
+
+v1.2 put the parental gate in front of the microphone prompt of speaking practice. On a real device this made speaking exercises a dead end for a child playing alone: "Not now" led back to the same microphone button. The product owner decided that the microphone should not need an adult:
+
+- **The OS dialog is the authorization.** Speaking practice shows a child-friendly explainer ("Let me hear you!", the voice stays on this device) and then the system prompt. Apple's Kids Category rules require a parental gate for links out and purchases, not for permission prompts; speech is recognized on the device and never stored or sent (COPPA's audio exception and Google Play Families rules are met the same way as before).
+- **Never stuck.** "Not now" turns the current exercise into "I said it"; a refusal switches speaking to self-check through `speakModeAtom`, as before. The parent area can still switch speaking to self-check at any time.
+- **Voice postcards keep the gate.** They save recordings, so the grown-up consents in the parent area (diary opt-in) and passes the gate before the first prompt.

@@ -108,9 +108,11 @@ export interface World {
 /**
  * Lesson kinds, in map order inside a world:
  * learn (new words) → story (listening) → song (sing-along) → speak
- * (pronunciation) → review → boss. 'practice' is the cross-world Word Gym.
+ * (pronunciation) → review → boss. 'practice' is the cross-world Word Gym and
+ * 'jump' the challenge that opens a world ahead (ADR 0009); neither is a slot
+ * of a world's map.
  */
-export type LessonKind = 'learn' | 'story' | 'song' | 'speak' | 'review' | 'boss' | 'practice';
+export type LessonKind = 'learn' | 'story' | 'song' | 'speak' | 'review' | 'boss' | 'practice' | 'jump';
 
 /** Static description of one lesson slot inside a world. */
 export interface LessonPlan {

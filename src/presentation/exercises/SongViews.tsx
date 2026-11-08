@@ -11,6 +11,7 @@ import { playSfxAtom, speakAtom, stopSpeechAtom } from '@/state/actions';
 import { contentAtom } from '@/state/core';
 import { localeAtom } from '@/state/selectors';
 
+import { EmojiArt } from '../art/EmojiArt';
 import { SpeakerButton, Tile, type TileState } from '../components/game';
 import { AppText, BigButton, Card } from '../components/ui';
 import { useExerciseIntro } from '../hooks/use-exercise-intro';
@@ -178,7 +179,7 @@ export function SongView({ exercise, onAnswer, introduce, guide, locked }: Props
               onPress={() => singOneLine(i)}
               style={[styles.line, active && styles.lineActive, sung && !active && styles.lineSung]}
             >
-              <Text style={styles.lineEmoji}>{line.emoji}</Text>
+              <EmojiArt emoji={line.emoji} size={40} />
               <View style={styles.lineText}>
                 <AppText variant={active ? 'heading' : 'body'} color={active ? colors.primary : colors.ink}>
                   {line.en}
@@ -261,7 +262,7 @@ export function LyricGapView({ exercise, onAnswer, locked, introduce, guide }: P
       <Animated.View entering={FadeInDown.springify()} style={styles.stretch}>
         <Card style={styles.gapCard}>
           {/* The line's picture would give the answer away, so it shows once answered. */}
-          <Text style={styles.gapEmoji}>{locked ? line.emoji : '🎶'}</Text>
+          <EmojiArt emoji={locked ? line.emoji : '🎶'} size={100} />
           <AppText variant="title" center>
             {gapped.segments.map((segment, i) => (
               <Fragment key={i}>
@@ -322,7 +323,6 @@ const styles = StyleSheet.create({
   },
   lineActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   lineSung: { opacity: 0.75 },
-  lineEmoji: { fontSize: 34 },
   lineText: { flex: 1, gap: 2 },
   yourTurn: {
     backgroundColor: colors.orange,
@@ -332,7 +332,6 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap', justifyContent: 'center' },
   gapCard: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
-  gapEmoji: { fontSize: 84 },
   blank: { color: colors.primary, textDecorationLine: 'underline' },
   blankFilled: { color: colors.successDark },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignSelf: 'stretch', justifyContent: 'center' },

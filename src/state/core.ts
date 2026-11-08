@@ -41,6 +41,12 @@ export const todayAtom = atom((get) => {
 /** Events waiting to be celebrated by the UI (level-ups, eggs, badges). */
 export const pendingEventsAtom = atom<readonly GameEvent[]>([]);
 
+/**
+ * While true, celebrations wait in the queue: a screen with its own intro
+ * (the lesson results) holds them so they arrive one after the other.
+ */
+export const celebrationsHeldAtom = atom(false);
+
 /* ------------------------------------------------------------ Profiles */
 
 export const profileIndexAtom = atom<ProfileIndex>(createProfileIndex());

@@ -1,4 +1,5 @@
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
+import * as Linking from 'expo-linking';
 import * as Sharing from 'expo-sharing';
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -37,6 +38,8 @@ import { NumberPad, SectionTitle } from '../components/game';
 import { AppText, BigButton, Card, ProgressBar, Screen, TopBar } from '../components/ui';
 import { useT } from '../i18n/use-t';
 import { colors, radii, spacing } from '../theme/tokens';
+
+const PRIVACY_POLICY_URL = 'https://github.com/binnicordova/ialingo/blob/main/store/privacy-policy.md';
 
 function newChallenge(seed: number): GateChallenge {
   return createGateChallenge(createRng(seed));
@@ -247,6 +250,15 @@ function Dashboard() {
         <Card>
           <AppText variant="small" color={colors.inkSoft}>
             🔒 {t('privacyBody')}
+          </AppText>
+          <BigButton
+            label={t('privacyPolicy')}
+            tone="neutral"
+            compact
+            onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+          />
+          <AppText variant="tiny" color={colors.muted}>
+            {t('artCredits')}
           </AppText>
         </Card>
 

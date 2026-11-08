@@ -32,7 +32,7 @@ export function PetsScreen() {
 
   return (
     <Screen>
-      <TopBar title={t('myPetsTitle')} onBack={() => router.back()} right={<BerryPill amount={berries} />} />
+      <TopBar title={t('myPetsTitle')} right={<BerryPill amount={berries} />} />
       <AppText variant="body" center color={colors.inkSoft}>
         {t('petsCollected', { n: ownedCount, total: species.length })}
       </AppText>

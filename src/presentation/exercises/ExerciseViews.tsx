@@ -1,15 +1,26 @@
 import { useAtomValue } from 'jotai';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+  ZoomIn,
+} from 'react-native-reanimated';
 
 import type { Character } from '@/domain/characters/character';
 import { tokenizeSentence, type Exercise, type ExerciseAnswer } from '@/domain/curriculum/exercises';
 import type { VocabularyItem } from '@/domain/curriculum/types';
 import { contentAtom } from '@/state/core';
 
+import { EmojiArt } from '../art/EmojiArt';
 import { SpeakerButton, Tile, type TileState } from '../components/game';
 import { AppText, BigButton, Card } from '../components/ui';
+import { useCalm } from '../hooks/use-calm';
 import { useExerciseIntro } from '../hooks/use-exercise-intro';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
@@ -66,9 +77,78 @@ function useWords(ids: readonly string[]): VocabularyItem[] {
 
 function Instruction({ text }: { text: string }) {
   return (
-    <AppText variant="heading" center style={styles.instruction}>
+    <AppText variant="heading" center style={styles.instruction} accessibilityRole="header">
       {text}
     </AppText>
+  );
+}
+
+/**
+ * The one skeleton every exercise shares: the instruction on top, the content
+ * below it, and the main action pinned at the bottom (where the feedback sheet
+ * appears), so the thumb always knows where to go. Quizzes keep their answers
+ * high, clear of the sheet; learn cards sit in the middle.
+ */
+function ExerciseLayout({
+  instruction,
+  children,
+  footer,
+  centered = false,
+}: {
+  instruction: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  centered?: boolean;
+}) {
+  return (
+    <View style={styles.layout}>
+      <Instruction text={instruction} />
+      <View style={[styles.layoutBody, centered && styles.layoutCentered]}>{children}</View>
+      {footer ? <View style={styles.layoutFooter}>{footer}</View> : null}
+    </View>
+  );
+}
+
+/** A big speaker and a slow "turtle" replay next to it. */
+function ListenButtons({ text, size = 96 }: { text: string; size?: number }) {
+  const { t } = useT();
+  const { english, englishSlow } = useSpeak();
+  return (
+    <View style={styles.listenRow}>
+      <SpeakerButton onPress={() => english(text)} size={size} label={t('tapToListen')} testID="speaker" />
+      <SpeakerButton
+        onPress={() => englishSlow(text)}
+        size={Math.round(size * 0.6)}
+        icon="🐢"
+        tone={colors.successSoft}
+        label={t('listenSlow')}
+        testID="speaker-slow"
+      />
+    </View>
+  );
+}
+
+/** A big emoji picture that breathes gently, so the eye lands on it. */
+function BigPicture({ emoji, size = 160 }: { emoji: string; size?: number }) {
+  const calm = useCalm();
+  const lift = useSharedValue(0);
+  useEffect(() => {
+    if (calm) return;
+    lift.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+    );
+  }, [calm, lift]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -6 * lift.value }, { scale: 1 + 0.03 * lift.value }] }));
+  return (
+    <Animated.View entering={calm ? undefined : ZoomIn.springify().damping(11)} style={[styles.bigPicture, { width: size, height: size }]}>
+      <Animated.View style={style}>
+        <EmojiArt emoji={emoji} size={Math.round(size * 0.72)} />
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -84,15 +164,21 @@ function pickState(optionId: string, answerId: string, chosen: string | null, lo
 function LearnCardView({ exercise, onAnswer, introduce, guide, locked }: ExerciseViewProps) {
   const { t, l } = useT();
   const { english } = useSpeak();
+  const calm = useCalm();
   const [word] = useWords(exercise.kind === 'learn-card' ? [exercise.wordId] : []);
   useExerciseIntro(exercise.id, introduce, t('instrLearn'), guide, () => word && english(word.en));
   if (!word) return null;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrLearn')} />
-      <Animated.View entering={FadeInDown.springify()} style={styles.learnCardWrap}>
+    <ExerciseLayout
+      instruction={t('instrLearn')}
+      centered
+      footer={
+        <BigButton label={t('next')} onPress={() => onAnswer({ kind: 'seen' })} disabled={locked} tone="primary" testID="learn-next" />
+      }
+    >
+      <Animated.View entering={calm ? undefined : ZoomIn.springify().damping(20).stiffness(180)} style={styles.learnCardWrap}>
         <Card style={styles.learnCard}>
-          <Text style={styles.learnEmoji}>{word.emoji}</Text>
+          <BigPicture emoji={word.emoji} size={150} />
           <AppText variant="hero" center color={colors.primary}>
             {word.en}
           </AppText>
@@ -101,9 +187,8 @@ function LearnCardView({ exercise, onAnswer, introduce, guide, locked }: Exercis
           </AppText>
         </Card>
       </Animated.View>
-      <SpeakerButton onPress={() => english(word.en)} label={t('tapToListen')} testID="speaker" />
-      <BigButton label={t('next')} onPress={() => onAnswer({ kind: 'seen' })} disabled={locked} tone="primary" style={styles.fullWidth} testID="learn-next" />
-    </View>
+      <ListenButtons text={word.en} size={84} />
+    </ExerciseLayout>
   );
 }
 
@@ -118,11 +203,11 @@ function ListenPickView({ exercise, onAnswer, locked, introduce, guide }: Exerci
   const [chosen, setChosen] = useState<string | null>(null);
   useExerciseIntro(exercise.id, introduce, t('instrListen'), guide, () => answer && english(answer.en));
   if (!ex || !answer) return null;
+  const four = options.length === 4;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrListen')} />
-      <SpeakerButton onPress={() => english(answer.en)} size={110} label={t('tapToListen')} testID="speaker" />
-      <View style={[styles.grid, options.length === 4 && styles.grid2]}>
+    <ExerciseLayout instruction={t('instrListen')}>
+      <ListenButtons text={answer.en} size={112} />
+      <View style={styles.grid}>
         {options.map((option) => (
           <Tile
             key={option.id}
@@ -131,7 +216,7 @@ function ListenPickView({ exercise, onAnswer, locked, introduce, guide }: Exerci
             size="lg"
             accessibilityLabel={option.en}
             state={pickState(option.id, ex.answerId, chosen, locked)}
-            style={options.length === 4 ? styles.gridCell2 : styles.gridCell3}
+            style={four ? styles.gridCell2 : styles.gridCell3}
             onPress={
               locked
                 ? undefined
@@ -143,7 +228,7 @@ function ListenPickView({ exercise, onAnswer, locked, introduce, guide }: Exerci
           />
         ))}
       </View>
-    </View>
+    </ExerciseLayout>
   );
 }
 
@@ -158,11 +243,8 @@ function PicturePickView({ exercise, onAnswer, locked, introduce, guide }: Exerc
   useExerciseIntro(exercise.id, introduce, t('instrPicture'), guide);
   if (!ex || !answer) return null;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrPicture')} />
-      <Animated.View entering={FadeIn} style={styles.bigPicture}>
-        <Text style={styles.bigEmoji}>{answer.emoji}</Text>
-      </Animated.View>
+    <ExerciseLayout instruction={t('instrPicture')}>
+      <BigPicture emoji={answer.emoji} size={170} />
       <View style={styles.list}>
         {options.map((option) => (
           <Tile
@@ -183,7 +265,7 @@ function PicturePickView({ exercise, onAnswer, locked, introduce, guide }: Exerc
           />
         ))}
       </View>
-    </View>
+    </ExerciseLayout>
   );
 }
 
@@ -205,13 +287,10 @@ function TrueFalseView({ exercise, onAnswer, locked, introduce, guide }: Exercis
     return chosen === value ? 'wrong' : 'disabled';
   };
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrTrueFalse')} />
+    <ExerciseLayout instruction={t('instrTrueFalse')}>
       <View style={styles.row}>
-        <SpeakerButton onPress={() => english(spoken.en)} size={90} label={t('tapToListen')} testID="speaker" />
-        <View style={styles.bigPicture}>
-          <Text style={styles.bigEmoji}>{shownWord.emoji}</Text>
-        </View>
+        <ListenButtons text={spoken.en} size={84} />
+        <BigPicture emoji={shownWord.emoji} size={150} />
       </View>
       <View style={styles.grid}>
         {[true, false].map((value) => (
@@ -234,7 +313,7 @@ function TrueFalseView({ exercise, onAnswer, locked, introduce, guide }: Exercis
           />
         ))}
       </View>
-    </View>
+    </ExerciseLayout>
   );
 }
 
@@ -301,8 +380,7 @@ function MatchPairsView({ exercise, onAnswer, locked, introduce, guide }: Exerci
   if (!ex) return null;
   const disabled = locked || wrongPair !== null;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrMatch')} />
+    <ExerciseLayout instruction={t('instrMatch')}>
       <View style={styles.matchColumns}>
         <View style={styles.matchColumn}>
           {words.map((w) => (
@@ -330,7 +408,7 @@ function MatchPairsView({ exercise, onAnswer, locked, introduce, guide }: Exerci
           ))}
         </View>
       </View>
-    </View>
+    </ExerciseLayout>
   );
 }
 
@@ -339,6 +417,7 @@ function MatchPairsView({ exercise, onAnswer, locked, introduce, guide }: Exerci
 function SpellWordView({ exercise, onAnswer, locked, introduce, guide }: ExerciseViewProps) {
   const { t } = useT();
   const { english } = useSpeak();
+  const calm = useCalm();
   const ex = exercise.kind === 'spell-word' ? exercise : null;
   const [word] = useWords(ex ? [ex.wordId] : []);
   const [placed, setPlaced] = useState<readonly number[]>([]);
@@ -356,22 +435,28 @@ function SpellWordView({ exercise, onAnswer, locked, introduce, guide }: Exercis
 
   if (!ex || !word) return null;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrSpell')} />
+    <ExerciseLayout
+      instruction={t('instrSpell')}
+      footer={
+        <BigButton label={t('clear')} icon="↩️" compact tone="neutral" onPress={() => setPlaced([])} disabled={locked || placed.length === 0} />
+      }
+    >
       <View style={styles.row}>
-        <View style={styles.bigPictureSmall}>
-          <Text style={styles.midEmoji}>{word.emoji}</Text>
-        </View>
-        <SpeakerButton onPress={() => english(word.en)} size={76} label={t('tapToListen')} testID="speaker" />
+        <BigPicture emoji={word.emoji} size={120} />
+        <ListenButtons text={word.en} size={76} />
       </View>
       <View style={styles.slots}>
         {Array.from({ length }, (_, i) => {
           const tileIndex = placed[i];
           return (
             <View key={i} style={[styles.slot, tileIndex !== undefined && styles.slotFilled]}>
-              <AppText variant="title" color={colors.primary}>
-                {tileIndex !== undefined ? (ex.letters[tileIndex] ?? '') : ''}
-              </AppText>
+              {tileIndex !== undefined ? (
+                <Animated.View entering={calm ? undefined : ZoomIn.springify().damping(10)}>
+                  <AppText variant="title" color={colors.primary}>
+                    {ex.letters[tileIndex] ?? ''}
+                  </AppText>
+                </Animated.View>
+              ) : null}
             </View>
           );
         })}
@@ -389,8 +474,7 @@ function SpellWordView({ exercise, onAnswer, locked, introduce, guide }: Exercis
           />
         ))}
       </View>
-      <BigButton label={t('clear')} icon="↩️" compact tone="neutral" onPress={() => setPlaced([])} disabled={locked || placed.length === 0} />
-    </View>
+    </ExerciseLayout>
   );
 }
 
@@ -399,6 +483,7 @@ function SpellWordView({ exercise, onAnswer, locked, introduce, guide }: Exercis
 function BuildSentenceView({ exercise, onAnswer, locked, introduce, guide }: ExerciseViewProps) {
   const { t, l } = useT();
   const { english } = useSpeak();
+  const calm = useCalm();
   const content = useAtomValue(contentAtom);
   const ex = exercise.kind === 'build-sentence' ? exercise : null;
   const sentence = ex ? content.sentence(ex.sentenceId) : undefined;
@@ -417,12 +502,11 @@ function BuildSentenceView({ exercise, onAnswer, locked, introduce, guide }: Exe
 
   if (!ex || !sentence) return null;
   return (
-    <View style={styles.center}>
-      <Instruction text={t('instrSentence')} />
+    <ExerciseLayout instruction={t('instrSentence')}>
       <View style={styles.row}>
-        <SpeakerButton onPress={() => english(sentence.en)} size={80} label={t('tapToListen')} testID="speaker" />
+        <ListenButtons text={sentence.en} size={80} />
         <View style={styles.sentenceHint}>
-          <Text style={styles.midEmoji}>{sentence.emoji}</Text>
+          <EmojiArt emoji={sentence.emoji} size={72} />
           <AppText variant="small" color={colors.inkSoft} center>
             {l(sentence.meaning)}
           </AppText>
@@ -430,15 +514,20 @@ function BuildSentenceView({ exercise, onAnswer, locked, introduce, guide }: Exe
       </View>
       <View style={styles.answerLine}>
         {placed.map((tileIndex, i) => (
-          <Tile
-            key={`${tileIndex}-${i}`}
-            testID={`placed-${i}`}
-            label={ex.tiles[tileIndex]}
-            size="sm"
-            state="selected"
-            style={styles.chip}
-            onPress={locked ? undefined : () => setPlaced(placed.filter((_, j) => j !== i))}
-          />
+          <Animated.View
+            key={`${tileIndex}`}
+            entering={calm ? undefined : ZoomIn.springify().damping(12)}
+            layout={calm ? undefined : LinearTransition.springify().damping(16)}
+          >
+            <Tile
+              testID={`placed-${i}`}
+              label={ex.tiles[tileIndex]}
+              size="sm"
+              state="selected"
+              style={styles.chip}
+              onPress={locked ? undefined : () => setPlaced(placed.filter((_, j) => j !== i))}
+            />
+          </Animated.View>
         ))}
       </View>
       <View style={styles.letterBank}>
@@ -454,41 +543,30 @@ function BuildSentenceView({ exercise, onAnswer, locked, introduce, guide }: Exe
           />
         ))}
       </View>
-    </View>
+    </ExerciseLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', gap: spacing.lg, paddingHorizontal: spacing.lg },
-  instruction: { marginTop: spacing.sm },
-  fullWidth: { alignSelf: 'stretch' },
+  layout: { flex: 1, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.md },
+  layoutBody: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: spacing.lg, gap: spacing.xl },
+  layoutCentered: { justifyContent: 'center', paddingTop: 0 },
+  layoutFooter: { alignSelf: 'stretch', paddingBottom: spacing.sm },
+  instruction: { marginTop: spacing.xs },
+  listenRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.md },
   learnCardWrap: { alignSelf: 'stretch' },
-  learnCard: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xl },
-  learnEmoji: { fontSize: 110 },
+  learnCard: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignSelf: 'stretch', justifyContent: 'center' },
-  grid2: {},
-  gridCell2: { flexBasis: '46%', flexGrow: 0 },
-  gridCell3: { flexBasis: '30%', flexGrow: 0 },
+  gridCell2: { flexBasis: '46%', flexGrow: 0, aspectRatio: 1.15 },
+  gridCell3: { flexBasis: '30%', flexGrow: 0, minHeight: 150 },
   bigPicture: {
-    width: 150,
-    height: 150,
     borderRadius: radii.xl,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bigPictureSmall: {
-    width: 110,
-    height: 110,
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bigEmoji: { fontSize: 96 },
-  midEmoji: { fontSize: 64 },
-  list: { alignSelf: 'stretch', gap: spacing.sm },
-  listItem: { flex: 0, minHeight: 64 },
+  list: { alignSelf: 'stretch', gap: spacing.md },
+  listItem: { flex: 0, minHeight: 68 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   matchColumns: { flexDirection: 'row', gap: spacing.md, alignSelf: 'stretch' },
   matchColumn: { flex: 1, gap: spacing.sm },
@@ -518,5 +596,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     justifyContent: 'center',
   },
-  chip: { flexGrow: 0, flexBasis: 'auto', paddingHorizontal: spacing.lg },
+  // Word chips size to their word. `flex: 0` matters on native: with the tile's
+  // `flex: 1`, Yoga resolves `flexBasis: 'auto'` to 0 (web CSS does not), so the
+  // chip collapsed to its padding and the word disappeared.
+  chip: { flex: 0, flexBasis: 'auto', paddingHorizontal: spacing.lg },
 });

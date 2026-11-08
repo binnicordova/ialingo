@@ -22,7 +22,7 @@ Notes for the reviewer field, if asked:
 - **Appeals to children:** yes. The app follows the Families Policy.
 - **Ads:** none, and no ad SDK.
 - **In-app purchases:** none.
-- **Interactions:** no chat, no user-generated content, no links out of the app. Sharing a certificate or postcard happens only behind the parental gate.
+- **Interactions:** no chat, no user-generated content, no links out of the app except the privacy policy. That link and sharing a certificate or postcard happen only behind the parental gate.
 - **Location:** not used. `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` and the external storage permissions are blocked in `app.json`.
 
 ## Permissions declaration

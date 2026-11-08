@@ -7,6 +7,7 @@ import type { LessonPlan, World } from './types';
  * - World 1 is always open.
  * - A world opens when every *learn* lesson of the previous world is done
  *   (review and boss are optional for moving on).
+ * - A passed jump challenge opens its target world and every world before it.
  * - Inside a world, learn lessons open one after another; review and boss open
  *   once every learn lesson is done.
  */
@@ -18,8 +19,18 @@ export function isWorldUnlocked(
   const sorted = [...worlds].sort((a, b) => a.order - b.order);
   const index = sorted.findIndex((w) => w.id === world.id);
   if (index <= 0) return true;
+  if (index <= furthestJumpIndex(sorted, progress)) return true;
   const previous = sorted[index - 1];
   return previous ? areLearnLessonsDone(previous, progress) : true;
+}
+
+/** Position (in map order) of the furthest world reached by a jump, or -1. */
+export function furthestJumpIndex(sortedWorlds: readonly World[], progress: LearnerProgress): number {
+  let furthest = -1;
+  sortedWorlds.forEach((w, i) => {
+    if (progress.jumpedTo.includes(w.id)) furthest = i;
+  });
+  return furthest;
 }
 
 export function areLearnLessonsDone(world: World, progress: LearnerProgress): boolean {

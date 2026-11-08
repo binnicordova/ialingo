@@ -22,6 +22,8 @@ export function lessonTitle(plan: LessonPlan, t: Translate): string {
       return t('lessonBoss');
     case 'practice':
       return t('wordGym');
+    case 'jump':
+      return t('lessonJump');
   }
 }
 
@@ -34,6 +36,7 @@ export const LESSON_KIND_ICON: Readonly<Record<LessonKind, string>> = {
   review: '🔁',
   boss: '👑',
   practice: '🏋️',
+  jump: '⏩',
 };
 
 /** Label of each daily quest. */

@@ -145,6 +145,7 @@ export function restoreGameState(raw: unknown, today: DayKey, locale: Locale): G
       totalAnswers: num(progressRaw.totalAnswers, 0),
       totalCorrect: num(progressRaw.totalCorrect, 0),
       practiceSessions: num(progressRaw.practiceSessions, 0),
+      jumpedTo: [...new Set(stringArray(progressRaw.jumpedTo))],
     },
     wallet: { berries: Math.floor(num(record(data.wallet).berries, 0)) },
     pets: {

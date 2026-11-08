@@ -65,7 +65,7 @@ Builds are configured in `eas.json` (`development`, `development-simulator`, `pr
 ## How it plays
 
 1. **Onboarding (under a minute):** pick a language → pick an egg → tap it until it hatches (3D) → pick a preset name. No account, email or keyboard.
-2. **Adventure map:** 34 worlds grouped by level; the big **Play** button always opens the next lesson.
+2. **Adventure map:** every world and lesson on one winding path (grouped by level), the next lesson marked **Start!** with your pet beside it, each world's pet standing by its path, and **Jump here?** to open a world ahead with a quick challenge. Practice, quests, pets and badges live in the tabs below.
 3. **Each world:** about 4 *learn* lessons (new words, each with one speaking exercise) → a **story** (picture book read aloud by the guide, then comprehension questions) → a **sing-along** (the guide chants each line, the child echoes it, then "which word is missing?") → a **speaking** lesson → review → the **boss** challenge, which wins that world's pet egg.
 4. **Speaking practice:** the child hears the word, taps the microphone and says it. The device recognizes the speech **on the device**, and child-friendly scoring gives "Great!", "Almost, listen again" or "Try again" (up to 3 tries, never a dead end). Without a recognizer it falls back to self-check.
 5. **Pets (3D):** feed, play, dress up, choose who joins the adventure; pets grow from Baby to Junior to Grown-up through learning only.

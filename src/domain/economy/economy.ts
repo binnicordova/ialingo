@@ -19,6 +19,8 @@ export const ECONOMY_TUNING = {
   songBonusBerries: 2,
   speakBonusBerries: 3,
   practiceBonusBerries: 1,
+  /** A jump challenge pays like a lesson; passing it adds this once per world. */
+  jumpPassBonusBerries: 10,
   dailyGiftBerries: 10,
   welcomeBerries: 15,
   feedCost: 1,
@@ -68,6 +70,7 @@ export function lessonReward(
     song: tuning.songBonusBerries,
     speak: tuning.speakBonusBerries,
     practice: tuning.practiceBonusBerries,
+    jump: 0,
     review: tuning.reviewBonusBerries,
     boss: tuning.bossBonusBerries,
   };
