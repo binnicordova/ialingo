@@ -24,8 +24,8 @@ import {
 import { contentAtom, recognitionAtom } from '@/state/core';
 import { localeAtom, speakModeAtom } from '@/state/selectors';
 
+import { EmojiArt } from '../art/EmojiArt';
 import { SpeakerButton } from '../components/game';
-import { ParentGateModal } from '../components/ParentGateModal';
 import { AppText, BigButton, Card } from '../components/ui';
 import { useExerciseIntro } from '../hooks/use-exercise-intro';
 import { useSpeak } from '../hooks/use-speak';
@@ -58,8 +58,11 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
   const [attempts, setAttempts] = useState(0);
   const [score, setScore] = useState<SpeakScore | null>(null);
   const [silent, setSilent] = useState(false);
-  /** Kids Category rule: a grown-up passes the parental gate before the OS permission prompt. */
-  const [gate, setGate] = useState(false);
+  /**
+   * "Not now" on the microphone card: this exercise falls back to "I said it",
+   * so a child is never stuck (the card comes back on the next speaking exercise).
+   */
+  const [micDeclined, setMicDeclined] = useState(false);
 
   const target =
     exercise.kind === 'speak-word'
@@ -110,8 +113,12 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
     }
   };
 
+  /**
+   * The OS permission dialog is the authorization: speech is recognized on the
+   * device and nothing is stored, so no grown-up gate is needed (ADR 0003, amended).
+   * A refusal switches speaking to "I said it" through `speakModeAtom`.
+   */
   const allowMicrophone = async () => {
-    setGate(false);
     const granted = await requestMic();
     setPhase('idle');
     if (granted) void startListening();
@@ -124,7 +131,7 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
       </AppText>
       <Animated.View entering={FadeInDown.springify()} style={styles.stretch}>
         <Card style={styles.targetCard}>
-          <Text style={isSentence ? styles.sentenceEmoji : styles.wordEmoji}>{target.emoji}</Text>
+          <EmojiArt emoji={target.emoji} size={isSentence ? 88 : 116} />
           <AppText variant={isSentence ? 'title' : 'hero'} center color={colors.primary}>
             {text}
           </AppText>
@@ -137,18 +144,27 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
       {phase === 'asking' ? (
         <Animated.View entering={FadeIn} style={styles.stretch}>
           <Card style={styles.permission}>
-            <Text style={styles.permissionEmoji}>🧑‍🍼🎤</Text>
+            <EmojiArt emoji="🎤" size={56} />
             <AppText variant="heading" center>
               {t('micPermissionTitle')}
             </AppText>
             <AppText variant="small" center color={colors.inkSoft}>
               {t('micPermissionBody')}
             </AppText>
-            <BigButton label={t('allowMic')} tone="success" onPress={() => setGate(true)} testID="mic-allow" />
-            <BigButton label={t('notNow')} tone="neutral" compact onPress={() => setPhase('idle')} />
+            <BigButton label={t('allowMic')} tone="success" onPress={() => void allowMicrophone()} testID="mic-allow" />
+            <BigButton
+              label={t('notNow')}
+              tone="neutral"
+              compact
+              onPress={() => {
+                setMicDeclined(true);
+                setPhase('idle');
+              }}
+              testID="mic-not-now"
+            />
           </Card>
         </Animated.View>
-      ) : mode === 'recognition' ? (
+      ) : mode === 'recognition' && !micDeclined ? (
         <View style={styles.micArea}>
           <View style={styles.row}>
             <SpeakerButton onPress={() => english(text)} size={72} label={t('tapToListen')} testID="speaker" />
@@ -194,7 +210,6 @@ export function SpeakView({ exercise, locked, onAnswer, introduce, guide }: Prop
           />
         </View>
       )}
-      <ParentGateModal visible={gate} onPass={() => void allowMicrophone()} onCancel={() => setGate(false)} />
     </View>
   );
 }
@@ -266,7 +281,7 @@ export function StoryPageView({ exercise, onAnswer, introduce, guide, locked }: 
       </AppText>
       <Animated.View key={exercise.id} entering={FadeInDown.springify()} style={styles.stretch}>
         <Card style={styles.page}>
-          <Text style={styles.sceneEmoji}>{line.emoji}</Text>
+          <EmojiArt emoji={line.emoji} size={132} />
           <AppText variant="title" center>
             {line.en}
           </AppText>
@@ -288,8 +303,6 @@ const styles = StyleSheet.create({
   instruction: { marginTop: spacing.sm },
   stretch: { alignSelf: 'stretch' },
   targetCard: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xl },
-  wordEmoji: { fontSize: 96 },
-  sentenceEmoji: { fontSize: 72 },
   micArea: { alignItems: 'center', gap: spacing.md, alignSelf: 'stretch' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl },
   micWrap: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
@@ -300,7 +313,5 @@ const styles = StyleSheet.create({
   attemptDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.border },
   attemptUsed: { backgroundColor: colors.orange },
   permission: { alignItems: 'stretch', gap: spacing.sm, borderRadius: radii.xl },
-  permissionEmoji: { fontSize: 40, textAlign: 'center' },
   page: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl, minHeight: 260, justifyContent: 'center' },
-  sceneEmoji: { fontSize: 110 },
 });

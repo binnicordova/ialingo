@@ -162,3 +162,33 @@ Sticker states: locked (never met) → met → learned (box ≥ 2, blue frame) �
 | `oddRounds` | 6 | Rounds of three words from one coherent world plus one from a world of a different theme |
 
 Both pay through `settleMiniGame` (1 berry per first-try answer, same daily cap of 20). Odd One Out opens once the child has met at least 3 words in one coherent world and 1 word in a coherent world of another theme (about world 4). Mixed worlds (`coherent: false` in `content/categories.ts`) never supply words, so a round like "cow, dog, pig + owl" cannot happen.
+
+## Lesson feel (`domain/learning/lesson-session.ts`, `presentation/three/moment-scene.ts`, ADR 0008)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `LESSON_FEEL.inARowShownFrom` | 3 | The "⭐ N in a row!" badge appears above the progress bar |
+| `LESSON_FEEL.inARowMoment` | 5 | Every 5 right answers in a row: a full-screen 3D pet moment, and the bar turns gold |
+| `LESSON_FEEL.inARowMomentSeconds` | 2.6 | The in-a-row moment moves on by itself (a tap skips it) |
+| Second-try moment | once per lesson | Before the first re-queued exercise; waits for "Continue" |
+| `SLOW_REPLAY_RATE` (`state/actions.ts`) | 0.62 | The 🐢 replay, on top of the parent's voice speed |
+| `MOMENT_SCENE` | 90 confetti, 8 sparkles, 12 rays; 0.75 s entrance, 0.6 s hop | One draw call each for confetti, clouds and rays |
+| Results intro | stars at 550 ms + 320 ms each, then the cards count up for 0.7 s | Level-ups, eggs and badges wait about 2.8 s (`celebrationsHeldAtom`) |
+
+A miss resets "in a row" to 0 silently: no message, nothing lost. Reduced motion (system or parent setting) keeps every moment but removes confetti, rays, leaps and particle bursts.
+
+## Emoji art (`scripts/build-emoji-art.mjs`)
+
+Every picture in exercises, the lesson path and the results is vector art generated from the content: Microsoft Fluent Emoji Flat (MIT), Noto Emoji (Apache 2.0) where Fluent has none, and Circle Flags (MIT) for countries. Run `npm run emoji-art` after adding content; `tests/unit/presentation/emoji-art.test.ts` fails if any content emoji has no art.
+
+## Journey map and jump challenges (`domain/curriculum/journey.ts`, ADR 0009)
+
+| Knob | Value | Meaning |
+| --- | --- | --- |
+| `JUMP_TUNING.passAccuracy` | 0.8 | First-try accuracy that opens the world ("4 out of 5" on screen, derived from this value) |
+| `JUMP_TUNING.focusWords` | 12 | Words asked, taken one at a time from each skipped world in turn |
+| Jump recipe | 12 exercises, 4 options | listen, picture, true/false, listen, spell, picture, sentence, match, listen, picture, spell, sentence; no speaking |
+| `ECONOMY_TUNING.jumpPassBonusBerries` | 10 | Once per world, on top of the usual lesson reward |
+| Map geometry (`LessonPath`, `JourneyMap`) | rows 136 dp, nodes 76 / 92 dp, banner 84 dp | Fixed heights so the 37-world map is a virtualized list |
+
+A missed jump has no cost and can be tried again any time. Skipped lessons keep zero stars and skipped bosses still hold their eggs.

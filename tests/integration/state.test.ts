@@ -10,6 +10,7 @@ import { contentAtom, gameStateAtom, hydratedAtom, pendingEventsAtom, profileCho
 import {
   activeLessonAtom,
   continueLessonAtom,
+  dismissMomentAtom,
   startLessonAtom,
   submitAnswerAtom,
 } from '@/state/lesson';
@@ -66,11 +67,17 @@ describe('Jotai state wiring', () => {
     let guard = 0;
     while (!store.get(activeLessonAtom)!.completed && guard < 100) {
       const exercise = currentExercise(store.get(activeLessonAtom)!.session)!;
-      expect(store.set(submitAnswerAtom, correctAnswer(exercise, wordText, sentence))).toBe(true);
-      store.set(continueLessonAtom);
+      const answer = correctAnswer(exercise, wordText, sentence);
+      expect(store.set(submitAnswerAtom, { exerciseId: exercise.id, answer })).toBe(true);
+      store.set(continueLessonAtom, exercise.id);
+      while (store.get(activeLessonAtom)!.moments.length > 0) store.set(dismissMomentAtom);
       guard += 1;
     }
     expect(store.get(activeLessonAtom)!.completed).toBe(true);
+    const summary = store.get(activeLessonAtom)!.summary!;
+    expect(summary.correctFirstTry).toBe(summary.scoredTotal);
+    expect(summary.bestInARow).toBe(summary.scoredTotal);
+    expect(summary.wordsPracticed).toBeGreaterThan(0);
     expect(store.get(berriesAtom)).toBeGreaterThan(berriesBefore);
     expect(store.get(activePetAtom)!.pet.xp).toBeGreaterThan(0);
     expect(store.get(pendingEventsAtom).map((e) => e.type)).toContain('lesson-completed');
@@ -154,6 +161,49 @@ describe('Jotai state wiring', () => {
     await bootstrapStore(expoGo, createNoopServices(TODAY), 'es');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(expoGo.get(speakModeAtom)).toBe('self-check');
+  });
+  it('ignores stale double taps and queues pet moments between exercises', async () => {
+    const services = createNoopServices(TODAY);
+    const store = createStore();
+    await bootstrapStore(store, services, 'es');
+    store.set(completeOnboardingAtom, { speciesId: 'sprout', nickname: 'Kiwi', locale: 'es' });
+    const firstLesson = store.get(worldViewsAtom)[0]!.nextLesson!;
+    store.set(startLessonAtom, firstLesson.id);
+    const content = store.get(contentAtom);
+    const wordText = (id: string) => content.word(id)?.en ?? '';
+    const sentence = (id: string) => content.sentence(id)?.en ?? '';
+    const current = () => currentExercise(store.get(activeLessonAtom)!.session)!;
+
+    // A learn card, tapped twice: the second "Next" must not answer the following exercise.
+    const card = current();
+    expect(card.kind).toBe('learn-card');
+    store.set(submitAnswerAtom, { exerciseId: card.id, answer: { kind: 'seen' } });
+    store.set(continueLessonAtom, card.id);
+    const next = current();
+    expect(store.set(submitAnswerAtom, { exerciseId: card.id, answer: { kind: 'seen' } })).toBeNull();
+    store.set(continueLessonAtom, card.id);
+    expect(current().id).toBe(next.id);
+    expect(store.get(activeLessonAtom)!.feedback).toBeNull();
+
+    // Right answers in a row: a moment every 5, and answers wait until it is dismissed.
+    let moments = 0;
+    for (let guard = 0; guard < 60 && !store.get(activeLessonAtom)!.completed; guard += 1) {
+      const exercise = current();
+      store.set(submitAnswerAtom, { exerciseId: exercise.id, answer: correctAnswer(exercise, wordText, sentence) });
+      store.set(continueLessonAtom, exercise.id);
+      const pending = store.get(activeLessonAtom)!.moments;
+      if (pending.length > 0) {
+        moments += 1;
+        expect(pending[0]).toEqual({ kind: 'in-a-row', count: store.get(activeLessonAtom)!.session.inARow });
+        const blocked = current();
+        expect(
+          store.set(submitAnswerAtom, { exerciseId: blocked.id, answer: correctAnswer(blocked, wordText, sentence) }),
+        ).toBeNull();
+        store.set(dismissMomentAtom);
+      }
+    }
+    expect(store.get(activeLessonAtom)!.completed).toBe(true);
+    expect(moments).toBeGreaterThan(0);
   });
 });
 

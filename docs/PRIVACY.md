@@ -6,7 +6,7 @@ iaLingo is meant to be used by a child **without an adult in the learning loop**
 
 - **No accounts or login.** No email, phone number, name or birthday is ever asked for. Family profiles are identified by their pet.
 - **No free text from children.** Pet names are presets. (Certificates have a blank line to write a name *by hand* after printing.)
-- **No network calls of its own.** No analytics SDK, crash reporter, remote config, ads, in-app purchases, links out or social features.
+- **No network calls of its own.** No analytics SDK, crash reporter, remote config, ads, in-app purchases or social features. The only link out is the privacy policy, in the parent area behind the parental gate.
 - **No profiling or emotion inference.** Adaptivity is a plain spaced-repetition schedule over words, computed on the device.
 
 ## The microphone (v1.1)
@@ -21,7 +21,7 @@ The microphone is used in exactly two places, only when the child taps a microph
 
 In **Expo Go** there is no recognizer, so speaking exercises use self-check and the microphone is never opened.
 
-Before the OS permission prompt, the app shows an "Ask a grown-up" card, and (v1.2) the grown-up must pass the **parental gate** before the prompt appears, both for speaking practice and for the first voice postcard (App Store Kids Category rule). Permission texts (iOS `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`) are written for parents.
+For **speaking practice**, the app shows a short explainer ("Let me hear you!") and then the OS permission prompt; no grown-up gate (v1.4, ADR 0003 amendment), because speech is recognized on the device and nothing is stored. "Not now" or a refusal falls back to "I said it". The **first voice postcard** still requires the **parental gate** before the prompt, because postcards are saved. Permission texts (iOS `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`) are written for parents.
 
 **Android offline English (v1.2).** On Android the app checks, on the device, whether Google's on-device recognizer has English installed (`getSupportedLocales`). If it doesn't, on-device recognition is treated as unavailable (so audio is never sent online without consent), and the parent area offers "Download English (offline)", which asks Android to download the model (`androidTriggerOfflineModelDownload`). The download is done by the operating system; the app sends nothing.
 

@@ -2,6 +2,7 @@ import { pickReviewWords, type WordMastery } from '../learning/mastery';
 import type { DayKey } from '../shared/day';
 import { createRng, type Rng } from '../shared/rng';
 import { gapLine, tokenizeSentence, type Exercise } from './exercises';
+import { JUMP_TUNING, jumpPlan } from './journey';
 import type {
   LessonId,
   LessonPlan,
@@ -73,6 +74,15 @@ export const PRACTICE_TUNING = { minWords: 4, focusWords: 8 } as const;
 const PRACTICE_RECIPE: readonly Slot[] = [
   'listen', 'picture', 'spell', 'listen', 'true-false',
   'picture', 'match', 'speak-word', 'listen', 'picture',
+];
+
+/**
+ * Slot sequence for jump challenges (12 exercises, harder options). No
+ * speaking: a pass must not depend on the microphone or on self-check.
+ */
+const JUMP_RECIPE: readonly Slot[] = [
+  'listen', 'picture', 'true-false', 'listen', 'spell', 'picture',
+  'sentence', 'match', 'listen', 'picture', 'spell', 'sentence',
 ];
 
 /** Slot sequence for boss lessons (12 exercises, harder options). */
@@ -526,4 +536,42 @@ function buildFocusRecipe(
       }
     }
   }
+}
+
+export interface GenerateJumpInput {
+  /** The world to open; it hosts the challenge (color and guide). */
+  readonly target: World;
+  /** Worlds being skipped (see `skippedWorlds`): the challenge asks their words. */
+  readonly skipped: readonly World[];
+  readonly worlds: readonly World[];
+  readonly seed: number;
+}
+
+/**
+ * Builds a jump challenge: words spread evenly across the skipped worlds
+ * (one from each world in turn), their sentences, and four options per pick.
+ * Returns null when there is nothing to skip.
+ */
+export function generateJumpChallenge(input: GenerateJumpInput): GeneratedLesson | null {
+  const { target, skipped, worlds } = input;
+  if (skipped.length === 0) return null;
+  const rng = createRng(input.seed);
+  const shuffled = skipped.map((w) => rng.shuffle(w.words));
+  const focus: VocabularyItem[] = [];
+  for (let round = 0; focus.length < JUMP_TUNING.focusWords; round += 1) {
+    const before = focus.length;
+    for (const words of shuffled) {
+      const word = words[round];
+      if (word && focus.length < JUMP_TUNING.focusWords) focus.push(word);
+    }
+    if (focus.length === before) break;
+  }
+  if (focus.length < 2) return null;
+
+  const plan = jumpPlan(target);
+  const globalPool = worlds.flatMap((w) => w.words);
+  const builder = new LessonBuilder(plan.id, rng, focus, globalPool, LESSON_TUNING.hardOptionCount);
+  const sentences = rng.shuffle(skipped.flatMap((w) => w.sentences));
+  buildFocusRecipe(builder, JUMP_RECIPE, rng.shuffle(focus), sentences);
+  return { id: plan.id, plan, exercises: builder.build() };
 }

@@ -1,4 +1,5 @@
 import { newlyEarned, type AchievementMetrics } from '@/domain/achievements/achievement';
+import { canJumpTo, isJumpPassed, jumpLessonId } from '@/domain/curriculum/journey';
 import { canPractice, PRACTICE_LESSON_ID } from '@/domain/curriculum/lesson-generator';
 import { buildLessonPlans } from '@/domain/curriculum/lesson-plans';
 import { isLessonUnlocked, isWorldCompleted, isWorldUnlocked } from '@/domain/curriculum/unlock-policy';
@@ -17,6 +18,7 @@ import {
   countCompletedLessons,
   countLearnedWords,
   countMasteredWords,
+  recordJumpChallenge,
   recordLessonCompletion,
   recordPracticeCompletion,
 } from '@/domain/learning/progress';
@@ -193,12 +195,68 @@ export function finishLesson(
     },
   ];
 
-  let next: GameState = {
-    ...state,
-    progress: completion.progress,
-    wallet: credit(state.wallet, reward.berries),
-  };
+  let next = rewardLearner({ ...state, progress: completion.progress }, reward, events);
 
+  if (plan?.kind === 'boss' && world && completion.firstCompletion) {
+    const speciesId = world.rewardSpeciesId;
+    if (!ownsSpecies(next.pets, speciesId) && !next.pets.eggs.includes(speciesId)) {
+      next = { ...next, pets: addEgg(next.pets, speciesId) };
+      events.push({ type: 'egg-earned', speciesId, source: 'world-boss' });
+    }
+  }
+
+  return settleLearning(next, events, unlockedBefore, ctx);
+}
+
+/**
+ * A finished jump challenge (ADR 0009). It pays like a lesson; passing it opens
+ * the target world (and every world before it) with a one-time bonus. Failing
+ * changes nothing but mastery: no penalty, and it can be tried again any time.
+ */
+export function finishJumpChallenge(
+  state: GameState,
+  input: { targetWorldId: WorldId; accuracy: number; wordResults: readonly WordResult[] },
+  ctx: CommandContext,
+): CommandResult {
+  const worlds = ctx.content.orderedWorlds;
+  const target = ctx.content.world(input.targetWorldId);
+  if (!target) return unchanged(state);
+  const unlockedBefore = unlockedWorldIds(state, ctx);
+  const passed = canJumpTo(target, worlds, state.progress) && isJumpPassed(input.accuracy);
+  const completion = recordJumpChallenge(state.progress, {
+    accuracy: input.accuracy,
+    wordResults: input.wordResults,
+    today: ctx.today,
+    targetWorldId: target.id,
+    passed,
+  });
+
+  const pet = activePet(state.pets);
+  const base = lessonReward('jump', completion.stars, completion.perfect, pet ? xpMultiplier(pet) : 1);
+  const reward = {
+    ...base,
+    berries: base.berries + (completion.firstCompletion ? ECONOMY_TUNING.jumpPassBonusBerries : 0),
+  };
+  const events: GameEvent[] = [
+    {
+      type: 'lesson-completed',
+      lessonId: jumpLessonId(target.id),
+      stars: completion.stars,
+      perfect: completion.perfect,
+      berries: reward.berries,
+      xp: reward.xp,
+      firstCompletion: completion.firstCompletion,
+    },
+    { type: 'jump-finished', worldId: target.id, passed },
+  ];
+  const next = rewardLearner({ ...state, progress: completion.progress }, reward, events);
+  return settleLearning(next, events, unlockedBefore, ctx);
+}
+
+/** Credits berries and gives the active pet its XP (pushing a level-up event). */
+function rewardLearner(state: GameState, reward: { berries: number; xp: number }, events: GameEvent[]): GameState {
+  let next: GameState = { ...state, wallet: credit(state.wallet, reward.berries) };
+  const pet = activePet(next.pets);
   if (pet) {
     const grown = gainXp(pet, reward.xp);
     next = { ...next, pets: updatePet(next.pets, grown.pet) };
@@ -212,24 +270,22 @@ export function finishLesson(
       });
     }
   }
+  return next;
+}
 
-  if (plan?.kind === 'boss' && world && completion.firstCompletion) {
-    const speciesId = world.rewardSpeciesId;
-    if (!ownsSpecies(next.pets, speciesId) && !next.pets.eggs.includes(speciesId)) {
-      next = { ...next, pets: addEgg(next.pets, speciesId) };
-      events.push({ type: 'egg-earned', speciesId, source: 'world-boss' });
-    }
-  }
-
-  const achievements = applyAchievements(next, ctx);
-  next = achievements.state;
+/** After any learning: badges, then a "new world" event for each world that just opened. */
+function settleLearning(
+  state: GameState,
+  events: GameEvent[],
+  unlockedBefore: ReadonlySet<WorldId>,
+  ctx: CommandContext,
+): CommandResult {
+  const achievements = applyAchievements(state, ctx);
   events.push(...achievements.events);
-
-  for (const worldId of unlockedWorldIds(next, ctx)) {
+  for (const worldId of unlockedWorldIds(achievements.state, ctx)) {
     if (!unlockedBefore.has(worldId)) events.push({ type: 'world-unlocked', worldId });
   }
-
-  return { state: next, events };
+  return { state: achievements.state, events };
 }
 
 /** Spends berries to feed a pet. */

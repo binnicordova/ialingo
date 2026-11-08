@@ -15,6 +15,12 @@ export function useSpeak() {
     [speak],
   );
 
+  /** The same, slowly (the turtle button). */
+  const englishSlow = useCallback(
+    (text: string, onDone?: () => void) => speak({ text, language: 'target', slow: true, onDone }),
+    [speak],
+  );
+
   /** Text in the child's own language, in a guide's voice. */
   const native = useCallback(
     (text: string, character?: Character, onDone?: () => void) =>
@@ -29,5 +35,5 @@ export function useSpeak() {
     [speak],
   );
 
-  return { english, native, characterEnglish, stop };
+  return { english, englishSlow, native, characterEnglish, stop };
 }

@@ -3,7 +3,7 @@ import { atom, type Getter, type Setter } from 'jotai';
 import * as commands from '@/application/commands';
 import type { CommandContext, CommandResult } from '@/application/commands';
 import type { HapticKind, RecognitionOutcome, SoundEffect } from '@/application/ports';
-import type { LessonId, SpeciesId } from '@/domain/curriculum/types';
+import type { LessonId, SpeciesId, WorldId } from '@/domain/curriculum/types';
 import type { GameState, Settings } from '@/domain/game/game-state';
 import { VOICE_DIARY_TUNING } from '@/domain/voice/voice-diary';
 import type { WordResult } from '@/domain/learning/lesson-session';
@@ -56,6 +56,12 @@ export const finishLessonAtom = atom(
   null,
   (get, set, input: { lessonId: LessonId; accuracy: number; wordResults: readonly WordResult[] }) =>
     run(get, set, (s, c) => commands.finishLesson(s, input, c)),
+);
+
+export const finishJumpChallengeAtom = atom(
+  null,
+  (get, set, input: { targetWorldId: WorldId; accuracy: number; wordResults: readonly WordResult[] }) =>
+    run(get, set, (s, c) => commands.finishJumpChallenge(s, input, c)),
 );
 
 export const feedPetAtom = atom(null, (get, set, speciesId: SpeciesId) =>
@@ -136,8 +142,13 @@ export interface SpeakRequest {
   /** 'target' = English being learned; 'native' = the child's UI language. */
   readonly language: 'target' | 'native';
   readonly voice?: { readonly pitch: number; readonly rate: number };
+  /** The "turtle" replay: noticeably slower than the child's usual speed. */
+  readonly slow?: boolean;
   readonly onDone?: () => void;
 }
+
+/** Rate factor of the slow replay (on top of the parent's voice speed). */
+export const SLOW_REPLAY_RATE = 0.62;
 
 /** Speaks text with the right language, character voice and speed setting. */
 export const speakAtom = atom(null, (get, _set, request: SpeakRequest) => {
@@ -147,7 +158,7 @@ export const speakAtom = atom(null, (get, _set, request: SpeakRequest) => {
     language:
       request.language === 'target' ? TARGET_LANGUAGE_TAG : SPEECH_LANGUAGE_TAG[settings.uiLocale],
     pitch: request.voice?.pitch ?? 1,
-    rate: (request.voice?.rate ?? 1) * speedFactor,
+    rate: (request.voice?.rate ?? 1) * speedFactor * (request.slow ? SLOW_REPLAY_RATE : 1),
     onDone: request.onDone,
   });
 });

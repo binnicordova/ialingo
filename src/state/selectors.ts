@@ -19,8 +19,8 @@ import {
   rollQuestDay,
   type QuestKind,
 } from '@/domain/quests/quests';
+import { buildJourney, type Journey, type JourneyUnit } from '@/domain/curriculum/journey';
 import {
-  isLessonUnlocked,
   isWorldCompleted,
   isWorldUnlocked,
   nextLessonInWorld,
@@ -29,6 +29,7 @@ import {
 import type { LessonPlan, VocabularyItem, World } from '@/domain/curriculum/types';
 import { countLearnedWords, countMasteredWords, countCompletedLessons } from '@/domain/learning/progress';
 import { levelProgress, stageForLevel, type GrowthStage } from '@/domain/pets/leveling';
+import type { AccessoryModel } from '@/domain/pets/accessory';
 import type { OwnedPet } from '@/domain/pets/pet';
 import type { PetSpecies } from '@/domain/pets/species';
 import { isLimitReached, secondsLeft } from '@/domain/wellbeing/screen-time';
@@ -77,6 +78,17 @@ export const activePetAtom = atom<PetView | null>((get) => {
   return pet && species ? toPetView(pet, species) : null;
 });
 
+/** What the active pet is wearing: the 3D model and color, and the emoji for 2D portraits (null when nothing). */
+export const activePetAccessoryAtom = atom<{
+  readonly model: AccessoryModel;
+  readonly color: string;
+  readonly emoji: string;
+} | null>((get) => {
+  const pet = get(activePetAtom);
+  const accessory = pet?.pet.accessoryId ? get(contentAtom).accessory(pet.pet.accessoryId) : undefined;
+  return accessory ? { model: accessory.model, color: accessory.color, emoji: accessory.emoji } : null;
+});
+
 export const ownedPetsAtom = atom<readonly PetView[]>((get) => {
   const { pets } = get(gameStateAtom);
   const content = get(contentAtom);
@@ -108,26 +120,12 @@ export const worldViewsAtom = atom<readonly WorldView[]>((get) => {
   }));
 });
 
-export interface LessonView {
-  readonly plan: LessonPlan;
-  readonly unlocked: boolean;
-  readonly stars: number;
-  readonly plays: number;
-}
+/** Every world and lesson on one path, with statuses from the unlock policy (the home map). */
+export const journeyAtom = atom<Journey>((get) => buildJourney(get(contentAtom).orderedWorlds, get(progressAtom)));
 
-export function lessonViewsFor(worldId: string) {
-  return atom<readonly LessonView[]>((get) => {
-    const content = get(contentAtom);
-    const progress = get(progressAtom);
-    const world = content.world(worldId);
-    if (!world) return [];
-    return content.lessonPlansForWorld(worldId).map((plan) => ({
-      plan,
-      unlocked: isLessonUnlocked(plan, world, content.orderedWorlds, progress),
-      stars: progress.lessons[plan.id]?.bestStars ?? 0,
-      plays: progress.lessons[plan.id]?.plays ?? 0,
-    }));
-  });
+/** One world's part of the journey (a world's page). */
+export function journeyUnitFor(worldId: string) {
+  return atom<JourneyUnit | null>((get) => get(journeyAtom).units.find((u) => u.world.id === worldId) ?? null);
 }
 
 export const statsAtom = atom((get) => {

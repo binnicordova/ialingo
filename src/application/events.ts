@@ -34,6 +34,8 @@ export type GameEvent =
     }
   | { readonly type: 'achievement-unlocked'; readonly achievementId: AchievementId }
   | { readonly type: 'world-unlocked'; readonly worldId: WorldId }
+  /** A jump challenge ended; when passed, `world-unlocked` events follow. */
+  | { readonly type: 'jump-finished'; readonly worldId: WorldId; readonly passed: boolean }
   | { readonly type: 'pet-hatched'; readonly speciesId: SpeciesId }
   | { readonly type: 'pet-fed'; readonly speciesId: SpeciesId }
   | {

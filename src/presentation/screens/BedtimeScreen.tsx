@@ -3,8 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { contentAtom } from '@/state/core';
-import { activePetAtom, screenTimeAtom } from '@/state/selectors';
+import { activePetAccessoryAtom, activePetAtom, screenTimeAtom } from '@/state/selectors';
 
 import { AppText, BigButton, Screen } from '../components/ui';
 import { useSpeak } from '../hooks/use-speak';
@@ -21,7 +20,6 @@ const NIGHT = '#2B2D5C';
 export function BedtimeScreen() {
   const { t } = useT();
   const pet = useAtomValue(activePetAtom);
-  const content = useAtomValue(contentAtom);
   const { limitReached } = useAtomValue(screenTimeAtom);
   const { english } = useSpeak();
 
@@ -34,7 +32,7 @@ export function BedtimeScreen() {
     if (!limitReached) router.replace('/home');
   }, [limitReached]);
 
-  const accessory = pet?.pet.accessoryId ? content.accessory(pet.pet.accessoryId) : undefined;
+  const accessory = useAtomValue(activePetAccessoryAtom);
 
   return (
     <Screen background={NIGHT}>
@@ -42,7 +40,7 @@ export function BedtimeScreen() {
         <PetStage3D
           blueprint={pet.species.blueprint}
           stage={pet.stage}
-          accessory={accessory ? { model: accessory.model, color: accessory.color } : null}
+          accessory={accessory}
           sleeping
           background={NIGHT}
           ground="#5C6BC0"

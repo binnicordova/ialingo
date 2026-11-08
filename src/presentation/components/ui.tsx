@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tapFeedbackAtom } from '@/state/actions';
 
+import { EmojiArt } from '../art/EmojiArt';
 import { useT } from '../i18n/use-t';
 
 import { colors, fonts, radii, shade, shadow, spacing, TAP_TARGET, typeScale } from '../theme/tokens';
@@ -251,9 +252,7 @@ export function StarRow({ stars, max = 3, size = 22 }: { stars: number; max?: nu
   return (
     <View style={styles.row} accessibilityLabel={`${stars} / ${max} ★`}>
       {Array.from({ length: max }, (_, i) => (
-        <Text key={i} style={{ fontSize: size, opacity: i < stars ? 1 : 0.25 }}>
-          ⭐
-        </Text>
+        <EmojiArt key={i} emoji="⭐" size={Math.round(size * 1.15)} style={{ opacity: i < stars ? 1 : 0.25 }} />
       ))}
     </View>
   );

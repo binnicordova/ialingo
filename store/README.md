@@ -30,8 +30,8 @@ Answer **"No, we do not collect data from this app."** That is accurate because:
 
 - [x] Age band: **6–8** (`kidsAgeBand: SIX_TO_EIGHT`). The core audience is 7–9; 6–8 is the closest band, and Google Play targets both 6–8 and 9–12.
 - [x] No third-party analytics or advertising, and no data sent to third parties.
-- [x] No links out of the app and no purchases.
-- [x] **Parental gate before**: the parent area, sharing certificates and postcards, and (new in 1.2) **every microphone permission prompt**: the first speaking exercise and the first voice postcard.
+- [x] No purchases, and no links out of the app except the privacy policy behind the parental gate.
+- [x] **Parental gate before**: the parent area, sharing certificates and postcards, and the first voice postcard's microphone prompt (recordings are saved). Speaking practice asks for the microphone directly after a child-friendly explainer (v1.4): speech stays on the device and is never stored.
 - [x] Microphone use is explained to parents in the permission texts (`app.json`).
 - [x] Human-readable privacy policy in the child's languages (English, Spanish, Portuguese, French).
 

@@ -1,32 +1,33 @@
 import { router } from 'expo-router';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, SlideInDown, ZoomIn } from 'react-native-reanimated';
+import { useEffect, useMemo, useState } from 'react';
+import { AccessibilityInfo, Modal, ScrollView, StyleSheet, View } from 'react-native';
 
-import type { Exercise, ExerciseAnswer } from '@/domain/curriculum/exercises';
+import { isScored, type Exercise, type ExerciseAnswer } from '@/domain/curriculum/exercises';
 import type { CatalogIndex } from '@/domain/game/catalog';
-import { currentExercise, sessionProgress } from '@/domain/learning/lesson-session';
+import { currentExercise, firstQuizIds, isSecondTry, sessionProgress } from '@/domain/learning/lesson-session';
 import { hashSeed } from '@/domain/shared/rng';
 import { contentAtom } from '@/state/core';
 import {
   activeLessonAtom,
   continueLessonAtom,
+  dismissMomentAtom,
   quitLessonAtom,
   startLessonAtom,
   submitAnswerAtom,
   type ActiveLesson,
 } from '@/state/lesson';
-import { activePetAtom, canRecordPostcardAtom } from '@/state/selectors';
+import { activePetAtom } from '@/state/selectors';
 
-import { CharacterAvatar } from '../art/CharacterAvatar';
 import { PetPortrait } from '../art/PetPortrait';
-import { AppText, BigButton, IconButton, ProgressBar, Screen, StarRow } from '../components/ui';
+import { AnswerBurst, ExerciseTag, FeedbackSheet, Hop, LessonProgress, Wobble } from '../components/lesson';
+import { PetMoment } from '../components/PetMoment';
+import { AppText, BigButton, IconButton, Screen } from '../components/ui';
 import { ExerciseView } from '../exercises/ExerciseViews';
 import { useSpeak } from '../hooks/use-speak';
 import { useT } from '../i18n/use-t';
-import { PetStage3D, type PetStageHandle } from '../three/PetStage3D';
 import { colors, radii, spacing, tint } from '../theme/tokens';
+import { LessonResults } from './LessonResults';
 
 /** Plays one lesson: exercises, then feedback, then the results screen. */
 export function LessonScreen({ lessonId }: { lessonId: string }) {
@@ -90,14 +91,21 @@ function correctAnswerText(exercise: Exercise, content: CatalogIndex): { emoji: 
 }
 
 function LessonPlayer({ active }: { active: ActiveLesson }) {
-  const { t, l } = useT();
+  const { t } = useT();
   const content = useAtomValue(contentAtom);
   const pet = useAtomValue(activePetAtom);
   const submit = useSetAtom(submitAnswerAtom);
   const proceed = useSetAtom(continueLessonAtom);
-  const { characterEnglish, english, stop } = useSpeak();
+  const dismissMoment = useSetAtom(dismissMomentAtom);
+  const { characterEnglish, english, englishSlow, stop } = useSpeak();
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [line, setLine] = useState<string | null>(null);
+  /** Counters that cue the header pet's hop and the content's wobble. */
+  const [cues, setCues] = useState({ right: 0, miss: 0 });
+  const firstQuizzes = useMemo(
+    () => firstQuizIds(active.lesson.exercises, active.lesson.plan.newWordIds),
+    [active.lesson],
+  );
 
   const world = content.world(active.lesson.plan.worldId);
   const guide = world ? content.character(world.guideId) : undefined;
@@ -108,17 +116,21 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
   const firstOfKind =
     active.lesson.exercises.find((e) => e.kind === exercise.kind)?.id === exercise.id &&
     !active.session.retried.includes(exercise.id);
+  const secondTry = isSecondTry(active.session);
+  const moment = active.moments[0];
 
   const onAnswer = (answer: ExerciseAnswer) => {
-    const correct = submit(answer);
-    if (exercise.kind === 'learn-card' || exercise.kind === 'story-page' || exercise.kind === 'song') {
-      proceed();
+    // `exercise` is the one this view was rendered for: a stale tap is ignored by the state.
+    const correct = submit({ exerciseId: exercise.id, answer });
+    if (correct === null) return;
+    if (!isScored(exercise)) {
+      proceed(exercise.id);
       return;
     }
-    if (correct === null) return;
     AccessibilityInfo.announceForAccessibility(
       correct ? t('correct') : `${t('almost')} ${t('answerIs')} ${correctAnswerText(exercise, content).text}`,
     );
+    setCues((c) => (correct ? { ...c, right: c.right + 1 } : { ...c, miss: c.miss + 1 }));
     if (correct) {
       const cheers = guide?.cheers ?? ['Great job!'];
       // Deterministic variety: the same exercise always gets the same line.
@@ -137,69 +149,73 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
   const background = tint(world.color, 0.82);
   const feedback = active.feedback;
   const answer = feedback && !feedback.correct ? correctAnswerText(exercise, content) : null;
+  const hearable = answer && exercise.kind !== 'match-pairs' ? answer.text : null;
 
   return (
     <Screen background={background}>
       <View style={styles.header}>
         <IconButton icon="✖️" label={t('quitYes')} onPress={() => setConfirmQuit(true)} size={48} testID="lesson-close" />
-        <ProgressBar value={sessionProgress(active.session)} style={styles.progress} />
+        <LessonProgress value={sessionProgress(active.session)} inARow={active.session.inARow} />
         {pet ? (
-          <PetPortrait blueprint={pet.species.blueprint} stage={pet.stage} size={52} mood={feedback?.correct ? 'wow' : 'happy'} />
+          <Hop cue={cues.right}>
+            <PetPortrait blueprint={pet.species.blueprint} stage={pet.stage} size={52} mood={feedback?.correct ? 'wow' : 'happy'} />
+          </Hop>
         ) : null}
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} bounces={false}>
-        <ExerciseView
-          key={`${exercise.id}-${active.session.answeredCount}`}
-          exercise={exercise}
-          locked={feedback !== null}
-          onAnswer={onAnswer}
-          introduce={firstOfKind}
-          guide={guide}
-        />
-      </ScrollView>
+      <View style={styles.tagRow}>
+        {secondTry ? (
+          <ExerciseTag kind="second-try" />
+        ) : firstQuizzes.has(exercise.id) ? (
+          <ExerciseTag kind="new-word" />
+        ) : null}
+      </View>
 
-      {guide && !feedback ? (
-        <View style={styles.guideCorner} pointerEvents="none">
-          <CharacterAvatar look={guide.look} size={64} />
-        </View>
+      <Wobble cue={cues.miss} style={styles.stage}>
+        <ScrollView contentContainerStyle={styles.body} bounces={false}>
+          {moment ? null : (
+            <ExerciseView
+              key={`${exercise.id}-${active.session.answeredCount}`}
+              exercise={exercise}
+              locked={feedback !== null}
+              onAnswer={onAnswer}
+              introduce={firstOfKind}
+              guide={guide}
+            />
+          )}
+        </ScrollView>
+      </Wobble>
+
+      {feedback && isScored(exercise) ? (
+        <AnswerBurst key={`burst-${exercise.id}-${active.session.answeredCount}`} correct={feedback.correct} />
       ) : null}
 
       {feedback ? (
-        <Animated.View
-          entering={SlideInDown.springify().damping(16)}
-          accessibilityLiveRegion="polite"
-          style={[styles.feedback, { backgroundColor: feedback.correct ? colors.successSoft : '#FFF1E0' }]}
-        >
-          <View style={styles.feedbackRow}>
-            {guide ? <CharacterAvatar look={guide.look} size={64} mood={feedback.correct ? 'cheer' : 'happy'} bob={false} /> : null}
-            <View style={styles.feedbackText}>
-              <AppText variant="title" color={feedback.correct ? colors.successDark : colors.orangeDark}>
-                {feedback.correct ? t('correct') : t('almost')}
-              </AppText>
-              {line ? (
-                <AppText variant="body" color={colors.inkSoft}>
-                  {line}
-                </AppText>
-              ) : null}
-              {answer ? (
-                <AppText variant="body" color={colors.ink}>
-                  {t('answerIs')} {answer.emoji} {answer.text}
-                </AppText>
-              ) : null}
-            </View>
-          </View>
-          <BigButton
-            label={t('continue')}
-            tone={feedback.correct ? 'success' : 'orange'}
-            onPress={() => {
-              stop();
-              setLine(null);
-              proceed();
-            }}
-            testID="lesson-continue"
-          />
-        </Animated.View>
+        <FeedbackSheet
+          key={`sheet-${exercise.id}-${active.session.answeredCount}`}
+          correct={feedback.correct}
+          title={feedback.correct ? t('correct') : t('almost')}
+          line={line}
+          answer={answer}
+          guide={guide}
+          onHear={hearable ? () => english(hearable) : undefined}
+          onHearSlow={hearable ? () => englishSlow(hearable) : undefined}
+          onContinue={() => {
+            stop();
+            setLine(null);
+            proceed(exercise.id);
+          }}
+        />
+      ) : null}
+
+      {moment ? (
+        <PetMoment
+          key={`moment-${active.session.answeredCount}-${moment.kind}`}
+          moment={moment}
+          worldColor={world.color}
+          guide={guide}
+          onDone={dismissMoment}
+        />
       ) : null}
 
       <Modal transparent visible={confirmQuit} animationType="fade" onRequestClose={() => setConfirmQuit(false)}>
@@ -226,148 +242,15 @@ function LessonPlayer({ active }: { active: ActiveLesson }) {
           </View>
         </View>
       </Modal>
-      {world && !feedback ? (
-        <View style={styles.worldTag} pointerEvents="none">
-          <Text style={styles.worldTagEmoji}>{world.emoji}</Text>
-          <AppText variant="tiny" color={colors.inkSoft}>
-            {l(world.title)}
-          </AppText>
-        </View>
-      ) : null}
-    </Screen>
-  );
-}
-
-function LessonResults({ active, onReplay }: { active: ActiveLesson; onReplay: () => void }) {
-  const { t } = useT();
-  const pet = useAtomValue(activePetAtom);
-  const content = useAtomValue(contentAtom);
-  const { characterEnglish } = useSpeak();
-  const stageRef = useRef<PetStageHandle>(null);
-  const offerPostcard = useAtomValue(canRecordPostcardAtom);
-  const summary = active.summary;
-  const world = content.world(active.lesson.plan.worldId);
-  const guide = world ? content.character(world.guideId) : undefined;
-
-  useEffect(() => {
-    stageRef.current?.play('love');
-    const timer = setTimeout(() => stageRef.current?.play('jump'), 1300);
-    characterEnglish(summary?.perfect ? 'Perfect! You are amazing!' : 'Great job! Well done!', guide);
-    return () => clearTimeout(timer);
-  }, [characterEnglish, guide, summary?.perfect]);
-
-  return (
-    <Screen background={colors.backgroundWarm}>
-      <ScrollView contentContainerStyle={styles.results}>
-        <Animated.View entering={ZoomIn.springify()}>
-          <AppText variant="hero" center color={colors.primary}>
-            {summary?.perfect ? t('perfectLesson') : t('lessonComplete')}
-          </AppText>
-        </Animated.View>
-        <Animated.View entering={ZoomIn.delay(250).springify()}>
-          <StarRow stars={summary?.stars ?? 1} size={54} />
-        </Animated.View>
-        {pet ? (
-          <PetStage3D
-            ref={stageRef}
-            blueprint={pet.species.blueprint}
-            stage={pet.stage}
-            accessory={(() => {
-              const acc = pet.pet.accessoryId ? content.accessory(pet.pet.accessoryId) : undefined;
-              return acc ? { model: acc.model, color: acc.color } : null;
-            })()}
-            background={colors.backgroundWarm}
-            ground="#FFD8A8"
-            style={styles.resultStage}
-            onTap={() => stageRef.current?.play('spin')}
-            accessibilityLabel={pet.pet.nickname}
-          />
-        ) : null}
-        <Animated.View entering={FadeInDown.delay(400)} style={styles.rewardRow}>
-          <View style={styles.rewardChip}>
-            <Text style={styles.rewardEmoji}>🍓</Text>
-            <AppText variant="heading" color={colors.berry}>
-              {t('earnedBerries', { n: summary?.berries ?? 0 })}
-            </AppText>
-          </View>
-          {pet ? (
-            <View style={styles.rewardChip}>
-              <Text style={styles.rewardEmoji}>✨</Text>
-              <AppText variant="heading" color={colors.primary}>
-                {t('earnedXp', { n: summary?.xp ?? 0, name: pet.pet.nickname })}
-              </AppText>
-            </View>
-          ) : null}
-        </Animated.View>
-        {pet ? (
-          <View style={styles.xpBlock}>
-            <AppText variant="small" color={colors.inkSoft}>
-              {t('level', { n: pet.level })}
-            </AppText>
-            <ProgressBar value={pet.isMaxLevel ? 1 : pet.xpInLevel / pet.xpNeeded} color={colors.primary} />
-          </View>
-        ) : null}
-        <View style={styles.resultButtons}>
-          {offerPostcard ? (
-            <BigButton
-              label={t('postcardOffer')}
-              icon="💌"
-              tone="orange"
-              compact
-              onPress={() => router.replace('/postcard')}
-              testID="results-postcard"
-            />
-          ) : null}
-          <BigButton label={t('continue')} tone="success" onPress={() => router.back()} testID="results-continue" />
-          <BigButton label={t('playAgain')} tone="neutral" compact icon="🔁" onPress={onReplay} />
-        </View>
-      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
-  progress: { flex: 1 },
-  body: { flexGrow: 1, paddingTop: spacing.md, paddingBottom: 140 },
-  guideCorner: { position: 'absolute', right: spacing.md, bottom: spacing.xl },
-  worldTag: {
-    position: 'absolute',
-    left: spacing.lg,
-    bottom: spacing.xl + 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    opacity: 0.8,
-  },
-  worldTagEmoji: { fontSize: 18 },
-  feedback: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    gap: spacing.md,
-  },
-  feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  feedbackText: { flex: 1, gap: 2 },
+  tagRow: { minHeight: 26, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  stage: { flex: 1 },
+  body: { flexGrow: 1, paddingBottom: spacing.sm },
   modalBackdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', padding: spacing.xl },
   modalCard: { backgroundColor: colors.surface, borderRadius: radii.xl, padding: spacing.xl, gap: spacing.md, alignItems: 'stretch' },
-  results: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center' },
-  resultStage: { width: '100%', height: 280, borderRadius: radii.xl },
-  rewardRow: { gap: spacing.sm, alignSelf: 'stretch' },
-  rewardChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-  },
-  rewardEmoji: { fontSize: 28 },
-  xpBlock: { alignSelf: 'stretch', gap: spacing.xs },
-  resultButtons: { alignSelf: 'stretch', gap: spacing.sm },
 });
