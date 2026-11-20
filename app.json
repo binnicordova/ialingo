@@ -3,6 +3,14 @@
     "name": "iaLingo",
     "slug": "ialingo",
     "version": "1.3.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bf2e9383-a724-44c4-9609-d11db2c04303",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ialingo",

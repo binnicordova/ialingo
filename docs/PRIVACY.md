@@ -6,7 +6,8 @@ iaLingo is meant to be used by a child **without an adult in the learning loop**
 
 - **No accounts or login.** No email, phone number, name or birthday is ever asked for. Family profiles are identified by their pet.
 - **No free text from children.** Pet names are presets. (Certificates have a blank line to write a name *by hand* after printing.)
-- **No network calls of its own.** No analytics SDK, crash reporter, remote config, ads, in-app purchases or social features. The only link out is the privacy policy, in the parent area behind the parental gate.
+- **One network call of its own: the app-update check (v1.4, ADR 0010).** In store builds, `expo-updates` asks EAS Update (`u.expo.dev`) on launch whether a newer JS bundle exists for this runtime and channel. The request carries the runtime version, platform, channel, current update id and a random per-install id (`EAS-Client-ID`, app-scoped, not an advertising or hardware id), and exposes the IP address. No game state, profile, audio or child input is sent. Launch never waits for it (`fallbackToCacheTimeout: 0`); a downloaded update applies on the next cold start, so a child is never interrupted mid-lesson. Under COPPA this falls under "support for the internal operations" of the app. It is not available in Expo Go or development builds.
+- Otherwise no analytics SDK, crash reporter, remote config, ads, in-app purchases or social features. The only link out is the privacy policy, in the parent area behind the parental gate.
 - **No profiling or emotion inference.** Adaptivity is a plain spaced-repetition schedule over words, computed on the device.
 
 ## The microphone (v1.1)
@@ -63,7 +64,8 @@ Text-to-speech uses the operating system's voice engine. On some Android devices
 
 ## Rules for future changes
 
-1. Any feature that sends data off the device needs a privacy review and, for under-13s, verifiable parental consent *before* it ships.
-2. Never add free-text input for children.
-3. Keep data minimization: days, not timestamps; aggregates, not raw events; bounded retention for recordings.
-4. Keep the microphone tap-to-use only. No background listening, ever.
+1. Never use EAS Update for remote config, experiments or per-user targeting: updates ship the same bundle to every install on a channel.
+2. Any feature that sends data off the device needs a privacy review and, for under-13s, verifiable parental consent *before* it ships.
+3. Never add free-text input for children.
+4. Keep data minimization: days, not timestamps; aggregates, not raw events; bounded retention for recordings.
+5. Keep the microphone tap-to-use only. No background listening, ever.

@@ -1,4 +1,4 @@
-# Google Play: Data safety and Families answers (iaLingo 1.2)
+# Google Play: Data safety and Families answers (iaLingo 1.4)
 
 Answers for Play Console → App content. They follow from `docs/PRIVACY.md`; re-check them whenever a feature touches data.
 
@@ -6,14 +6,20 @@ Answers for Play Console → App content. They follow from `docs/PRIVACY.md`; re
 
 | Question | Answer | Why |
 | --- | --- | --- |
-| Does your app collect or share any of the required user data types? | **No** | No accounts, analytics, ads or network calls of our own. Progress is stored only on the device. |
-| Is all of the user data collected by your app encrypted in transit? | Not applicable (nothing is transmitted) | |
+| Does your app collect or share any of the required user data types? | **Yes** (since 1.4) | The app-update check (`expo-updates`, ADR 0010) sends a random per-install id to EAS Update. Progress, audio and profiles still stay on the device. |
+| Data types | **Device or other IDs** only | The `EAS-Client-ID` header: a random UUID created by the app, not the Android ID or advertising ID. |
+| Collected or shared? | Collected, **not shared** | Expo processes it as our service provider; Play does not count service-provider transfers as sharing. |
+| Processed ephemerally? | No (declare it as not ephemeral, to be safe) | |
+| Required or optional? | Required | Updates cannot be turned off in the app. |
+| Purpose | **App functionality** | Delivering bug fixes and new lessons. Not analytics, ads, personalization or account management. |
+| Is all of the user data collected by your app encrypted in transit? | **Yes** | HTTPS to `u.expo.dev`. |
 | Do you provide a way for users to request that their data is deleted? | **Yes**: in-app deletion (parent area → Delete player / Delete all progress), or uninstall | |
 
 Notes for the reviewer field, if asked:
 
 - **Audio:** speaking exercises use Android's `SpeechRecognizer` with on-device recognition. Only the recognized text reaches the app; it is scored and discarded. Nothing is recorded or uploaded. Online recognition is off unless a parent enables it, and then Google processes it under its own terms (not collected by iaLingo).
 - **Voice diary:** optional, off by default, parent-enabled. Short recordings are saved in the app's private storage and never leave the device. Data processed only on the device is not "collected" under Play's definition.
+- **App updates:** `expo-updates` checks EAS Update over HTTPS on launch and downloads new JS bundles for the same native runtime. It sends the runtime version, platform, channel and a random app-scoped install id; no child data. This is not an SDK on the Families self-certified ads list and does not use the advertising ID.
 - **Offline model download:** triggered by a parent, performed by Android's system service (`androidTriggerOfflineModelDownload`), and sends nothing about the child.
 
 ## Target audience and content
